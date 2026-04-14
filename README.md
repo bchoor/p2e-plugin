@@ -2,6 +2,7 @@
 
 Three slash commands that drive [P2E](https://github.com/bchoor/p2e) — a self-hosted product-to-engineering tool — from Claude Code, backed by the P2E MCP server:
 
+- `/p2e-bootstrap` — turn a PRD, storyboard, or project description into a populated 2D story map (phases × tiers × UXOs) in one pass. Asks high-level clarifying questions, renders a grid for review, supports per-cell deep dives via `superpowers:brainstorming`.
 - `/p2e-add-story` — thin wizard that creates a story (and optionally a UXO) via the p2e MCP, with an auto-created GitHub issue.
 - `/p2e-work-on-next-story` — select 1–N PLANNED stories from a queue, classify each (Fast / Standard / Architectural), optionally run the `p2e-architect` (approach selection) and/or `p2e-staff-engineer` (wave planning) subagents, then implement in parallel waves within a single worktree.
 - `/p2e-sync-labels` — finisher run after a batch PR merges; transitions `ready → review → done` on linked GitHub issues.
@@ -38,6 +39,7 @@ Auth is handled by Claude Code's MCP OAuth flow on first use — no manual token
 
 | Command | When to use |
 |---|---|
+| `/p2e-bootstrap <doc>` | Starting a new project. Takes a PRD / storyboard / product description, asks 1–4 clarifying questions, drafts phases + UXOs, lets you dive deeper on any cell before writing. Project shell must exist in P2E first. |
 | `/p2e-add-story <description>` | Create a new PLANNED story from a one-line description. Auto-infers phase/tier/UXO, drafts AC + capabilities, opens a GitHub issue with label `ready`. |
 | `/p2e-work-on-next-story [story_id=X-YY-LZ] [--full-team] [--dry-run]` | Pick up work. Without args, lists the top-ranked PLANNED stories and lets you multi-select. Classifies each story and routes to the right model tier. |
 | `/p2e-sync-labels` | Run after a `/p2e-work-on-next-story` PR merges. Moves linked issues `review → done` and posts the merge sha. |

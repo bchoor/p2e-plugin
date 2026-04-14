@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.1 — 2026-04-14
+
+Adds `/p2e-bootstrap` — turn a PRD, storyboard, or project description into a populated 2D story map (phases × tiers × UXOs) in one pass.
+
+### Added
+- **`/p2e-bootstrap`** command. Parses a source doc, asks 1–4 high-level clarifying questions via `AskUserQuestion`, drafts a full matrix, renders a grid for review, supports per-cell deep dives via `superpowers:brainstorming` or `gstack-office-hours`, writes all phases + UXOs in one batch. Does not create stories — that's `/p2e-add-story`'s job.
+
+### Known limitations
+- The P2E MCP surface has no `projects.create` op yet. `/p2e-bootstrap` requires the project shell to exist (create via P2E UI first).
+- Only creates new phases/UXOs. Does not delete or rename existing ones (safe-by-default).
+
+
 ## v0.2.0 — 2026-04-14
 
 Architectural cleanup. Commands and agents now call `mcp__p2e__*` tools directly via Claude Code's MCP client instead of shelling out to a bundled CLI. OAuth is handled automatically by Claude Code — no more `P2E_DEV_BEARER` setup.
