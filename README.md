@@ -8,15 +8,21 @@ Three slash commands that drive [P2E](https://github.com/bchoor/p2e) — a self-
 
 ## Install
 
-```
-claude plugin install bchoor/p2e-plugin
-```
-
-Pin to a tag for stability:
+From inside a Claude Code session:
 
 ```
-claude plugin install bchoor/p2e-plugin@v0.1.0
+/plugin marketplace add bchoor/p2e-plugin
+/plugin install p2e@p2e-plugins
 ```
+
+Pin the marketplace to a tag for stability:
+
+```
+/plugin marketplace add bchoor/p2e-plugin@v0.1.0
+/plugin install p2e@p2e-plugins
+```
+
+(The marketplace is named `p2e-plugins` — that's the `@<marketplace>` suffix on install. The plugin itself is named `p2e`.)
 
 ## Configure
 

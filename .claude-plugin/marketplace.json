@@ -1,0 +1,24 @@
+{
+  "name": "p2e-plugins",
+  "owner": {
+    "name": "bchoor"
+  },
+  "metadata": {
+    "description": "Marketplace for the p2e Claude Code plugin — authoring + workflow commands backed by the P2E MCP."
+  },
+  "plugins": [
+    {
+      "name": "p2e",
+      "source": "./",
+      "description": "Adds /p2e-add-story, /p2e-work-on-next-story, /p2e-sync-labels, and the p2e-architect / p2e-staff-engineer agents. Backed by the P2E MCP server (configurable via P2E_MCP_URL).",
+      "version": "0.1.0",
+      "author": {
+        "name": "bchoor"
+      },
+      "homepage": "https://github.com/bchoor/p2e-plugin",
+      "repository": "https://github.com/bchoor/p2e-plugin",
+      "license": "MIT",
+      "keywords": ["p2e", "product-management", "story-map", "mcp"]
+    }
+  ]
+}
