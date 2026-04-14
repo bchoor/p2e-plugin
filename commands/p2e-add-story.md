@@ -23,15 +23,12 @@ If the user invokes without a description, ask ONCE via `AskUserQuestion` with a
 
 ## Pre-flight
 
-1. Follow `skills/p2e/SKILL.md` §"Pre-flight: dev server check".
-2. Default project slug to `p2e`.
-3. Record `--dry-run` flag.
+1. Default project slug to `p2e`.
+2. Record `--dry-run` flag.
 
 ## Step 1. Fetch project context
 
-```bash
-bun ${CLAUDE_PLUGIN_ROOT}/lib/cli/mcp-call.ts projects '{"op":"get","project_slug":"p2e"}'
-```
+Call `mcp__p2e__projects` with `{ op: "get", project_slug: "p2e" }`.
 
 Cache as `ctx`. You need `ctx.phases[].title`, `ctx.phases[].uxos[].uxoId/title/tier/id`, and layer counts for story_id derivation.
 
@@ -96,12 +93,7 @@ One per distinct behavior change. Format:
 
 ### Release
 
-```bash
-bun ${CLAUDE_PLUGIN_ROOT}/lib/cli/mcp-call.ts stories '{"op":"list","project_slug":"p2e","status":"PLANNED"}' \
-  | jq -r '[.[] | select(.release != null)] | max_by(.createdAt) | .release // empty'
-```
-
-If non-empty, use as default. If empty, default to `v0.3` and flag `default` in the preview.
+Call `mcp__p2e__stories` with `{ op: "list", project_slug: "p2e", status: "PLANNED" }` and pick the most recently created story's `release` field as the default. If none exists, default to `v0.3` and flag `default` in the preview.
 
 ## Step 3. Preview + single confirm
 
@@ -143,30 +135,23 @@ Then ONE `AskUserQuestion` (options, in order):
 
 The Adjust options loop back to the preview; only `Accept and write` or `Abort` exits the loop.
 
-Under `--dry-run`: print the preview + the exact commands the Write section would execute, then exit. No AskUserQuestion, no writes, no GH call.
+Under `--dry-run`: print the preview + the exact MCP tool calls the Write section would execute, then exit. No AskUserQuestion, no writes, no GH call.
 
 ## Step 4. Write (single batch)
 
 On `Accept and write`, run in order. Stop at the first failure; surface the failing step + item index.
 
-0. (Only if UXO is new) `uxos.create` with the pending UXO:
+1. **(Only if UXO is new)** Call `mcp__p2e__uxos` with `{ op: "create", project_slug: "p2e", items: [{ phase_title, uxo_id, title, tier, description: null }] }`. Store the returned DB cuid as `resolvedUxoId`.
+
+2. **Create story.** Call `mcp__p2e__stories` with `{ op: "create", project_slug: "p2e", items: [{ story_id: "<uxoId>", uxo_id: "<resolvedUxoId or matched uxo.id>", title, status: "PLANNED", release, tags, story_as, story_want, story_so_that }] }`. The server auto-appends `-L<n+1>`. Store the returned full `storyId`.
+
+3. **Create AC.** Call `mcp__p2e__criteria` with `{ op: "create", project_slug: "p2e", items: [{ story_id, text }, ...] }` (all AC in one batch).
+
+4. **Create capabilities.** Call `mcp__p2e__capabilities` with `{ op: "create", project_slug: "p2e", items: [{ story_id, name, action, description, is_breaking }, ...] }` (all caps in one batch).
+
+5. **Create GH issue.**
 
    ```bash
-   bun ${CLAUDE_PLUGIN_ROOT}/lib/cli/mcp-call.ts uxos "$(jq -n --arg ps "p2e" --arg pt "<phase>" --arg uid "<uxo_id>" --arg title "<uxo_title>" --arg tier "<tier>" '{op:"create",project_slug:$ps,items:[{phase_title:$pt,uxo_id:$uid,title:$title,tier:$tier,description:null}]}')"
-   ```
-
-   Store the returned DB cuid as `resolvedUxoId`.
-
-1. `stories.create` using `resolvedUxoId` (or the matched UXO's `id` from Step 2). Pass the UXO id alone (`"<uxo_id>"`) as `story_id` — the server auto-appends `-L<n+1>`. Store the returned `storyId` (full form).
-
-2. `criteria.create` — all AC in one `items:[...]` batch, each `{story_id: <storyId>, text: <ac>}`.
-
-3. `capabilities.create` — all caps in one `items:[...]` batch, each `{story_id, name, action, description, is_breaking}`.
-
-4. GH issue:
-
-   ```bash
-   # Build body (unquoted heredoc so vars expand; $ac_bullets/$cap_bullets are "- a\n- b" strings)
    cat > /tmp/p2e-add-story-body.md <<EOF
    Story: **$storyId** — $title
    UXO: $uxoId — $uxoTitle ($phase / $tier)
@@ -191,11 +176,7 @@ On `Accept and write`, run in order. Stop at the first failure; surface the fail
    ISSUE_NUMBER=$(basename "$ISSUE_URL")
    ```
 
-5. `stories.update` linking `github_issue_number` + `github_issue_url`:
-
-   ```bash
-   bun ${CLAUDE_PLUGIN_ROOT}/lib/cli/mcp-call.ts stories "$(jq -n --arg ps "p2e" --arg sid "$storyId" --argjson num "$ISSUE_NUMBER" --arg url "$ISSUE_URL" '{op:"update",project_slug:$ps,items:[{story_id:$sid,github_issue_number:$num,github_issue_url:$url}]}')"
-   ```
+6. **Link issue back.** Call `mcp__p2e__stories` with `{ op: "update", project_slug: "p2e", items: [{ story_id, github_issue_number, github_issue_url }] }`.
 
 ## Step 5. Final summary
 
@@ -229,12 +210,10 @@ GitHub issue
   Body echoes the RRR above — confirmed aligned.
 ```
 
-After the `Body echoes...` line, print the exact RRR line from the issue body (`As <role>, I want <request>, so that <reason>.`) as visual proof. The body template uses the same variables as the summary, so alignment is structural — but surface it for the user.
-
 Finish with a one-liner: `→ /p2e-work-on-next-story to start work`.
 
 ## Idempotency
 
 Buffered state only until Accept. Any `AskUserQuestion` abort at any Adjust loop stage → no MCP writes, no GH calls.
 
-Under `--dry-run` the command is always read-only: it may run `projects.get` and `stories.list` (both reads) to populate the preview, but never `uxos.create`, `stories.create`, `criteria.create`, `capabilities.create`, `stories.update`, or `gh issue create`.
+Under `--dry-run` the command is always read-only: it may call `mcp__p2e__projects` and `mcp__p2e__stories` (both reads) to populate the preview, but never `mcp__p2e__uxos.create`, `mcp__p2e__stories.create`, `mcp__p2e__criteria.create`, `mcp__p2e__capabilities.create`, `mcp__p2e__stories.update`, or `gh issue create`.

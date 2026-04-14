@@ -10,8 +10,7 @@ Finishes the `ready → in-progress → review → done → close` lifecycle for
 
 ## Pre-flight
 
-1. Follow `skills/p2e/SKILL.md` §"Pre-flight: dev server check". (Not strictly required — this command is gh-only — but having the server up keeps agents consistent and allows future reconciliation against P2E state.)
-2. Parse optional named arguments:
+1. Parse optional named arguments:
    - `project=<slug>` — defaults to `p2e`.
    - `pr=<n>` — optional filter: only reconcile issues that were linked from this PR.
 

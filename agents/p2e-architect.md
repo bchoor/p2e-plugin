@@ -23,11 +23,7 @@ The orchestrator passes you:
 
 ## What to do
 
-1. Fetch the full story detail:
-
-```bash
-bun ${CLAUDE_PLUGIN_ROOT}/lib/cli/mcp-call.ts stories '{"op":"get","project_slug":"<slug>","story_id":"<story_id>"}'
-```
+1. Fetch the full story detail by calling `mcp__p2e__stories` with `{ op: "get", project_slug: "<slug>", story_id: "<story_id>" }`.
 
 2. Skim the codebase for relevant files. Prioritize: (a) files referenced by name in capabilities or AC, (b) `src/mcp/tools/` and `src/lib/actions.ts` for MCP-surface changes, (c) `src/components/` for UI-surface changes. Use `Glob`/`Grep` targeted to identifiers (e.g. `mcpCall`, capability names, AC tokens). Avoid broad unscoped sweeps — they burn the time budget.
 3. Check the `specFile` field in the story JSON from step 1. If it's non-null (e.g. `specs/p2e/B-05-L2.yaml`), read that file with `Read`. Skip this step if running close to the time budget.

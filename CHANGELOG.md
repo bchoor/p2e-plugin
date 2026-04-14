@@ -1,17 +1,45 @@
 # Changelog
 
+## v0.2.0 — 2026-04-14
+
+Architectural cleanup. Commands and agents now call `mcp__p2e__*` tools directly via Claude Code's MCP client instead of shelling out to a bundled CLI. OAuth is handled automatically by Claude Code — no more `P2E_DEV_BEARER` setup.
+
+### Changed
+- **Dropped bearer token requirement.** `P2E_DEV_BEARER` is no longer needed. MCP auth uses Claude Code's OAuth flow.
+- **Dropped bun dependency.** The plugin no longer ships TS code; `bun` is not required to run the commands.
+- **Commands rewritten** to call `mcp__p2e__*` tools directly:
+  - `/p2e-add-story` — uses `mcp__p2e__projects`, `mcp__p2e__stories`, `mcp__p2e__uxos`, `mcp__p2e__criteria`, `mcp__p2e__capabilities`.
+  - `/p2e-work-on-next-story` — same, plus `mcp__p2e__relations` for dependency resolution.
+- **Agents rewritten** (`p2e-architect`, `p2e-staff-engineer`) to fetch story detail via `mcp__p2e__stories`.
+- **Skill slimmed.** Dropped the `Pre-flight: dev server check` section (irrelevant when hitting remote MCP). Router rules inlined into commands; SKILL.md keeps them as reference.
+- **Classifier logic inlined.** The `classify()` router logic now lives inline in `/p2e-work-on-next-story` rather than as a TS helper.
+
+### Removed
+- `lib/` directory (7 files: `mcp.ts`, `mcp.test.ts`, `router.ts`, `router.test.ts`, `types.ts`, `cli/mcp-call.ts`, `cli/classify.ts`).
+- `P2E_DEV_BEARER` env var requirement.
+- Dev-server pre-flight check (`lsof -iTCP:3000` etc).
+
+### Migration
+If you upgrade from 0.1.x:
+- Unset `P2E_DEV_BEARER` if you had it exported — no longer consulted.
+- First `mcp__p2e__*` call triggers the Claude Code OAuth flow once; subsequent calls reuse the session.
+
+## v0.1.4 — 2026-04-14
+
+Bumped the marketplace entry version to 0.1.4 so `/plugin update` detects change vs cached 0.1.0. Includes all fixes from 0.1.1, 0.1.2, 0.1.3.
+
+## v0.1.3 — 2026-04-14
+
+Moved `skills/SKILL.md` into `skills/p2e/SKILL.md` for Claude Code's default skill discovery.
+
+## v0.1.2 — 2026-04-14
+
+Wrapped `.mcp.json` server definitions in `mcpServers` key (required by plugin loader).
+
+## v0.1.1 — 2026-04-14
+
+Added `.claude-plugin/marketplace.json` — plugins install through a marketplace catalog, not directly from repos.
+
 ## v0.1.0 — 2026-04-14
 
-Initial public release. Extracted from the private p2e monorepo (B-05-L1).
-
-### Added
-- `/p2e-add-story` slash command with inferred phase/tier/UXO + GH issue creation.
-- `/p2e-work-on-next-story` batch orchestrator with Architect / Staff Engineer subagents and parallel wave implementation.
-- `/p2e-sync-labels` finisher for post-merge label transitions.
-- `p2e-architect` (approach selection, opus) and `p2e-staff-engineer` (wave planning, opus) subagents.
-- `skills/SKILL.md` documenting P2E concepts, classification rules, and the planning recipe for external agents.
-- `P2E_MCP_URL` env var support in `.mcp.json` for pointing at any P2E instance.
-
-### Known limitations
-- Requires `P2E_DEV_BEARER` env var; MCP auth is still a manual OAuth bootstrap (one-time per instance).
-- Slash commands assume `gh` CLI is installed and authenticated against the P2E repo.
+Initial public release. Extracted from bchoor/p2e monorepo (B-05-L1).

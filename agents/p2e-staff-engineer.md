@@ -21,11 +21,7 @@ opus-justified: architecture — wave dependency graph construction and file-col
 
 ## What to do
 
-1. Fetch each story's detail:
-
-```bash
-bun ${CLAUDE_PLUGIN_ROOT}/lib/cli/mcp-call.ts stories '{"op":"get","project_slug":"<slug>","story_id":"<id>"}'
-```
+1. For each story in the batch, call `mcp__p2e__stories` with `{ op: "get", project_slug: "<slug>", story_id: "<id>" }`.
 
 2. Build a dependency graph using `BUILDS_ON`, `DEPENDS_ON`, and `FIXES` relations. **Out-of-batch targets** (relation points to a story NOT in the selection) are treated as already satisfied — the caller is responsible for selecting the full closure if they want strict ordering. Note any out-of-batch dependencies in the markdown summary so the user can confirm.
 3. Estimate files touched per story:
