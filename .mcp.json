@@ -1,6 +1,8 @@
 {
-  "p2e": {
-    "type": "http",
-    "url": "${P2E_MCP_URL:-https://p2e-mocha.vercel.app/api/mcp}"
+  "mcpServers": {
+    "p2e": {
+      "type": "http",
+      "url": "${P2E_MCP_URL:-https://p2e-mocha.vercel.app/api/mcp}"
+    }
   }
 }
