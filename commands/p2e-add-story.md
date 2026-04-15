@@ -21,6 +21,27 @@ Examples:
 
 If the user invokes without a description, ask ONCE via `AskUserQuestion` with a single "Enter description" option (free-text via "Other"). Do not demand fields one at a time.
 
+## Fill mode
+
+Targets an existing PLANNED story by ID and fills in its missing RRR + AC + capabilities, instead of creating a new story. Used by the bootstrap stories drafting flow: drafts are written title-only, then fleshed later via fill mode.
+
+```
+/p2e-add-story --fill <storyId>
+/p2e-add-story --fill <storyId> <path/to/prd.md>
+```
+
+Examples:
+
+- `/p2e-add-story --fill B-04-L1` — fill from current working context.
+- `/p2e-add-story --fill B-04-L1 docs/PRD.md` — explicit doc context.
+
+In fill mode:
+
+- Phase / Tier / UXO inference is skipped (already known from the existing story).
+- The existing story's `title` is the anchor for inference of `story_as` / `story_want` / `story_so_that` / AC / capabilities.
+- The wizard preview shows derived fields with `(filled)` annotations (vs `(matched)` / `(inferred)` / `(default)` / `(query)` in create mode).
+- On accept: the existing story's RRR fields are updated (not created); AC + capabilities are created; the GitHub issue is created at this point (it did not exist for the draft).
+
 ## Pre-flight
 
 1. Default project slug to `p2e`.
