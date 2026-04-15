@@ -148,6 +148,50 @@ On Accept:
 
 4. **Fail-fast behavior.** If Step 2 partially succeeds and Step 3 fails, surface which UXOs weren't written. User can retry just Step 3 with the same args. Don't auto-rollback created phases.
 
+## Per-UXO story drafting
+
+Invoked from Step 5's "Dive deeper" sub-menu when the user picks "Draft stories for this UXO". Drafts are **title-only** — no RRR, no AC, no capabilities, no GitHub issue. Density is PRD-driven: propose only what the source actually motivates. A UXO can legitimately get 0 drafts if the source is thin on that cell.
+
+### Flow
+
+1. **Scope source context.** Re-read the section(s) of the source doc relevant to the chosen UXO. Anchor on the UXO's `title` and its phase. If no source doc was provided to bootstrap (inline-description mode), use what the user originally pasted.
+
+2. **Propose 0–N story titles.** For each proposed title, capture a one-line **justification** citing the source passage that motivated it. If the source doesn't motivate any titles, propose 0 — do NOT pad. Surface "no draft stories proposed for `<uxoId>` — source is thin on this cell" and return to the bootstrap loop.
+
+3. **Render the proposal.**
+
+   ```
+   ╭─ Draft stories for B-04 — REST API ──────────────────────
+   │
+   │  ☐ 1. Public read endpoints (stories, projects, UXOs)
+   │       Justification: PRD §3.2 mentions read-only public access
+   │       for embedded dashboards.
+   │
+   │  ☐ 2. Webhook subscriptions for story state changes
+   │       Justification: PRD §4.1 calls out integration with
+   │       customer Slack workflows.
+   │
+   │  Justifications cite source passages so you can verify before accepting.
+   ╰──────────────────────────────────────────────────────────
+   ```
+
+4. **Per-story accept/reject** via `AskUserQuestion` with `multiSelect: true`. User picks which titles to keep.
+
+5. **Write accepted titles** as PLANNED stories under the UXO. Call `mcp__p2e__stories` with `{ op: "create", project_slug, items: [{ story_id: "<uxoId>", uxo_id: "<resolvedUxoId>", title, status: "PLANNED", release }] }` for each accepted title (the server auto-appends `-L<n+1>`). Inherited fields:
+   - `status`: `PLANNED`
+   - `release`: inherited from the bootstrap run's release default (or the project's most-recent PLANNED release)
+   - All other fields empty: no `story_as`, no `story_want`, no `story_so_that`, no tags
+   - **No GH issue** is created at this step. Drafts stay off the tracker until they're fleshed via `/p2e-add-story --fill`.
+
+6. **Return to the bootstrap feedback loop.** User can dive into another UXO or accept the matrix.
+
+### Invariants
+
+- **Title-only.** Never invent AC or capabilities at draft time. That's where hallucination risk lives.
+- **No force-fit.** Density is PRD-driven; 0 is a valid count.
+- **No GH issues** for drafts. Issue creation is deferred to `/p2e-add-story --fill`.
+- **One-shot per invocation.** The user can re-invoke per UXO; this command does not maintain "what was proposed last time" state across invocations.
+
 ## Step 7. Final summary
 
 ```
