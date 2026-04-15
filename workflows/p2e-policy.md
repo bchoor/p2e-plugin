@@ -4,7 +4,7 @@ This file defines the shared operating rules for every P2E wrapper. The wrappers
 
 ## MCP access
 
-- All P2E mutations and reads go through the `mcp__p2e__*` tools exposed by the plugin.
+- All P2E mutations and reads go through the P2E MCP surface and its operations exposed by the adapter.
 - The MCP server handles authentication and audit logging. Wrappers must not invent their own auth or audit paths.
 - The server URL may be configured by environment, but the workflow contract stays unchanged across environments.
 
@@ -21,11 +21,11 @@ When a workflow needs to classify a story or choose an execution track, use this
 
 Track mapping:
 
-- Fast => haiku for the implementer, no architect, no staff engineer.
-- Standard => sonnet for the implementer, architect yes, staff engineer only when batch size warrants it.
-- Architectural => sonnet for the implementer, architect yes, staff engineer yes.
+- Fast => lightweight implementer track, no architect, no staff engineer.
+- Standard => general implementer track, architect yes, staff engineer only when batch size warrants it.
+- Architectural => general implementer track, architect yes, staff engineer yes.
 
-Wrappers should treat `opus` as reserved for specialist subagents only when the workflow explicitly calls for them.
+Wrappers should reserve higher-capacity specialist roles for architect and staff-engineer work only when the workflow explicitly calls for them.
 
 ## Canonical orchestrator naming
 
@@ -66,4 +66,3 @@ Wrappers should treat `opus` as reserved for specialist subagents only when the 
 
 - The orchestrator should reconcile issue labels at the end of a batch when it has enough issue and merge context to do so safely.
 - If that context is missing or incomplete, the workflow must fall back to the explicit label-sync workflow instead of guessing.
-
