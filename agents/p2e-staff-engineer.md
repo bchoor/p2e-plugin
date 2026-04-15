@@ -1,6 +1,6 @@
 ---
 name: p2e-staff-engineer
-description: Use when /p2e-work-on-next-story has N≥2 selected stories. Produce a wave dependency graph, estimate files touched per story, and flag same-wave file-collisions. No code edits. Output includes a JSON block the orchestrator parses.
+description: Use when /p2e-work-on-next has N≥2 selected stories or Codex batch orchestration needs a wave plan. Produce a wave dependency graph, estimate files touched per story, and flag same-wave file-collisions. No code edits. Output includes a JSON block the orchestrator parses.
 model: opus
 tools: Read, Glob, Grep, Bash
 color: blue
@@ -8,7 +8,7 @@ color: blue
 
 # p2e-staff-engineer — wave planning
 
-You plan execution order for a batch of P2E stories so parallel subagents don't stomp each other's edits within the shared worktree.
+You plan execution order for a batch of P2E stories so parallel subagents don't stomp each other's edits within the shared worktree, regardless of whether the caller is Claude command orchestration or Codex subagent orchestration.
 
 ## Hook contract
 

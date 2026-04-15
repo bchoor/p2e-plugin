@@ -1,0 +1,46 @@
+{
+  "name": "p2e",
+  "version": "0.4.0",
+  "description": "P2E authoring and execution workflows for Codex, backed by the P2E MCP.",
+  "author": {
+    "name": "bchoor",
+    "email": "noreply@users.noreply.github.com",
+    "url": "https://github.com/bchoor"
+  },
+  "homepage": "https://github.com/bchoor/p2e-plugin",
+  "repository": "https://github.com/bchoor/p2e-plugin",
+  "license": "MIT",
+  "keywords": [
+    "p2e",
+    "codex",
+    "story-map",
+    "mcp",
+    "workflow"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "P2E",
+    "shortDescription": "Route P2E story-map work from Codex",
+    "longDescription": "Use P2E in Codex through a plain-language router and explicit workflow aliases for bootstrap, add-story, work-on-next, and label reconciliation.",
+    "developerName": "bchoor",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/bchoor/p2e-plugin",
+    "privacyPolicyURL": "https://github.com/bchoor/p2e-plugin",
+    "termsOfServiceURL": "https://github.com/bchoor/p2e-plugin",
+    "defaultPrompt": [
+      "Work on the next planned P2E story",
+      "Bootstrap a P2E project from this PRD",
+      "Create a new P2E story from this feature idea"
+    ],
+    "brandColor": "#0f766e",
+    "composerIcon": "./assets/p2e-icon.svg",
+    "logo": "./assets/p2e-icon.svg",
+    "screenshots": []
+  }
+}
