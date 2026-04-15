@@ -26,7 +26,32 @@ If `story_id=` was passed, skip the filter + sort. Call `mcp__p2e__stories` with
 
 ## Step 2. Classify each candidate
 
-For each candidate, fetch `mcp__p2e__stories` with `{ op: "get", project_slug: "p2e", story_id }` to get capabilities/tags/AC count, then apply these rules in order:
+For each candidate, fetch `mcp__p2e__stories` with `{ op: "get", project_slug: "p2e", story_id }` to get capabilities/tags/AC count.
+
+### Thin-draft check (BEFORE classification)
+
+A "thin draft" is a story that bootstrap drafted title-only and was never fleshed out. Detect with:
+
+```
+isThinDraft(story) := story.acceptanceCriteria.length === 0
+                    && story.capabilities.length === 0
+```
+
+If `isThinDraft(story)`, prompt the user via `AskUserQuestion`:
+
+> "`<storyId>` is a thin draft (no AC, no capabilities). What now?"
+
+Options:
+
+1. **Flesh now (Recommended)** — invoke `/p2e-add-story --fill <storyId>` inline. On success, re-fetch the story (it now has RRR + AC + caps) and continue classification.
+2. **Proceed as-is** — pass the title + UXO context to the implementer subagent and trust the model to infer. The implementer's brief should explicitly note the story was a thin draft.
+3. **Skip this story** — drop it from the wave. The story stays PLANNED for later.
+
+After handling thin drafts, apply the classification rules below.
+
+### Classification rules
+
+Apply in order:
 
 1. Any capability with `isBreaking: true` → **Architectural** / sonnet
 2. Any capability with action `DEPRECATES` or `REMOVES` → **Architectural** / sonnet
