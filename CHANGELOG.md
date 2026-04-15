@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.2 — 2026-04-15
+
+Fixes Codex OAuth discovery for the bundled P2E MCP server configuration.
+
+### Fixed
+- **Concrete default MCP URL** in `.mcp.json` for the bundled `p2e` server. This avoids Codex login/auth discovery failures caused by shell-style `${P2E_MCP_URL:-...}` URL syntax not being expanded in the MCP auth flow.
+- **README wording** updated to describe `https://p2e-mocha.vercel.app/api/mcp` as the hosted production endpoint and to note the concrete-URL requirement for Codex MCP overrides.
+
 ## v0.4.1 — 2026-04-15
 
 Adds lightweight CI for plugin invariants and packaging consistency.

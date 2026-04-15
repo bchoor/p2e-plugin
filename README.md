@@ -29,7 +29,7 @@ From inside a Claude Code session:
 Pin the marketplace to a tag for stability:
 
 ```text
-/plugin marketplace add bchoor/p2e-plugin@v0.4.1
+/plugin marketplace add bchoor/p2e-plugin@v0.4.2
 /plugin install p2e@p2e-plugins
 ```
 
@@ -47,13 +47,15 @@ Codex uses:
 
 ## Configure
 
-The plugin talks to a running P2E instance. It defaults to the hosted demo at `https://p2e-mocha.vercel.app/api/mcp`. Point it at your own instance with `P2E_MCP_URL`:
+The plugin talks to a running P2E instance. It defaults to the hosted production endpoint at `https://p2e-mocha.vercel.app/api/mcp`. Point it at your own instance with `P2E_MCP_URL`:
 
 ```bash
 export P2E_MCP_URL="https://<your-p2e-instance>/api/mcp"
 ```
 
 Auth is handled by the host application's MCP flow on first use.
+
+For Codex specifically, the plugin ships with the hosted production URL as its default MCP endpoint. If you want to point Codex at a different P2E instance, update the installed MCP entry or re-add it with a concrete URL rather than relying on shell-style `${VAR:-fallback}` expansion.
 
 ## Commands and skills at a glance
 
