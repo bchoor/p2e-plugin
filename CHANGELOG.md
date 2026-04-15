@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.4.0 — 2026-04-15
+
+Adds native Codex plugin support while aligning the Claude and Codex surfaces through shared workflow definitions.
+
+### Added
+- **Codex plugin packaging** via `.codex-plugin/plugin.json`.
+- **Codex skills** for `p2e`, `p2e-bootstrap`, `p2e-add-story`, `p2e-work-on-next`, and `p2e-sync-labels`.
+- **Shared workflow core** in `workflows/` so Claude and Codex wrappers point at the same behavior contract.
+
+### Changed
+- **Claude command surface renamed** from `/p2e-work-on-next-story` to `/p2e-work-on-next`.
+- **Claude commands slimmed to wrappers** over the shared workflow core instead of carrying the only behavioral definition.
+- **Shared orchestration prompts updated** so `p2e-architect` and `p2e-staff-engineer` can be invoked from either Claude command orchestration or Codex subagent orchestration.
+- **README rewritten** for the dual Claude/Codex plugin surface and the new sync semantics.
+
+### Notes
+- `work-on-next` now owns the normal end-of-run label sync path when it has enough context to do so safely.
+- `sync-labels` remains available as the explicit repair/reconcile workflow.
+
 ## v0.3.0 — 2026-04-14
 
 Adds per-UXO story drafting from a PRD source, plus the downstream pieces (`--fill` mode on `/p2e-add-story`, thin-draft detection in `/p2e-work-on-next-story`).

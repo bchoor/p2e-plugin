@@ -29,7 +29,7 @@ From inside a Claude Code session:
 Pin the marketplace to a tag for stability:
 
 ```text
-/plugin marketplace add bchoor/p2e-plugin@v0.3.0
+/plugin marketplace add bchoor/p2e-plugin@v0.4.0
 /plugin install p2e@p2e-plugins
 ```
 
