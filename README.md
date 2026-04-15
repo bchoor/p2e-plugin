@@ -37,7 +37,7 @@ The marketplace is named `p2e-plugins`; the plugin itself is named `p2e`.
 
 ## Install in Codex
 
-This repo now includes a native Codex plugin manifest at [plugin.json](/Users/bchoor/Downloads/projects/p2e-plugin/.worktrees/codex-compat/.codex-plugin/plugin.json) plus the shared MCP config at [.mcp.json](/Users/bchoor/Downloads/projects/p2e-plugin/.worktrees/codex-compat/.mcp.json).
+This repository includes a native Codex plugin manifest at [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json) plus the shared MCP config at [`.mcp.json`](./.mcp.json).
 
 Codex uses:
 
@@ -53,16 +53,16 @@ The plugin talks to a running P2E instance. It defaults to the hosted demo at `h
 export P2E_MCP_URL="https://<your-p2e-instance>/api/mcp"
 ```
 
-Auth is handled by the host's MCP flow on first use.
+Auth is handled by the host application's MCP flow on first use.
 
 ## Commands and skills at a glance
 
 | Workflow | Claude | Codex | When to use |
 |---|---|---|---|
-| Bootstrap | `/p2e-bootstrap <doc>` | `p2e-bootstrap` or plain language | Start a new project map from a PRD, storyboard, or product description. |
-| Add story | `/p2e-add-story <description>` | `p2e-add-story` or plain language | Create a new PLANNED story or fill an existing thin draft. |
-| Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [--full-team] [--dry-run]` | `p2e-work-on-next` or plain language | Pick up planned work, classify it, orchestrate implementation, and run the normal sync path. |
-| Sync labels | `/p2e-sync-labels` | `p2e-sync-labels` or plain language | Run explicit label reconciliation after external changes, partial runs, or missed automatic sync. |
+| Bootstrap | `/p2e-bootstrap <doc>` | `p2e-bootstrap` or natural-language request | Start a new project map from a PRD, storyboard, or product description. |
+| Add story | `/p2e-add-story <description>` | `p2e-add-story` or natural-language request | Create a new PLANNED story or fill an existing thin draft. |
+| Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [--full-team] [--dry-run]` | `p2e-work-on-next` or natural-language request | Pick up planned work, classify it, orchestrate implementation, and run the normal sync path. |
+| Sync labels | `/p2e-sync-labels` | `p2e-sync-labels` or natural-language request | Run explicit label reconciliation after external changes, partial runs, or missed automatic sync. |
 
 ## Sync behavior
 
