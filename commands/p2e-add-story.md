@@ -162,9 +162,19 @@ Under `--dry-run`: print the preview + the exact MCP tool calls the Write sectio
 
 On `Accept and write`, run in order. Stop at the first failure; surface the failing step + item index.
 
+The write path branches on mode:
+
+### Create mode (default)
+
 1. **(Only if UXO is new)** Call `mcp__p2e__uxos` with `{ op: "create", project_slug: "p2e", items: [{ phase_title, uxo_id, title, tier, description: null }] }`. Store the returned DB cuid as `resolvedUxoId`.
 
 2. **Create story.** Call `mcp__p2e__stories` with `{ op: "create", project_slug: "p2e", items: [{ story_id: "<uxoId>", uxo_id: "<resolvedUxoId or matched uxo.id>", title, status: "PLANNED", release, tags, story_as, story_want, story_so_that }] }`. The server auto-appends `-L<n+1>`. Store the returned full `storyId`.
+
+### Fill mode (`--fill <storyId>`)
+
+1. **Update story RRR fields.** Call `mcp__p2e__stories` with `{ op: "update", project_slug: "p2e", items: [{ story_id: "<storyId>", story_as, story_want, story_so_that, tags, release }] }`. The story already exists; this fills the previously-empty fields.
+
+### Shared steps (both modes)
 
 3. **Create AC.** Call `mcp__p2e__criteria` with `{ op: "create", project_slug: "p2e", items: [{ story_id, text }, ...] }` (all AC in one batch).
 
