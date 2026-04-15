@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.0 — 2026-04-14
+
+Adds per-UXO story drafting from a PRD source, plus the downstream pieces (`--fill` mode on `/p2e-add-story`, thin-draft detection in `/p2e-work-on-next-story`).
+
+### Added
+- **`/p2e-bootstrap` "Draft stories for this UXO"** sub-option in the dive-deeper menu. Proposes 0–N title-only PLANNED stories per UXO, with a one-line justification per proposal citing the source passage. PRD-driven density (no force-fit), no GitHub issues at draft time.
+- **`/p2e-add-story --fill <storyId>`** mode. Targets an existing PLANNED story and fills in RRR + AC + capabilities. Skips phase/tier/UXO inference (already known). Creates the GitHub issue at fill time.
+- **Thin-draft detection in `/p2e-work-on-next-story`.** Before classifying a candidate, checks `acceptanceCriteria.length === 0 && capabilities.length === 0`. If true, prompts the user to flesh now / proceed as-is / skip.
+- **Skill: "Thin drafts" section** in `skills/p2e/SKILL.md` documenting the heuristic and behavior.
+
+### Changed
+- `/p2e-add-story` Step 4 write path branches on create vs fill mode.
+
+### Notes
+- Open questions deferred for v1: source-passage citation fidelity, no-PRD case, bulk fill of multiple drafts at once.
+
+
 ## v0.2.2 — 2026-04-14
 
 Skill hygiene pass — `skills/p2e/SKILL.md` no longer leaks internal project-roadmap references.
