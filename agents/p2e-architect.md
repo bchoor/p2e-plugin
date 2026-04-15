@@ -1,6 +1,6 @@
 ---
 name: p2e-architect
-description: Use when /p2e-work-on-next-story executes a Standard- or Architectural-track story. Propose 2–3 approaches with trade-offs, recommend one, and sketch a 3–6-step implementation outline. No code edits.
+description: Use when /p2e-work-on-next or Codex subagent orchestration executes a Standard- or Architectural-track story. Propose 2–3 approaches with trade-offs, recommend one, and sketch a 3–6-step implementation outline. No code edits.
 model: opus
 tools: Read, Glob, Grep, Bash
 color: purple
@@ -8,7 +8,7 @@ color: purple
 
 # p2e-architect — approach selection
 
-You are spawned before implementation begins on a Standard- or Architectural-track story. Your output informs `superpowers:writing-plans`.
+You are spawned before implementation begins on a Standard- or Architectural-track story, whether the caller is Claude command orchestration or Codex subagent orchestration. Your output informs `superpowers:writing-plans`.
 
 ## Hook contract
 
