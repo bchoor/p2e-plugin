@@ -48,6 +48,23 @@ How `/p2e-work-on-next-story` moves stories through the pipeline:
 - On wave-gate pass: `mcp__p2e__stories` update status → `BUILT` + `mcp__p2e__criteria` toggle all AC.
 - On wave-gate fail (user picks "mark PARTIAL"): leave as `PARTIAL`; comment on the GH issue with findings.
 
+## Thin drafts
+
+A **thin draft** is a story that was created title-only (no RRR, no AC, no capabilities, no GitHub issue) — typically via `/p2e-bootstrap`'s per-UXO drafting flow. It is a legitimate state, not a bug.
+
+**Detection heuristic** (used by `/p2e-work-on-next-story`):
+
+```
+isThinDraft(story) := story.acceptanceCriteria.length === 0
+                    && story.capabilities.length === 0
+```
+
+**Behavior in `/p2e-work-on-next-story`:** before classifying a story as Fast / Standard / Architectural, the orchestrator checks `isThinDraft`. If true, it prompts the user mid-flow with three options: flesh now (via `/p2e-add-story --fill <storyId>`), proceed as-is and trust the model to infer, or skip the story entirely.
+
+**Why thin drafts have no GH issues.** Thin drafts represent intent ("we'll probably want a story for this"), not commitment. Issues get created when the story is fleshed out — at that point the team is ready to discuss/track it. Creating an issue at draft time would flood the tracker with placeholder rows.
+
+**False positives.** A story manually created via direct MCP write that happens to have 0 AC and 0 capabilities will trip the heuristic. This is intentional: the orchestrator's prompt is informational ("this story has no AC/caps — flesh it or proceed?"), not destructive. The user can always pick "Proceed as-is".
+
 ## GH issue contract
 
 - `/p2e-add-story` auto-creates a GH issue with label `ready` after every successful MCP write. No opt-out.

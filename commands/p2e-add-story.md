@@ -21,6 +21,27 @@ Examples:
 
 If the user invokes without a description, ask ONCE via `AskUserQuestion` with a single "Enter description" option (free-text via "Other"). Do not demand fields one at a time.
 
+## Fill mode
+
+Targets an existing PLANNED story by ID and fills in its missing RRR + AC + capabilities, instead of creating a new story. Used by the bootstrap stories drafting flow: drafts are written title-only, then fleshed later via fill mode.
+
+```
+/p2e-add-story --fill <storyId>
+/p2e-add-story --fill <storyId> <path/to/prd.md>
+```
+
+Examples:
+
+- `/p2e-add-story --fill B-04-L1` — fill from current working context.
+- `/p2e-add-story --fill B-04-L1 docs/PRD.md` — explicit doc context.
+
+In fill mode:
+
+- Phase / Tier / UXO inference is skipped (already known from the existing story).
+- The existing story's `title` is the anchor for inference of `story_as` / `story_want` / `story_so_that` / AC / capabilities.
+- The wizard preview shows derived fields with `(filled)` annotations (vs `(matched)` / `(inferred)` / `(default)` / `(query)` in create mode).
+- On accept: the existing story's RRR fields are updated (not created); AC + capabilities are created; the GitHub issue is created at this point (it did not exist for the draft).
+
 ## Pre-flight
 
 1. Default project slug to `p2e`.
@@ -141,9 +162,19 @@ Under `--dry-run`: print the preview + the exact MCP tool calls the Write sectio
 
 On `Accept and write`, run in order. Stop at the first failure; surface the failing step + item index.
 
+The write path branches on mode:
+
+### Create mode (default)
+
 1. **(Only if UXO is new)** Call `mcp__p2e__uxos` with `{ op: "create", project_slug: "p2e", items: [{ phase_title, uxo_id, title, tier, description: null }] }`. Store the returned DB cuid as `resolvedUxoId`.
 
 2. **Create story.** Call `mcp__p2e__stories` with `{ op: "create", project_slug: "p2e", items: [{ story_id: "<uxoId>", uxo_id: "<resolvedUxoId or matched uxo.id>", title, status: "PLANNED", release, tags, story_as, story_want, story_so_that }] }`. The server auto-appends `-L<n+1>`. Store the returned full `storyId`.
+
+### Fill mode (`--fill <storyId>`)
+
+1. **Update story RRR fields.** Call `mcp__p2e__stories` with `{ op: "update", project_slug: "p2e", items: [{ story_id: "<storyId>", story_as, story_want, story_so_that, tags, release }] }`. The story already exists; this fills the previously-empty fields.
+
+### Shared steps (both modes)
 
 3. **Create AC.** Call `mcp__p2e__criteria` with `{ op: "create", project_slug: "p2e", items: [{ story_id, text }, ...] }` (all AC in one batch).
 
