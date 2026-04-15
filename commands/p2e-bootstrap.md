@@ -125,11 +125,11 @@ What next?
 
 - **Adjust a phase** — prompt for which phase, then free-text new title/subtitle. Re-render.
 - **Adjust a cell** — prompt for phase + tier, then free-text the new UXO list (one per line, format `<id>? <title>` — auto-assign id if omitted).
-- **Dive deeper** — this is the force-multiplier:
-  - Prompt for the target (phase X or UXO Y).
-  - Invoke `superpowers:brainstorming` with the focus narrowed to that slice, passing the parsed source doc + the current matrix draft as context.
-  - When brainstorming returns, fold its recommendations into the draft (phase refinement, new UXOs, removed UXOs). Re-render.
-  - Alternative for builder-mode brainstorming: invoke `gstack-office-hours` in builder mode for more open-ended exploration.
+- **Dive deeper** — this is the force-multiplier. Prompt for the target (phase X or UXO Y), then sub-options:
+  - **Brainstorming** — invoke `superpowers:brainstorming` with the focus narrowed to that slice, passing the parsed source doc + the current matrix draft as context. When brainstorming returns, fold its recommendations into the draft (phase refinement, new UXOs, removed UXOs).
+  - **Open-ended exploration** — invoke `gstack-office-hours` in builder mode for more open-ended exploration.
+  - **Draft stories for this UXO** — see "Per-UXO story drafting" section below. Proposes 0–N title-only PLANNED stories under the chosen UXO.
+  Re-render the matrix after the sub-option returns.
 - **Regenerate** — prompt "What angle? (shift persona / reframe journey / prioritize different axis)" and redo Steps 1–4 with that framing. The original parse is retained so you don't re-read the source.
 
 Loop until user picks Accept or Abort.
