@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.2 — 2026-04-14
+
+Skill hygiene pass — `skills/p2e/SKILL.md` no longer leaks internal project-roadmap references.
+
+### Changed
+- Dropped "Pending until P-07-L1 is BUILT" language from status transitions — reads as plain description now.
+- Dropped the "Product → Projects (forward-looking)" subsection; referenced an unshipped internal story.
+- Dropped references to `docs/P2E-lifecycle.md` and `docs/P2E-handover.md` (not present in the public plugin repo).
+- Dropped "main P2E repo's CLAUDE.md core invariant #2" citation from the audit-trail section.
+- Renamed "Planning recipe for external agents" → "Planning recipe" (the original framing assumed the reader was outside the project).
+
+
 ## v0.2.1 — 2026-04-14
 
 Adds `/p2e-bootstrap` — turn a PRD, storyboard, or project description into a populated 2D story map (phases × tiers × UXOs) in one pass.

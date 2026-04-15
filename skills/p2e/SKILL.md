@@ -17,7 +17,7 @@ export P2E_MCP_URL="https://<your-p2e-instance>/api/mcp"
 
 ### Audit trail (server-side)
 
-Every MCP mutation writes an `AuditLog` row via the server actions (per the main P2E repo's CLAUDE.md core invariant #2). The plugin NEVER calls audit helpers directly — the server handles this.
+Every MCP mutation writes an `AuditLog` row on the server. The plugin NEVER calls audit helpers directly — the server handles this automatically for all mutations.
 
 ## Adaptive persona router
 
@@ -40,9 +40,9 @@ When executing stories, classify each using these rules (in order):
 
 `--full-team` on `/p2e-work-on-next-story` forces Architectural for every selected story.
 
-## Status transitions (v1)
+## Status transitions
 
-Interim shim until P-07-L1 replaces it with OPEN / IN_PROGRESS / DONE + health:
+How `/p2e-work-on-next-story` moves stories through the pipeline:
 
 - On wave start (per story): `mcp__p2e__stories` update status → `PARTIAL`.
 - On wave-gate pass: `mcp__p2e__stories` update status → `BUILT` + `mcp__p2e__criteria` toggle all AC.
@@ -68,7 +68,7 @@ Never delete capabilities or criteria in response to a skill-level workflow. Dep
 
 ## Concepts
 
-External agents: read this section before proposing map changes. You do NOT need to open `docs/P2E-lifecycle.md` or `docs/P2E-handover.md` to plan work — everything you need to classify, locate, and shape a layer is here.
+Read this section before proposing map changes. Everything you need to classify, locate, and shape a layer is here.
 
 ### Journey — phase column
 
@@ -130,13 +130,9 @@ Layers connect via `StoryRelation` rows. Use the relation type that best describ
 | `FIXES` | Narrative-level: "this layer fixes that layer" (pair with `FIXED` capability action when applicable) |
 | `PART_OF` | Parent/child sub-story relation (reserved for future hierarchy work) |
 
-### Product → Projects (forward-looking)
+## Planning recipe
 
-**Pending until P-08-L1 is BUILT.** The current model has `Project` as the top-level container. P-08-L1 introduces `Product` as the parent of many `Project`s, plus a cross-project release view. Until P-08-L1 ships, treat each `project_slug` as the outer boundary of any plan. Agents **may** draft work that would benefit from the Product concept, but should note the dependency and not call MCP tools that do not yet exist.
-
-## Planning recipe for external agents
-
-Use this when you are an LLM agent in an external repo and you want to propose new work against a P2E project.
+Use this when you want to propose new work against a P2E project.
 
 1. **Pick a phase.** Call `mcp__p2e__projects` with `{ op: "get", project_slug }` to see the journey. Choose the phase that matches the user step your proposed work improves.
 
