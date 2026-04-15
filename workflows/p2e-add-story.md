@@ -6,7 +6,7 @@ This workflow drafts a single story, its acceptance criteria, and its capabiliti
 
 - Turn a story description into a structured P2E story entry.
 - Support both create mode and fill mode.
-- Create the GitHub issue after the MCP write succeeds, then link it back to the story.
+- Create the GitHub issue after the MCP write succeeds with the `ready` label, then link it back to the story.
 
 ## Preconditions
 
@@ -21,7 +21,7 @@ This workflow drafts a single story, its acceptance criteria, and its capabiliti
 3. The wrapper should render a preview that annotates what was matched, inferred, or defaulted.
 4. The wrapper should ask for a single confirm step with adjustment options for phase/tier, UXO, story fields, acceptance criteria, capabilities, or abort.
 5. On acceptance, perform the MCP write in order and stop at the first failure.
-6. Create or update the story, then create acceptance criteria, then create capabilities, then create the GitHub issue, then link the issue back to the story.
+6. Create or update the story, then create acceptance criteria, then create capabilities, then create the GitHub issue labeled `ready`, then link the issue back to the story.
 
 ## Drafting rules
 
@@ -35,4 +35,3 @@ This workflow drafts a single story, its acceptance criteria, and its capabiliti
 - Batch writes are fail-fast and non-atomic across phases.
 - If a later phase fails, the wrapper must surface which phase failed and which item index failed.
 - The successful earlier writes remain in place and may need manual reconciliation.
-
