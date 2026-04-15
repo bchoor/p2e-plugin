@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.4.1 — 2026-04-15
+
+Adds lightweight CI for plugin invariants and packaging consistency.
+
+### Added
+- **GitHub Actions CI** via `.github/workflows/ci.yml`.
+- **Repository validator** in `scripts/validate-plugin.py` that checks:
+  - JSON manifest validity
+  - required command, skill, and workflow file sets
+  - Codex/Claude version consistency
+  - wrapper-to-workflow references
+
+### Notes
+- CI is intentionally invariant-based rather than host-runtime-heavy. It validates plugin structure and packaging without trying to simulate Claude or Codex execution environments.
+
 ## v0.4.0 — 2026-04-15
 
 Adds native Codex plugin support while aligning the Claude and Codex surfaces through shared workflow definitions.
