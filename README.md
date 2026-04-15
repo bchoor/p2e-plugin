@@ -1,68 +1,104 @@
-# p2e-plugin — Claude Code plugin for P2E
+# p2e-plugin — Claude Code and Codex plugin for P2E
 
-Three slash commands that drive [P2E](https://github.com/bchoor/p2e) — a self-hosted product-to-engineering tool — from Claude Code, backed by the P2E MCP server:
+This plugin routes [P2E](https://github.com/bchoor/p2e) story-map work through the P2E MCP server on both Claude Code and Codex.
 
-- `/p2e-bootstrap` — turn a PRD, storyboard, or project description into a populated 2D story map (phases × tiers × UXOs) in one pass. Asks high-level clarifying questions, renders a grid for review, supports per-cell deep dives via `superpowers:brainstorming`.
-- `/p2e-add-story` — thin wizard that creates a story (and optionally a UXO) via the p2e MCP, with an auto-created GitHub issue.
-- `/p2e-work-on-next-story` — select 1–N PLANNED stories from a queue, classify each (Fast / Standard / Architectural), optionally run the `p2e-architect` (approach selection) and/or `p2e-staff-engineer` (wave planning) subagents, then implement in parallel waves within a single worktree.
-- `/p2e-sync-labels` — finisher run after a batch PR merges; transitions `ready → review → done` on linked GitHub issues.
+Primary workflows:
 
-## Install
+- `p2e` — Codex plain-language router
+- `/p2e-bootstrap` and `p2e-bootstrap`
+- `/p2e-add-story` and `p2e-add-story`
+- `/p2e-work-on-next` and `p2e-work-on-next`
+- `/p2e-sync-labels` and `p2e-sync-labels`
+
+## What it does
+
+- `bootstrap` turns a PRD, storyboard, or product description into a 2D P2E story map.
+- `add-story` creates or fills a story through the P2E MCP, then creates and links the GitHub issue.
+- `work-on-next` selects planned work, classifies it, orchestrates implementation, and performs normal end-of-run label reconciliation when context is sufficient.
+- `sync-labels` remains available as an explicit standalone repair/reconcile workflow when automatic sync is incomplete or external changes need cleanup.
+
+## Install in Claude Code
 
 From inside a Claude Code session:
 
-```
+```text
 /plugin marketplace add bchoor/p2e-plugin
 /plugin install p2e@p2e-plugins
 ```
 
 Pin the marketplace to a tag for stability:
 
-```
-/plugin marketplace add bchoor/p2e-plugin@v0.2.0
+```text
+/plugin marketplace add bchoor/p2e-plugin@v0.3.0
 /plugin install p2e@p2e-plugins
 ```
 
-(The marketplace is named `p2e-plugins` — that's the `@<marketplace>` suffix on install. The plugin itself is named `p2e`.)
+The marketplace is named `p2e-plugins`; the plugin itself is named `p2e`.
+
+## Install in Codex
+
+This repo now includes a native Codex plugin manifest at [plugin.json](/Users/bchoor/Downloads/projects/p2e-plugin/.worktrees/codex-compat/.codex-plugin/plugin.json) plus the shared MCP config at [.mcp.json](/Users/bchoor/Downloads/projects/p2e-plugin/.worktrees/codex-compat/.mcp.json).
+
+Codex uses:
+
+- the top-level `p2e` skill for plain-language routing
+- direct alias skills for `p2e-bootstrap`, `p2e-add-story`, `p2e-work-on-next`, and `p2e-sync-labels`
+- the same shared `workflows/` definitions used by the Claude wrappers
 
 ## Configure
 
 The plugin talks to a running P2E instance. It defaults to the hosted demo at `https://p2e-mocha.vercel.app/api/mcp`. Point it at your own instance with `P2E_MCP_URL`:
 
-```
+```bash
 export P2E_MCP_URL="https://<your-p2e-instance>/api/mcp"
 ```
 
-Auth is handled by Claude Code's MCP OAuth flow on first use — no manual token setup required.
+Auth is handled by the host's MCP flow on first use.
 
-## Commands at a glance
+## Commands and skills at a glance
 
-| Command | When to use |
+| Workflow | Claude | Codex | When to use |
+|---|---|---|---|
+| Bootstrap | `/p2e-bootstrap <doc>` | `p2e-bootstrap` or plain language | Start a new project map from a PRD, storyboard, or product description. |
+| Add story | `/p2e-add-story <description>` | `p2e-add-story` or plain language | Create a new PLANNED story or fill an existing thin draft. |
+| Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [--full-team] [--dry-run]` | `p2e-work-on-next` or plain language | Pick up planned work, classify it, orchestrate implementation, and run the normal sync path. |
+| Sync labels | `/p2e-sync-labels` | `p2e-sync-labels` or plain language | Run explicit label reconciliation after external changes, partial runs, or missed automatic sync. |
+
+## Sync behavior
+
+`work-on-next` now performs normal end-of-run label reconciliation when it has enough issue and merge context to do so safely.
+
+Use `sync-labels` separately when:
+
+- the orchestrator did not have enough context to finish reconciliation
+- a PR merged outside the normal workflow
+- you need targeted repair for a story or batch
+
+## Track mapping
+
+When `work-on-next` classifies a story, it routes it through the shared track logic:
+
+| Track | Implementer tier |
 |---|---|
-| `/p2e-bootstrap <doc>` | Starting a new project. Takes a PRD / storyboard / product description, asks 1–4 clarifying questions, drafts phases + UXOs, lets you dive deeper on any cell before writing. Project shell must exist in P2E first. |
-| `/p2e-add-story <description>` | Create a new PLANNED story from a one-line description. Auto-infers phase/tier/UXO, drafts AC + capabilities, opens a GitHub issue with label `ready`. |
-| `/p2e-work-on-next-story [story_id=X-YY-LZ] [--full-team] [--dry-run]` | Pick up work. Without args, lists the top-ranked PLANNED stories and lets you multi-select. Classifies each story and routes to the right model tier. |
-| `/p2e-sync-labels` | Run after a `/p2e-work-on-next-story` PR merges. Moves linked issues `review → done` and posts the merge sha. |
+| Fast | lightweight implementer |
+| Standard | general implementer plus architect |
+| Architectural | general implementer plus architect and staff-engineer planning |
 
-## Track → model mapping
+Specialist prompts remain:
 
-When `/p2e-work-on-next-story` classifies a story, it routes the implementer subagent to this model tier:
+- `p2e-architect`
+- `p2e-staff-engineer`
 
-| Track | Implementer model |
-|---|---|
-| Fast | haiku |
-| Standard | sonnet |
-| Architectural | sonnet |
-
-Opus is reserved for the named `p2e-architect` and `p2e-staff-engineer` agents (pinned via `model: opus` in their frontmatter). Override an implementer's model by including an explicit `opus-justified:` line in the spawn brief.
+Those prompts are shared across Claude orchestration and Codex subagent orchestration.
 
 ## Requirements
 
-- Claude Code CLI (plugin system)
-- `gh` CLI authenticated against the P2E GitHub repo (for issue / PR operations)
+- a host that supports the plugin surface you want to use: Claude Code or Codex
+- access to the P2E MCP server
+- `gh` CLI authenticated against the target P2E GitHub repo for issue / PR / label operations
 
 ## Links
 
-- P2E (main repo): https://github.com/bchoor/p2e
+- P2E main repo: https://github.com/bchoor/p2e
 - Hosted demo: https://p2e-mocha.vercel.app
 - Issue tracker: https://github.com/bchoor/p2e/issues
