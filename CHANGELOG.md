@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.3 — 2026-04-16
+
+Restores the explicit preview-and-confirm contract for `p2e-add-story`.
+
+### Fixed
+- **Codex add-story instructions** now explicitly stay in story-creation mode instead of drifting into troubleshooting behavior when a request describes a bug or regression.
+- **Preview-before-write contract** restored: the user must see the inferred phase, tier, UXO, title, RRR, acceptance criteria, and capabilities before any story or GitHub issue is created.
+- **Confirm gate** restored: add-story now requires explicit accept / adjust / abort behavior in the shared workflow contract.
+
+### Changed
+- **Plugin validator** now checks the add-story guardrails so this preview/review behavior cannot silently regress again.
+
 ## v0.4.2 — 2026-04-15
 
 Fixes Codex OAuth discovery for the bundled P2E MCP server configuration.

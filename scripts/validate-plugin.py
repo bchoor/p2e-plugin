@@ -131,10 +131,39 @@ def validate_wrapper_references():
         assert_true(workflow_ref in router, f"Router skill missing {workflow_ref}")
 
 
+def validate_add_story_contract():
+    add_story_skill = read_text(ROOT / "skills" / "p2e-add-story" / "SKILL.md")
+    add_story_workflow = read_text(ROOT / "workflows" / "p2e-add-story.md")
+
+    for required_phrase in (
+        "ALWAYS show a preview",
+        "NEVER silently create",
+        "stop and report the concrete blocker briefly",
+    ):
+        assert_true(
+            required_phrase in add_story_skill,
+            f"skills/p2e-add-story/SKILL.md missing add-story guardrail: {required_phrase}",
+        )
+
+    for required_phrase in (
+        "Never write the story",
+        "## Required preview contents",
+        "## Required confirm step",
+        "accept and write",
+        "If the user does not accept, do not write.",
+        "GitHub issue will be created with the `ready` label",
+    ):
+        assert_true(
+            required_phrase in add_story_workflow,
+            f"workflows/p2e-add-story.md missing add-story contract phrase: {required_phrase}",
+        )
+
+
 def main():
     validate_json_files()
     validate_expected_files()
     validate_wrapper_references()
+    validate_add_story_contract()
     print("plugin validation passed")
 
 
