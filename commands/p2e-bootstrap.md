@@ -1,6 +1,6 @@
 ---
 name: p2e-bootstrap
-description: Thin wrapper for the shared P2E bootstrap workflow.
+description: Bootstrap a P2E backlog from a PRD (`--mode=new`) or an existing repo (`--mode=onboarding`).
 argument-hint: <doc-path or inline description or repo path> [project=<slug>] [--mode={new,onboarding}] [--backfill-built] [--all] [--dry-run]
 ---
 

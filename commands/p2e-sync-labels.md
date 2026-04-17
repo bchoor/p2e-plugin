@@ -1,6 +1,6 @@
 ---
 name: p2e-sync-labels
-description: Thin wrapper for the shared P2E label-sync workflow.
+description: Reconcile GitHub issue labels to each P2E story's lifecycle status; `pr=<n>` scopes to one PR.
 argument-hint: [project=p2e] [pr=<n>]
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: p2e-update-story
-description: Thin wrapper for the shared P2E update-story workflow.
+description: Thicken an existing P2E story's spec from a PRD, issue URL, or spec YAML; `--dry-run` previews only.
 argument-hint: <story_id> [source=<prd-path-or-issue-url-or-spec-yaml>] [--dry-run]
 ---
 

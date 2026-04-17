@@ -1,6 +1,6 @@
 ---
 name: p2e-work-on-next
-description: Thin wrapper for the canonical P2E orchestrator workflow.
+description: Pick the next open P2E story (or one by `story_id=`) and run the orchestrator; `--full-team` enables architect+plan.
 argument-hint: [release=v0.3] [phase=Build] [tag=plugin] [story_id=X-00-L0] [--full-team] [--dry-run]
 ---
 
