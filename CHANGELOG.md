@@ -1,8 +1,8 @@
 # Changelog
 
-## v0.7.0 — 2026-04-17
+## v0.6.1 — 2026-04-17
 
-Implements B-05-L15: lifecycle-aware `/p2e-update-story` label reconciliation and the `PreToolUse` implementer status gate.
+Patch release on top of v0.6.0. Implements B-05-L15: lifecycle-aware `/p2e-update-story` label reconciliation and the `PreToolUse` implementer status gate. No breaking changes; fully additive behavior.
 
 ### Added
 - **Lifecycle label reconciliation in `/p2e-update-story`** (`workflows/p2e-update-story.md`): every lifecycle-boundary status transition (OPEN→IN_PROGRESS, IN_PROGRESS→IN_REVIEW, IN_REVIEW→DONE, any→BLOCKED) now runs a 3-phase fail-fast write: (1) MCP `stories.update`, (2) `scripts/sync-github-label.sh` to flip the GitHub label, (3) local cache refresh at `~/.cache/p2e/<slug>/<story_id>.json`. Non-lifecycle updates (thicken/steer/rename/move/retag/release/AC/capabilities diff) are unchanged.
@@ -12,8 +12,8 @@ Implements B-05-L15: lifecycle-aware `/p2e-update-story` label reconciliation an
 
 ### Changed
 - **`workflows/p2e-work-on-next.md` step 9** split into 9a (move to IN_PROGRESS via `/p2e-update-story`), 9b (materialize briefing), 9c (spawn implementer). Added a note that the PreToolUse hook enforces step 9a independently.
-- **`.codex-plugin/plugin.json`** version bumped to `0.7.0`.
-- **`.claude-plugin/marketplace.json`** version bumped to `0.7.0`.
+- **`.codex-plugin/plugin.json`** version bumped to `0.6.1`.
+- **`.claude-plugin/marketplace.json`** version bumped to `0.6.1`.
 
 ### Notes
 - The hook is Claude Code-only. Codex does not implement `PreToolUse` hooks; the `.codex-plugin/plugin.json` is unchanged and the asymmetry is documented in README.
