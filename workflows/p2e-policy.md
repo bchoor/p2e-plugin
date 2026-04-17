@@ -87,8 +87,8 @@ For stories without a `verificationCmd` set on the thick-spec, the orchestrator 
 
 | Track | Default verification |
 | --- | --- |
-| Fast | typecheck + lint (`bun run typecheck && bun run lint`) |
-| Standard | `bun run preflight` |
+| Fast | `bun run quickcheck` (= `bunx --bun prisma generate && bunx tsc --noEmit`) |
+| Standard | `bun run preflight` (= `quickcheck` + `bunx vitest run`) |
 | Architectural | `bun run preflight && bunx --bun prisma validate` |
 
 Tag-additive checks layer on top of the track default:

@@ -60,16 +60,19 @@ Run: `<verificationCmd>`
 The Constraints section in the briefing pulls from TWO sources:
 
 1. **Story-level constraints** — every entry in `story.constraints[]` is inlined verbatim.
-2. **Tag-mapped project invariants** — for each tag on the story, the orchestrator appends the matching invariant lines from the project's `CLAUDE.md` (or the workflow-level invariant catalog when no `CLAUDE.md` mapping exists). Default tag→invariant map for the `p2e` project:
+2. **Always-inline project invariants** — every briefing for the `p2e` project includes these invariants regardless of tags, because they apply to every code path:
+   - Multi-project scoping: every query and MCP tool scopes by `projectSlug`. Never hardcode a project slug.
+   - AuditLog everywhere: every mutation on `Project`, `Phase`, `Uxo`, `Story`, `StoryRelation`, `StoryCapability`, `AcceptanceCriterion`, or `Feature` writes via `src/lib/audit.ts`.
+3. **Tag-mapped project invariants** — for each tag on the story, the orchestrator appends the matching invariant lines from the project's `CLAUDE.md`. Default tag→invariant map for the `p2e` project, sourced from `bchoor/p2e:CLAUDE.md` core invariants:
 
 | Tag | Invariant lines to inline |
 | --- | --- |
-| Schema | Prisma schema changes require a migration that backfills cleanly; AuditLog every field change. |
-| MCP | Every MCP mutation must round-trip through the same code path the UI uses (MCP↔UI parity). |
-| UI | Multi-project scoping: every component reads `projectSlug` from context, never hardcodes `p2e`. |
-| Server | Server actions enforce the same gates as MCP tools (no bypass paths). |
-| Plugin | Wrappers stay thin pointers; behavior lives in `workflows/*.md`, not in the wrapper file. |
-| Infra | Reversible migrations only; CI must pass on the PR before merge. |
-| Docs | Documentation updates land in the same PR as the behavior change. |
+| Schema | Migrations must backfill cleanly; never reintroduce `prisma/seed.ts` or a `db:seed` script (removed after the 2026-04-14 destructive-upsert incident). |
+| MCP | MCP↔UI parity: every mutation lives in `src/lib/actions.ts` and is called by both the MCP route (`src/app/api/mcp/route.ts`) and the UI server actions. No bypass paths. |
+| Server | Server actions enforce the same gates as MCP tools; UXO health (`storyCount`, `builtCount`, `conflictCount`, `driftDetected`) is computed on read via `GROUP BY uxoId`, not cached. |
+| UI | Server/client boundary explicit: `MapGrid` and `UxoCell` stay server components; `StoryCard`, `DetailPanel`, drag-and-drop layers, and forms are `'use client'`. Bloomberg-terminal aesthetic, dark-first, compact padding (`py-1`, `space-y-0.5`). |
+| Plugin | Wrappers stay thin pointers; behavior lives in `workflows/*.md`, not in the wrapper file. Plugin and Codex manifests must keep version in sync (validated by `scripts/validate-plugin.py`). |
+| Infra | `DATABASE_URL` / `DATABASE_URL_UNPOOLED` in local, CI, and preview must use a non-production DB or branch — never run `prisma db push` against production. Repair migration drift with `prisma migrate resolve`, not by editing shipped migrations. |
+| Docs | The canonical lifecycle doc is `docs/P2E-lifecycle.md`; supersedes any "iteration" wording elsewhere. Documentation updates land in the same PR as the behavior change. |
 
-Wrappers may extend this map per project. The orchestrator selects only the invariants whose tag appears on the current story.
+Wrappers may extend this map per project. The orchestrator selects only the invariants whose tag appears on the current story (in addition to the always-inline ones above).
