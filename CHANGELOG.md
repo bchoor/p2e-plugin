@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.6.0 — 2026-04-17
+
+Completes the v0.6 autonomy cluster by shipping `/p2e-update-story` (B-05-L11) and the `/p2e-bootstrap --mode={new,onboarding}` reshape (B-05-L12). With L13 already in place as v0.5.0, the L11 + L12 pair closes the loop: bootstrap drafts DRAFT stories for both greenfield and onboarding paths, update-story thickens them, and work-on-next gates on the thickness predicate at pickup.
+
+### Added
+- **`/p2e-update-story`** — new Codex-compatible triple (`commands/p2e-update-story.md`, `workflows/p2e-update-story.md`, `skills/p2e-update-story/SKILL.md`). Single command to thicken empty fields or steer populated ones on any existing story with the same preview/confirm UX as `/p2e-add-story`. Supports all Story fields including the P-07-L1 thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Rejects DRAFT→OPEN transitions when `isThick=false` and surfaces the concrete `failingClauses` so the user can decide whether to stay at DRAFT or thicken further. On promotion to OPEN, creates the GitHub issue with the `ready` label (or patches the existing issue body). Batched fail-fast MCP writes. `--dry-run` prints payloads without writing.
+- **`--mode=onboarding`** in `workflows/p2e-bootstrap.md` — reads an existing repo via a shared brainstorming-style interview (2–4 batched questions in one turn) and parses `README` + `/docs` + route tree + test titles + recent commit history + open GitHub issues to propose phases and UXOs. Same accept/adjust preview matrix as `--mode=new`. Empty cells preferred over filler.
+- **`--mode=new`** is now explicit and documented; it remains the default when `--mode` is omitted, preserving the current PRD-driven behavior verbatim.
+- **`--backfill-built`** (onboarding only) — optional post-accept sub-step that scans merged PRs and proposes `DONE` layer stories with `INTRODUCES` capabilities inferred from PR titles + diff summaries. User accepts per-PR or skips the whole step.
+- **`--all`** — fans per-UXO story drafting across every UXO in the matrix in one pass and renders ONE combined multi-select accept. All drafts are written as `DRAFT` status (post-P-07-L1); no GitHub issues created at draft time.
+- **Validator coverage** in `scripts/validate-plugin.py` for the new update-story triple: checks its guardrails, preview/confirm/thicken/steer/thick-gate/GH reconciliation sections, and the `--fill` deprecation pointer in the add-story surfaces.
+
+### Changed
+- **`/p2e-add-story --fill`** is deprecated and now delegates to `/p2e-update-story` for one release. The legacy fill-mode shim does not implement its own preview or write path; it is a pointer only. Removal targeted for the follow-up release. `commands/p2e-add-story.md` and `workflows/p2e-add-story.md` document the shim; the router skill (`skills/p2e/SKILL.md`) points thickening / steering / renaming / re-parenting / retagging requests at `/p2e-update-story` directly.
+- **Bootstrap behavior** now emits stories as `DRAFT` status regardless of mode; thickening and GitHub-issue creation are deferred to `/p2e-update-story`.
+- **`.codex-plugin/plugin.json`** `defaultPrompt` gained an onboarding prompt ("Onboard this existing repo into P2E") and a thickening prompt ("Thicken this draft story").
+
+### Notes
+- Marketplace tagging now proceeds since the v0.6 cluster is complete (L11 + L12 + L13 + P-07-L1 all landed).
+- `gh` auth against the onboarding repo is required if the interview requests GitHub-issue context in `--mode=onboarding`.
+
 ## v0.5.0 — 2026-04-16
 
 Reshapes `/p2e-work-on-next` for autonomous Opus 4.7 execution by consuming lifecycle v2 (P-07-L1) and adding the thick-gate, first-turn briefing, two-strike escalation, shape-aware routing, and self-plan-inline path.

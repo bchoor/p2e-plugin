@@ -5,15 +5,17 @@ This plugin routes [P2E](https://github.com/bchoor/p2e) story-map work through t
 Primary workflows:
 
 - `p2e` — Codex plain-language router
-- `/p2e-bootstrap` and `p2e-bootstrap`
+- `/p2e-bootstrap` and `p2e-bootstrap` — supports `--mode={new,onboarding}`, `--backfill-built`, and `--all`
 - `/p2e-add-story` and `p2e-add-story`
+- `/p2e-update-story` and `p2e-update-story` — thicken or steer any existing story (replaces `/p2e-add-story --fill`)
 - `/p2e-work-on-next` and `p2e-work-on-next`
 - `/p2e-sync-labels` and `p2e-sync-labels`
 
 ## What it does
 
-- `bootstrap` turns a PRD, storyboard, or product description into a 2D P2E story map.
-- `add-story` creates or fills a story through the P2E MCP, then creates and links the GitHub issue.
+- `bootstrap` turns a PRD into a 2D P2E story map (`--mode=new`, default) or onboards an existing repo via a brainstorming interview that reads docs, route tree, tests, recent git history, and open GH issues (`--mode=onboarding`). `--backfill-built` proposes DONE layers from merged PRs; `--all` fans story drafting across every UXO with one combined accept.
+- `add-story` creates a new story through the P2E MCP and links its GitHub issue.
+- `update-story` thickens empty fields or steers populated ones on any existing story — rename, re-parent, retag, adjust release, thicken from source — with an annotated preview/confirm loop and the same fail-fast MCP write path. Enforces the P-07-L1 thickness predicate on DRAFT → OPEN.
 - `work-on-next` selects planned work, classifies it, orchestrates implementation, and performs normal end-of-run label reconciliation when context is sufficient.
 - `sync-labels` remains available as an explicit standalone repair/reconcile workflow when automatic sync is incomplete or external changes need cleanup.
 
@@ -29,7 +31,7 @@ From inside a Claude Code session:
 Pin the marketplace to a tag for stability:
 
 ```text
-/plugin marketplace add bchoor/p2e-plugin@v0.4.3
+/plugin marketplace add bchoor/p2e-plugin@v0.6.0
 /plugin install p2e@p2e-plugins
 ```
 
@@ -42,7 +44,7 @@ This repository includes a native Codex plugin manifest at [`.codex-plugin/plugi
 Codex uses:
 
 - the top-level `p2e` skill for plain-language routing
-- direct alias skills for `p2e-bootstrap`, `p2e-add-story`, `p2e-work-on-next`, and `p2e-sync-labels`
+- direct alias skills for `p2e-bootstrap`, `p2e-add-story`, `p2e-update-story`, `p2e-work-on-next`, and `p2e-sync-labels`
 - the same shared `workflows/` definitions used by the Claude wrappers
 
 ## Configure
@@ -61,8 +63,9 @@ For Codex specifically, the plugin ships with the hosted production URL as its d
 
 | Workflow | Claude | Codex | When to use |
 |---|---|---|---|
-| Bootstrap | `/p2e-bootstrap <doc>` | `p2e-bootstrap` or natural-language request | Start a new project map from a PRD, storyboard, or product description. |
-| Add story | `/p2e-add-story <description>` | `p2e-add-story` or natural-language request | Create a new DRAFT story or fill an existing thin draft. |
+| Bootstrap | `/p2e-bootstrap <doc-or-repo> [--mode={new,onboarding}] [--backfill-built] [--all]` | `p2e-bootstrap` or natural-language request | Start a new project map from a PRD (`--mode=new`, default) or onboard an existing repo (`--mode=onboarding`). `--backfill-built` proposes DONE layers from merged PRs; `--all` fans story drafting across every UXO. |
+| Add story | `/p2e-add-story <description>` | `p2e-add-story` or natural-language request | Create a new story. The legacy `--fill <storyId>` path is deprecated and delegates to `/p2e-update-story` for one release. |
+| Update story | `/p2e-update-story <story_id> [source=<prd-or-issue>] [--dry-run]` | `p2e-update-story` or natural-language request | Thicken empty fields, steer populated ones, rename, re-parent, retag, or adjust release on any existing story. Enforces the P-07-L1 thickness predicate on DRAFT → OPEN. |
 | Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [--full-team] [--dry-run]` | `p2e-work-on-next` or natural-language request | Pick up planned work, classify it, orchestrate implementation, and run the normal sync path. |
 | Sync labels | `/p2e-sync-labels` | `p2e-sync-labels` or natural-language request | Run explicit label reconciliation after external changes, partial runs, or missed automatic sync. |
 

@@ -1,6 +1,6 @@
 ---
 name: p2e
-description: Plain-language Codex router for P2E workflows. Route requests into bootstrap, add-story, work-on-next, or sync-labels using the shared workflow core.
+description: Plain-language Codex router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, or sync-labels using the shared workflow core.
 ---
 
 # p2e router
@@ -10,7 +10,8 @@ Read these first:
 
 Then choose the one best-fit workflow, load it, and execute it end-to-end:
 - requests about starting or mapping a project -> read `workflows/p2e-bootstrap.md`, then follow that workflow exactly
-- requests about creating or filling a story -> read `workflows/p2e-add-story.md`, then follow that workflow exactly
+- requests about creating a new story -> read `workflows/p2e-add-story.md`, then follow that workflow exactly
+- requests about updating, thickening, steering, renaming, re-parenting, or retagging an existing story -> read `workflows/p2e-update-story.md`, then follow that workflow exactly (this is the canonical path for what used to be `/p2e-add-story --fill`)
 - requests about implementing planned work -> read `workflows/p2e-work-on-next.md` AND `workflows/p2e-first-turn-briefing.md`, then follow the work-on-next workflow exactly
 - requests about label or issue reconciliation -> read `workflows/p2e-sync-labels.md`, then follow that workflow exactly
 
