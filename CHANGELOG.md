@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.5.0 — 2026-04-16
+
+Reshapes `/p2e-work-on-next` for autonomous Opus 4.7 execution by consuming lifecycle v2 (P-07-L1) and adding the thick-gate, first-turn briefing, two-strike escalation, shape-aware routing, and self-plan-inline path.
+
+### Added
+- **Thick-gate** in `workflows/p2e-policy.md`: orchestrator refuses any batch where `isThick=false` or `status!=OPEN` and directs the user to `/p2e-update-story`.
+- **First-turn briefing template** at `workflows/p2e-first-turn-briefing.md`: structured Markdown block (Intent / Constraints / AC / Capabilities / Files hint / Context docs / Non-goals / Verification) materialized as the implementer's turn-1 input, mapped 1:1 to thick-spec fields from `mcp__p2e__stories op=get`. Pulls tag-mapped project invariants from `CLAUDE.md` into the Constraints section.
+- **Two-strike escalation**: second verification failure flips story `status=BLOCKED` via MCP and routes to `p2e-architect` (Claude Code caller) or `codex:rescue` (Codex caller). No third retry. Escalation comments end with `— bchoor-claude`.
+- **Shape-aware routing** in `workflows/p2e-policy.md`: `p2e-architect` and `superpowers:writing-plans` become opt-in on Standard/Architectural stories — triggered by `constraints: ['approach-review']` or the `--full-team` CLI flag. Staff engineer + wave-gate rules preserved verbatim.
+- **Self-plan inline**: single-story thick runs with architect skipped have the implementer self-plan from the briefing, no external `writing-plans` call. TDD preserved when any capability has `isBreaking=true`.
+- **Per-track verification matrix** in `workflows/p2e-policy.md`: Fast = typecheck + lint, Standard = `bun run preflight`, Architectural = preflight + `prisma validate`. Per-story `verificationCmd` overrides; tag-additive checks layer on top.
+- **Persona-routing table** in `skills/p2e/SKILL.md` with a `Skip when` column documenting the shape-aware skips.
+
+### Changed
+- **Status lifecycle** rewritten across `workflows/p2e-policy.md` and `workflows/p2e-work-on-next.md` to v2 (`DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE` plus `BLOCKED`). The legacy `PLANNED → PARTIAL → BUILT` shim is removed.
+- **`agents/p2e-architect.md`** description updated to reflect the opt-in trigger; body adds a `When the architect is skipped` note pointing at the self-plan-inline path. Inputs section adds the first-turn briefing as turn-1 input.
+- **`agents/p2e-staff-engineer.md`** Inputs section adds the per-story first-turn briefing as turn-1 input (concatenated for the batch). Behavior unchanged — wave planning + file-collision detection still required for batch size ≥ 2.
+- **Wrappers** (`skills/p2e-work-on-next/SKILL.md`, `skills/p2e/SKILL.md`, `commands/p2e-work-on-next.md`) load `workflows/p2e-first-turn-briefing.md`. `commands/p2e-work-on-next.md` documents the `--full-team` flag in the body.
+- **README.md** lifecycle wording updated (PLANNED → DRAFT) for the add-story column.
+
+### Notes
+- Story-cluster context: this release ships the L13 piece of the v0.6 autonomy cluster. L11 (`/p2e-update-story`) and L12 (`/p2e-bootstrap --mode={new,onboarding}`) ship in subsequent releases. Marketplace tagging waits until the cluster is complete.
+
 ## v0.4.3 — 2026-04-16
 
 Restores the explicit preview-and-confirm contract for `p2e-add-story`.

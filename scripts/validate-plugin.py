@@ -77,6 +77,7 @@ def validate_expected_files():
     expected_workflows = {
         "p2e-add-story.md",
         "p2e-bootstrap.md",
+        "p2e-first-turn-briefing.md",
         "p2e-policy.md",
         "p2e-sync-labels.md",
         "p2e-work-on-next.md",

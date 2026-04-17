@@ -62,7 +62,7 @@ For Codex specifically, the plugin ships with the hosted production URL as its d
 | Workflow | Claude | Codex | When to use |
 |---|---|---|---|
 | Bootstrap | `/p2e-bootstrap <doc>` | `p2e-bootstrap` or natural-language request | Start a new project map from a PRD, storyboard, or product description. |
-| Add story | `/p2e-add-story <description>` | `p2e-add-story` or natural-language request | Create a new PLANNED story or fill an existing thin draft. |
+| Add story | `/p2e-add-story <description>` | `p2e-add-story` or natural-language request | Create a new DRAFT story or fill an existing thin draft. |
 | Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [--full-team] [--dry-run]` | `p2e-work-on-next` or natural-language request | Pick up planned work, classify it, orchestrate implementation, and run the normal sync path. |
 | Sync labels | `/p2e-sync-labels` | `p2e-sync-labels` or natural-language request | Run explicit label reconciliation after external changes, partial runs, or missed automatic sync. |
 

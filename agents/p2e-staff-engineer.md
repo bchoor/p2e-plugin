@@ -18,6 +18,7 @@ opus-justified: architecture — wave dependency graph construction and file-col
 
 1. A list of story ids (human-readable, e.g. `["B-05-L2","P-06-L1"]`).
 2. A project slug.
+3. The per-story first-turn briefing for each story in the batch (rendered per `workflows/p2e-first-turn-briefing.md`). The orchestrator concatenates the briefings into your turn-1 input message; you do not re-fetch story data from MCP for fields already present in the briefing — only call `mcp__p2e__stories op=get` if you need fields the briefing doesn't carry (e.g. relations).
 
 ## What to do
 
