@@ -22,8 +22,14 @@ When a workflow needs to classify a story or choose an execution track, use this
 Track mapping:
 
 - Fast => lightweight implementer track, no architect, no staff engineer.
-- Standard => general implementer track, architect yes, staff engineer only when batch size warrants it.
-- Architectural => general implementer track, architect yes, staff engineer yes.
+- Standard => general implementer track, architect opt-in (see shape-aware rule below), staff engineer only when batch size warrants it.
+- Architectural => general implementer track, architect opt-in (see shape-aware rule below), staff engineer yes.
+
+**Shape-aware routing:** The `p2e-architect` agent AND any external `superpowers:writing-plans` call are **opt-in** on Standard/Architectural stories. They run when EITHER the story's `constraints` array contains the literal string `approach-review`, OR the command was invoked with `--full-team`. Otherwise the implementer self-plans inline from the first-turn briefing (see `## First-turn briefing`).
+
+Staff engineer (`p2e-staff-engineer`) + wave-gate rules are unchanged: staff engineer fires whenever batch size >= 2 regardless of track.
+
+Fast-track stays lightweight: no architect, no staff engineer.
 
 Wrappers should reserve higher-capacity specialist roles for architect and staff-engineer work only when the workflow explicitly calls for them.
 
@@ -41,10 +47,37 @@ Wrappers should reserve higher-capacity specialist roles for architect and staff
 
 ## Status lifecycle
 
-- The shared lifecycle is `PLANNED` -> `PARTIAL` -> `BUILT`.
-- On wave start, stories move to `PARTIAL`.
-- On successful completion, stories move to `BUILT` and their acceptance criteria are toggled.
-- Failed or deferred work stays `PARTIAL` with a human-readable comment.
+- The canonical lifecycle is `DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE`. A `BLOCKED` status sits outside this linear path and marks stories waiting on unfinished `DEPENDS_ON` relations OR escalated per the two-strike rule.
+- DRAFT → OPEN is gated server-side by the `isThick` predicate (enforced by the P2E MCP); the plugin does not perform this transition itself.
+- On wave-start the orchestrator moves selected stories to `IN_PROGRESS`.
+- On successful verification + PR merge the orchestrator moves the story to `IN_REVIEW` and toggles its acceptance criteria.
+- On two consecutive verification failures the orchestrator moves the story to `BLOCKED` and stops retrying (see `## Two-strike escalation`).
+- Final acceptance (IN_REVIEW → DONE) is a human action outside the orchestrator's scope.
+
+## Thick-gate
+
+- Before routing any selected story into implementation, the orchestrator fetches `mcp__p2e__stories op=get` and checks `isThick === true` AND `status === "OPEN"`.
+- If either check fails for any story in the batch, the orchestrator stops and directs the user to `/p2e-update-story <story_id>` to thicken the spec (or to accept the thin draft per the `## Thin drafts` policy).
+- The thick-gate is enforced for every track (Fast / Standard / Architectural). It replaces ad-hoc readiness heuristics.
+
+## First-turn briefing
+
+- For each story the orchestrator dispatches into, it materializes a per-story briefing as the implementer's **turn 1** input message.
+- The exact template, section ordering, and field-mapping live in `workflows/p2e-first-turn-briefing.md`.
+- The briefing maps 1:1 to the thick-spec fields returned by `mcp__p2e__stories op=get` so it is mechanically fillable.
+
+## Two-strike escalation
+
+- After each implementer pass the orchestrator runs the story's verification (the `verificationCmd` from the thick-spec, or the batch-level verification command).
+- First failure: the orchestrator re-briefs the implementer with the failure output and allows one more pass.
+- Second failure: the orchestrator stops. It sets the story's `status` to `BLOCKED` via `mcp__p2e__stories op=update`, posts the failure summary back to the linked issue, and routes the story to either the `p2e-architect` agent for a fresh approach OR the `codex:rescue` skill for a deeper diagnosis — the choice depends on the caller (Claude Code → architect; Codex → `codex:rescue`).
+- There is no third retry.
+
+## Self-plan inline
+
+- For **single-story thick runs** where the shape-aware router skipped the architect (no `approach-review` constraint and no `--full-team`), the implementer self-plans inline from the first-turn briefing.
+- No external `superpowers:writing-plans` call is made in this path.
+- For batch size >= 2, the staff-engineer wave plan runs regardless.
 
 ## Batch behavior
 
@@ -66,3 +99,4 @@ Wrappers should reserve higher-capacity specialist roles for architect and staff
 
 - The orchestrator should reconcile issue labels at the end of a batch when it has enough issue and merge context to do so safely.
 - If that context is missing or incomplete, the workflow must fall back to the explicit label-sync workflow instead of guessing.
+- Stories completing the run successfully land at `IN_REVIEW`; the sync should reflect that lifecycle state in the corresponding GitHub issue labels.

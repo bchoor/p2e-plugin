@@ -1,10 +1,10 @@
 # P2E Work-On-Next Workflow
 
-This is the canonical orchestrator workflow. Adapter-specific entrypoints should map to this shared behavior. The workflow selects planned stories, classifies them, coordinates implementation waves, and reconciles labels at the end of the run when enough context is available.
+This is the canonical orchestrator workflow. Adapter-specific entrypoints should map to this shared behavior. The workflow selects open stories, classifies them, coordinates implementation waves, and reconciles labels at the end of the run when enough context is available.
 
 ## Purpose
 
-- Select one or more planned stories from the queue.
+- Select one or more open stories from the queue.
 - Route each story through the adaptive model and agent hierarchy.
 - Execute work in waves with per-story gate checks.
 - Auto-sync labels at the end of the batch when issue and merge context is sufficient.
@@ -12,32 +12,35 @@ This is the canonical orchestrator workflow. Adapter-specific entrypoints should
 
 ## Workflow
 
-1. Query the planned queue with the optional release, phase, tag, or story filter.
+1. Query the planned queue (`mcp__p2e__stories op=list status=OPEN`) with the optional release, phase, tag, or story filter.
 2. Sort or narrow the queue deterministically when multiple candidates are available.
-3. For each candidate, fetch story details and apply the thin-draft check before classification.
-4. Apply the adaptive router to choose the track and model.
-5. Present the queue to the user and let them choose one or more stories.
-6. Ensure the work is happening in an appropriate git worktree for the batch.
-7. When the batch size warrants it, ask the staff engineer for a wave plan and use it to organize the run.
-8. For each wave, mark stories `PARTIAL`, spawn implementers, and gate the wave with verification.
-9. On a passing story, move it to `BUILT`, toggle its acceptance criteria, and post the summary back to the linked issue.
-10. On a failing or deferred story, leave it `PARTIAL` and comment with the relevant failure or hold reason.
+3. For each candidate, fetch full detail (`op=get`) and apply the thin-draft check (`## Thin drafts` in policy) before classification.
+4. Apply the **thick-gate** (`## Thick-gate` in policy): refuse any story where `isThick=false` or `status != "OPEN"`; direct the user to `/p2e-update-story` and stop.
+5. Apply the adaptive router (`## Adaptive router` in policy) to choose the track and, using the shape-aware rule, decide whether the architect + `superpowers:writing-plans` run or are skipped.
+6. Present the selected queue, routing decisions, and wave plan to the user.
+7. Ensure the work is happening in an appropriate git worktree for the batch.
+8. If batch size >= 2, ask the staff engineer for a wave plan and use it to organize the run.
+9. For each wave, move selected stories to `IN_PROGRESS` (`op=update status=IN_PROGRESS`), materialize the first-turn briefing per `workflows/p2e-first-turn-briefing.md` for each story, spawn implementers with the briefing as turn 1, and gate the wave with verification.
+10. If the architect was skipped for a single-story thick run, the implementer self-plans inline from the briefing (no external `writing-plans` call).
+11. On a passing story, move it to `IN_REVIEW` (`op=update status=IN_REVIEW`), toggle its acceptance criteria (`mcp__p2e__criteria op=toggle`), and post the summary back to the linked issue.
+12. On a failing verification, apply the two-strike rule (`## Two-strike escalation` in policy): one re-brief, then on the second failure set `status=BLOCKED` and route to `p2e-architect` (Claude Code caller) or `codex:rescue` (Codex caller).
 
 ## Thin-draft handling
 
-- If a story has no acceptance criteria and no capabilities, treat it as a thin draft.
+- If a story has no acceptance criteria and no capabilities, treat it as a thin draft. The story remains at `DRAFT` or `OPEN` but is considered under-specified for implementation.
 - The wrapper should stop and ask what to do before routing a thin draft into implementation.
-- The user may flesh it, proceed as-is, or skip it.
+- The user may flesh it out (using `/p2e-update-story`), proceed as-is, or skip it.
 
 ## End-of-run sync
 
 - If the batch has enough issue and merge context to reconcile labels safely, perform the label sync automatically at the end of the run.
 - If that context is missing, incomplete, or ambiguous, do not guess.
 - In the fallback case, the wrapper should route to `p2e-sync-labels` as the explicit reconcile step.
+- Stories completing the run are at `IN_REVIEW`; reconcile labels to match that state.
 
 ## Dry-run behavior
 
 - Dry-run is read-only.
 - The workflow should still show the selected queue, routing decisions, wave plan, and the writes it would have performed.
 - Dry-run must skip all side effects, including issue updates and label reconciliation.
-
+- Dry-run still shows the first-turn briefing it WOULD have handed to each implementer.

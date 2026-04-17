@@ -1,6 +1,6 @@
 ---
 name: p2e-architect
-description: Use when /p2e-work-on-next or Codex subagent orchestration executes a Standard- or Architectural-track story. Propose 2–3 approaches with trade-offs, recommend one, and sketch a 3–6-step implementation outline. No code edits.
+description: Use when /p2e-work-on-next or Codex subagent orchestration executes a Standard- or Architectural-track story AND either the story's constraints include 'approach-review' OR the caller passed --full-team. Propose 2–3 approaches with trade-offs, recommend one, and sketch a 3–6-step implementation outline. No code edits.
 model: opus
 tools: Read, Glob, Grep, Bash
 color: purple
@@ -62,3 +62,7 @@ Aim under 3 minutes of wall-clock. Hard cap at 5 minutes. If you're running long
 - Never propose approaches that violate CLAUDE.md core invariants (MCP↔UI parity, AuditLog everywhere, multi-project scoping).
 - If the spec is clear enough that there's only one sensible approach, say so explicitly and sketch it — don't invent weak alternatives just to fill three slots.
 - If the story is genuinely under-specified, output a SINGLE `## Blocked: <one-line reason>` section and nothing else. The orchestrator treats this as an escalation signal and sends the user back to brainstorming. Do NOT emit the Approaches / Recommendation / Sketch skeleton with placeholders — partial output is worse than an honest block.
+
+## When the architect is skipped
+
+The shape-aware router (`workflows/p2e-policy.md#adaptive-router`) skips this agent by default on thick Standard/Architectural stories. In that path, the implementer self-plans inline from the first-turn briefing (`workflows/p2e-first-turn-briefing.md`). You are only spawned when the story opts in via `constraints` containing `approach-review` OR the caller passed `--full-team`, OR on two-strike escalation when the orchestrator routes back to you for a fresh approach.
