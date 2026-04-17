@@ -1,5 +1,5 @@
 {
-  "description": "P2E PreToolUse status gate — blocks implementer Agent spawn against stories not yet IN_PROGRESS or IN_REVIEW.",
+  "description": "P2E hooks — PreToolUse status gate (blocks implementer Agent spawn against stories not yet IN_PROGRESS or IN_REVIEW) + PreToolUse project-slug validator (blocks mcp__plugin_p2e_p2e__* calls whose project_slug mismatches the repo binding) + SessionStart bound-project reminder (injects system-reminder naming the bound P2E project).",
   "hooks": {
     "PreToolUse": [
       {
@@ -8,6 +8,27 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-agent-spawn-story-status.sh\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__plugin_p2e_p2e__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pretooluse-project-slug-validator.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start-bound-project.sh\"",
             "timeout": 5
           }
         ]
