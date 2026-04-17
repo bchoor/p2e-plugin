@@ -96,6 +96,74 @@ Specialist prompts remain:
 
 Those prompts are shared across Claude orchestration and Codex subagent orchestration.
 
+## Status gate hook (PreToolUse)
+
+### What it does
+
+The `hooks/pre-agent-spawn-story-status.sh` hook fires on every `Agent` tool call (implementer spawn). It reads the P2E story id from the agent prompt, checks the story's current status via a local cache or the P2E MCP, and **blocks the spawn** (exit 1) if the story is not yet `IN_PROGRESS` or `IN_REVIEW`. This enforces the `/p2e-work-on-next` dispatch discipline: a story must be moved to `IN_PROGRESS` before an implementer is spawned against it.
+
+The hook is Claude Code-only. Codex does not implement `PreToolUse` hooks; this asymmetry is intentional and documented here rather than wired into `.codex-plugin/plugin.json`.
+
+### Story-id regex
+
+The hook scans the agent prompt for a P2E story id matching:
+
+```
+[A-Z]{1,2}-[0-9]+(-L[0-9]+)?
+```
+
+Examples: `B-05-L15`, `P-01`, `AB-3`. The first match is used. If no match is found, the hook exits 0 (allow).
+
+### Label map
+
+| P2E status  | GitHub label |
+|-------------|--------------|
+| OPEN        | `ready`      |
+| IN_PROGRESS | `in-progress`|
+| IN_REVIEW   | `review`     |
+| DONE        | `done`       |
+| BLOCKED     | `blocked`    |
+
+Label reconciliation is performed by `scripts/sync-github-label.sh` and is invoked by `workflows/p2e-update-story.md` on every lifecycle-boundary status transition. If a label does not exist on the target repo, a warning is printed and the step exits 0.
+
+### Escape hatch
+
+Set `P2E_SKIP_STATUS_GATE=1` to bypass the hook entirely:
+
+```bash
+P2E_SKIP_STATUS_GATE=1 claude ...
+```
+
+Use this when bootstrapping, running architect/staff-engineer agents, or during pre-hook setup.
+
+### Auto-short-circuit subagent types
+
+The hook exits 0 (allow) automatically when `subagent_type` in the tool input is one of:
+
+- `p2e-architect`
+- `p2e-staff-engineer`
+- `rescue`
+
+These subagent types operate before or outside the implementer lifecycle, so the gate does not apply.
+
+### Cache
+
+The hook caches MCP responses locally at:
+
+```
+~/.cache/p2e/<slug>/<story_id>.json
+```
+
+Format: `{"status":"IN_PROGRESS","ts":1713340800}`
+
+TTL: **30 seconds**. A warm-cache read completes in <500ms (p99). Cold-cache reads make an HTTP round trip to the P2E MCP endpoint (`$P2E_MCP_URL`, default `https://p2e-mocha.vercel.app/api/mcp`) and may exceed 500ms depending on network latency. The hook uses a 2-second curl timeout; on timeout it fails closed (blocks) unless `P2E_SKIP_STATUS_GATE=1`.
+
+`/p2e-update-story` refreshes the cache on every lifecycle-boundary status write, so the hook reads the correct status immediately after a transition without waiting for TTL expiry.
+
+### Fail-closed behavior
+
+If the hook cannot verify the story status (MCP unreachable, auth required, or unparseable response), it **blocks** the spawn with a remediation message. This is intentional: a missing gate check is treated as a failed check.
+
 ## Requirements
 
 - a host that supports the plugin surface you want to use: Claude Code or Codex

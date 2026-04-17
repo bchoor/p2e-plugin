@@ -107,10 +107,54 @@ If the staged update transitions the story to `OPEN` and the staged state still 
 
 Transitions that don't cross `DRAFT → OPEN` (for example `OPEN → IN_PROGRESS`, `IN_PROGRESS → IN_REVIEW`, or `IN_REVIEW → DONE`) are allowed without the thickness check.
 
+## Lifecycle label reconciliation
+
+When the staged update crosses a **lifecycle boundary** (a status transition), the workflow must reconcile the linked GitHub issue label after the MCP write and before the GH issue body patch.
+
+### Label map
+
+| P2E status  | GitHub label |
+|-------------|--------------|
+| OPEN        | `ready`      |
+| IN_PROGRESS | `in-progress`|
+| IN_REVIEW   | `review`     |
+| DONE        | `done`       |
+| BLOCKED     | `blocked`    |
+
+Only the five statuses above have a label mapping. Any other status value produces a stderr warning and the phase exits 0 (not a failure).
+
+### Lifecycle boundaries that trigger label sync
+
+A lifecycle boundary is any status transition that changes the status field. Examples:
+
+- `OPEN → IN_PROGRESS` (transition: remove `ready`, add `in-progress`)
+- `IN_PROGRESS → IN_REVIEW` (transition: remove `in-progress`, add `review`)
+- `IN_REVIEW → DONE` (transition: remove `review`, add `done`)
+- any status → `BLOCKED` (transition: remove the current-status label, add `blocked`)
+
+Non-status updates (thicken / steer / rename / move UXO / retag / release / AC / capabilities diff) do **not** trigger label sync — see AC3.
+
+### Write ordering for lifecycle transitions (fail-fast, 3 phases)
+
+When the accept path includes a status transition:
+
+1. **Phase 1 — MCP update** (`mcp__p2e__stories op=update`): write the new status and all other staged fields. Stop on any failure; surface phase 1 + item index.
+2. **Phase 2 — Label reconciliation** (`scripts/sync-github-label.sh <repo> <issue#> <from-status> <to-status>`): invoke the helper with the from/to status values resolved from the label map. Stop on non-zero exit (unless the exit is a "label not found" warning, which exits 0). Surface phase 2 on failure.
+3. **Phase 3 — Cache refresh**: write `~/.cache/p2e/<slug>/<story_id>.json` with `{"status":"<new-status>","ts":<unix-epoch>}` so the PreToolUse hook (see `hooks/pre-agent-spawn-story-status.sh`) reads the fresh status within its 30-second TTL window. This phase is best-effort: a write failure here does not stop the overall flow — log a stderr warning and continue.
+
+After phase 3, the flow continues to the GH issue body patch (existing reconciliation step) if applicable.
+
+For non-lifecycle updates, the existing write ordering (phase 1 MCP + optional GH body patch) remains unchanged.
+
+### Unknown label behavior
+
+If `scripts/sync-github-label.sh` cannot find a label on the target repo (because the label was not created), it prints a warning to stderr and exits 0 so the overall update succeeds. The wrapper should surface the warning to the user with a note to create the label via `gh label create`.
+
 ## GitHub issue reconciliation
 
 - If the story has no linked GitHub issue AND the staged update promotes it to `OPEN`: create the issue in the project's configured GitHub repo, label it `ready`, link it back via `githubIssueNumber` + `githubIssueUrl` on the story, and include the P2E story id in the issue title.
-- If the story already has a linked GitHub issue: patch the issue body to match the new state (same story → GH direction as `workflows/p2e-sync-labels.md`). Do not touch labels here — label lifecycle is owned by `/p2e-work-on-next` and `/p2e-sync-labels`.
+- If the story already has a linked GitHub issue AND the update crosses a lifecycle boundary: the label was already reconciled in the lifecycle label reconciliation phase above. Patch the issue body to match the new state. Do not double-write the label.
+- If the story already has a linked GitHub issue AND the update is NOT a lifecycle transition: patch the issue body only.
 - If the staged update is purely about `DRAFT` fields (no promotion), leave the GH issue alone.
 
 ## AuditLog

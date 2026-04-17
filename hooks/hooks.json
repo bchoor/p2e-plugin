@@ -1,0 +1,17 @@
+{
+  "description": "P2E PreToolUse status gate — blocks implementer Agent spawn against stories not yet IN_PROGRESS or IN_REVIEW.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-agent-spawn-story-status.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
