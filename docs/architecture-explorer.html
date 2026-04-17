@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P2E Plugin 3D Architecture Explorer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #05080c;
+    --panel: rgba(18, 24, 33, 0.85);
+    --panel-solid: #121821;
+    --panel-2: #1a2130;
+    --border: #263044;
+    --text: #e7ecf3;
+    --text-dim: #8b97a9;
+    --text-muted: #5b6778;
+    --accent: #4ea8ff;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --err: #f87171;
+  }
+  html, body { background: var(--bg); color: var(--text); height: 100%; overflow: hidden;
+    font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  code, .mono { font-family: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; }
+
+  .app { position: relative; width: 100vw; height: 100vh;
+    background: radial-gradient(ellipse at center, #0b1220 0%, #05080c 70%); }
+  /* When a node is focused, layer-label + plane chrome also fade so the eye tracks the spine only. */
+  .app.focusing svg#scene .layer-label { opacity: 0.25; transition: opacity .2s; }
+  .app.focusing svg#scene polygon[stroke-dasharray="3,4"] { opacity: 0.25; transition: opacity .2s; }
+  svg#scene { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+  svg#scene.dragging { cursor: grabbing; }
+  svg#scene text { user-select: none; pointer-events: none; }
+
+  .panel-left, .panel-right, .panel-bottom, .header { position: absolute; backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+  .header { top: 12px; left: 12px; padding: 10px 14px; z-index: 10; }
+  .header h1 { font-size: 13px; font-weight: 600; }
+  .header .sub { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+
+  .panel-left { top: 76px; left: 12px; width: 240px; padding: 12px; z-index: 10; max-height: calc(100vh - 240px); overflow-y: auto; }
+  .panel-right { top: 12px; right: 12px; width: 230px; padding: 12px; z-index: 10; max-height: calc(100vh - 230px); overflow-y: auto; }
+  .panel-bottom { bottom: 12px; left: 12px; right: 12px; z-index: 10; padding: 10px 14px; max-height: 30vh; }
+
+  .panel h2 { font-size: 9px; text-transform: uppercase; letter-spacing: 1.3px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+  .panel .section { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .panel .section:last-child { border-bottom: 0; padding-bottom: 0; }
+  .panel .section:first-child { padding-top: 0; }
+
+  .preset-btn {
+    display: flex; align-items: center; gap: 8px; text-align: left;
+    background: transparent; color: var(--text); border: 1px solid transparent;
+    padding: 6px 8px; border-radius: 5px; cursor: pointer; width: 100%;
+    font-size: 12px; transition: all .12s ease; margin-bottom: 2px;
+  }
+  .preset-btn:hover { background: rgba(78,168,255,0.06); border-color: var(--border); }
+  .preset-btn.active { background: rgba(78,168,255,0.14); border-color: var(--accent); }
+  .preset-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+  .preset-btn.active .dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  .preset-btn .meta { color: var(--text-muted); font-size: 10px; margin-left: auto; font-family: monospace; }
+
+  .toggle { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+  .toggle:hover { background: rgba(255,255,255,0.04); }
+  .toggle input { accent-color: var(--accent); cursor: pointer; }
+  .toggle .swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .ctrl-btn {
+    display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05);
+    color: var(--text); border: 1px solid var(--border); padding: 5px 10px; border-radius: 5px;
+    cursor: pointer; font-size: 11px; transition: all .12s;
+  }
+  .ctrl-btn:hover { background: rgba(78,168,255,0.1); border-color: var(--accent); }
+  .ctrl-btn.primary { background: var(--accent); color: #05080c; border-color: var(--accent); font-weight: 600; }
+  .ctrl-btn.primary:hover { background: #7fc0ff; }
+  .ctrl-btn.primary.copied { background: var(--ok); }
+
+  .flow-desc { color: var(--text-dim); font-size: 12px; line-height: 1.55; max-height: 7em; overflow-y: auto; }
+  .flow-desc strong { color: var(--text); }
+  .flow-desc code { background: rgba(78,168,255,0.1); padding: 1px 5px; border-radius: 3px; color: var(--accent); font-size: 11px; }
+
+  .prompt-panel { display: grid; grid-template-columns: 1fr 240px; gap: 12px; }
+  .prompt-text { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 5px; padding: 10px 12px; color: var(--text); white-space: pre-wrap; overflow-y: auto; font-size: 11px; max-height: 15vh; line-height: 1.5; }
+  .prompt-actions { display: flex; flex-direction: column; gap: 6px; }
+  .prompt-actions .lbl { font-size: 9px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+
+  .help-hint {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(18, 24, 33, 0.95); border: 1px solid var(--accent); border-radius: 8px;
+    padding: 16px 22px; z-index: 5; color: var(--text); text-align: center;
+    backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(78,168,255,0.2);
+    transition: opacity .5s ease; pointer-events: none;
+  }
+  .help-hint.hidden { opacity: 0; }
+  .help-hint .kb { display: inline-block; background: var(--panel-2); border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px; font-family: monospace; font-size: 11px; margin: 0 3px; }
+
+  /* Node SVG styles */
+  .node rect { stroke-width: 1.5; cursor: pointer; transition: filter .25s ease; }
+  .node:hover rect { filter: brightness(1.35); }
+.node.dimmed { opacity: 0.18; pointer-events: none; }
+  .node.faded { opacity: 0.08; transition: opacity .2s; pointer-events: none; }
+  .node.focused rect { stroke-width: 3; filter: drop-shadow(0 0 10px currentColor) brightness(1.15); }
+  .node.neighbor rect { stroke-width: 2; }
+  .node.has-comment rect { stroke: var(--warn); stroke-width: 2.5; }
+  .node text { pointer-events: none; fill: var(--text); }
+  .node .title { font: 600 11px/1 -apple-system; }
+  .node .sub { font: 9px/1 "SF Mono", ui-monospace, Menlo; fill: var(--text-dim); }
+  .connection { fill: none; stroke-width: 1.4; opacity: .45; transition: opacity .25s; }
+  .connection.active { opacity: 1; stroke-width: 2.2; animation: dash 1.4s linear infinite; }
+  .connection.dimmed { opacity: .04; }
+  @keyframes dash { to { stroke-dashoffset: -28; } }
+
+  /* Modal */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(3px); }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--panel-solid); border: 1px solid var(--border); border-radius: 8px; padding: 20px; min-width: 420px; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+  .modal h3 { font-size: 14px; margin-bottom: 4px; }
+  .modal .subtitle { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; }
+  .modal .kind { font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px; padding: 2px 8px; border-radius: 3px; display: inline-block; margin-bottom: 10px; font-weight: 700; }
+  .modal .desc { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.55; }
+  .modal textarea { width: 100%; min-height: 90px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 10px; font: inherit; resize: vertical; }
+  .modal textarea:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+  .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+  .modal button { padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--text); }
+  .modal button.primary { background: var(--accent); color: #05080c; border-color: var(--accent); font-weight: 600; }
+  .modal button:hover { background: rgba(255,255,255,0.05); }
+  .modal button.primary:hover { background: #7fc0ff; }
+
+  .comment { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-left: 3px solid var(--warn); border-radius: 4px; padding: 7px 9px; margin-bottom: 5px; position: relative; font-size: 11px; }
+  .comment .target { color: var(--accent); font-weight: 600; margin-bottom: 2px; font-size: 10px; }
+  .comment .text { color: var(--text); word-break: break-word; }
+  .comment .del { position: absolute; top: 4px; right: 4px; background: transparent; border: 0; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 4px; line-height: 1; }
+  .comment .del:hover { color: var(--err); }
+  .empty { color: var(--text-muted); font-size: 10px; font-style: italic; }
+
+  .axis-gizmo { position: absolute; bottom: 12px; right: 12px; width: 72px; height: 72px; z-index: 5; pointer-events: none; }
+.axis-gizmo svg { width: 100%; height: 100%; }
+  .zen-toggle {
+    position: absolute; top: 16px; right: 256px; z-index: 15;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 7px 10px; cursor: pointer; font-size: 14px; line-height: 1;
+    backdrop-filter: blur(10px); transition: all .15s;
+  }
+  .zen-toggle:hover { background: rgba(78,168,255,0.15); border-color: var(--accent); }
+  .app.zen .header, .app.zen .panel-left, .app.zen .panel-right, .app.zen .panel-bottom { display: none; }
+  .app.zen .help-hint { display: none; }
+  .app.zen .zen-toggle { right: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <svg id="scene"></svg>
+
+  <div class="axis-gizmo"><svg id="gizmo" viewBox="-50 -50 100 100"></svg></div>
+  <button class="zen-toggle" id="zen-toggle" title="Zen mode (H) — hide panels for full-canvas view">&#x2B1C;</button>
+
+  <div class="help-hint" id="help-hint">
+    <span class="kb">Drag</span> rotate &nbsp; <span class="kb">Shift</span>+<span class="kb">Drag</span> pan &nbsp; <span class="kb">Wheel</span> scale &nbsp; <span class="kb">Click</span> node to focus end-to-end
+  </div>
+
+  <div class="header">
+    <h1>P2E Plugin &mdash; 3D Architecture</h1>
+    <div class="sub">v0.7.0 &middot; drag orbit &middot; shift+drag pan &middot; wheel scale &middot; click focus &middot; H zen</div>
+  </div>
+
+  <div class="panel-left panel">
+    <div class="section">
+      <h2>View</h2>
+      <div style="display:flex; gap:4px; flex-wrap:wrap;">
+        <button class="ctrl-btn" onclick="resetView()">Reset</button>
+        <button class="ctrl-btn" onclick="zoomBy(0.87)" title="Scale up (or +)">Scale +</button>
+        <button class="ctrl-btn" onclick="zoomBy(1.15)" title="Scale down (or -)">Scale &minus;</button>
+        <button class="ctrl-btn" id="autorotate-btn" onclick="toggleAutorotate()">Auto-rotate</button>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Use-case flow</h2>
+      <div id="presets"></div>
+    </div>
+    <div class="section">
+      <h2>Layers</h2>
+      <div id="layers"></div>
+    </div>
+  </div>
+
+  <div class="panel-right panel">
+    <div class="section" id="selected-section" style="display:none;">
+      <h2>Selected node</h2>
+      <div id="selected-content"></div>
+    </div>
+    <div class="section">
+      <h2>Flow description</h2>
+      <div class="flow-desc" id="flow-desc"></div>
+    </div>
+    <div class="section">
+      <h2>Comments <span id="comment-count" style="color:var(--accent)"></span></h2>
+      <div id="comments-list"><div class="empty">Click a node to add a comment.</div></div>
+    </div>
+    <div class="section">
+      <h2>Connections</h2>
+      <div id="conns"></div>
+    </div>
+  </div>
+
+  <div class="panel-bottom panel">
+    <div class="prompt-panel">
+      <div>
+        <h2 style="font-size:9px;text-transform:uppercase;letter-spacing:1.3px;color:var(--text-muted);margin-bottom:6px;">Prompt output</h2>
+        <div class="prompt-text mono" id="prompt-text"></div>
+      </div>
+      <div class="prompt-actions">
+        <div class="lbl">Actions</div>
+        <button class="ctrl-btn primary" id="copy-btn">Copy Prompt</button>
+        <div style="font-size:10px; color:var(--text-muted); margin-top:auto; line-height:1.5;">
+          Current preset + any comments you've added become a natural-language prompt you can paste back into Claude.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <span class="kind" id="modal-kind"></span>
+    <h3 id="modal-title"></h3>
+    <div class="subtitle mono" id="modal-subtitle"></div>
+    <div class="desc" id="modal-desc"></div>
+    <textarea id="modal-input" placeholder="Add a comment or question..."></textarea>
+    <div class="actions">
+      <button id="modal-cancel">Cancel</button>
+      <button class="primary" id="modal-save">Save Comment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================================================
+// Data
+// =========================================================================
+
+const LAYER_META = {
+  commands:  { label: 'Commands',  fill: '#1e3a5f', stroke: '#4ea8ff', y: -400 },
+  skills:    { label: 'Skills',    fill: '#2d2447', stroke: '#a78bfa', y: -280 },
+  workflows: { label: 'Workflows', fill: '#4a1f3d', stroke: '#f472b6', y: -140 },
+  hooks:     { label: 'Hooks',     fill: '#4a3a14', stroke: '#fbbf24', y: -20 },
+  agents:    { label: 'Agents',    fill: '#4a2a14', stroke: '#f97316', y: -20 },
+  scripts:   { label: 'Scripts',   fill: '#2a2f39', stroke: '#9ca3af', y: 100 },
+  mcp:       { label: 'MCP tools', fill: '#143a2e', stroke: '#34d399', y: 220 },
+  deps:      { label: 'Ext. skills',fill: '#4a3018', stroke: '#f59e0b', y: 40 },
+  external:  { label: 'External',  fill: '#4a1e1e', stroke: '#ef4444', y: 360 }
+};
+
+const CONN_TYPES = {
+  'wrap':     { label: 'Wrapper',          color: '#4ea8ff', dash: null },
+  'read-doc': { label: 'Reads doc',        color: '#a78bfa', dash: '4,4' },
+  'mcp-call': { label: 'MCP call',         color: '#34d399', dash: null },
+  'gh-call':  { label: 'gh / GitHub',      color: '#ef4444', dash: null },
+  'spawn':    { label: 'Spawn agent',      color: '#f97316', dash: '10,5' },
+  'hook':     { label: 'Hook intercept',   color: '#fbbf24', dash: '2,3' },
+  'cache':       { label: 'Cache r/w',      color: '#9ca3af', dash: '3,3' },
+  'handoff':     { label: 'Workflow handoff',color: '#c084fc', dash: null },
+  'skill-invoke':{ label: 'Ext. skill call', color: '#eab308', dash: '6,3' }
+};
+
+// Nodes with 3D coords: x (left-right), y (layer), z (depth front-back)
+const NODES = [
+  // Commands layer
+  { id:'cmd-bs',    label:'/p2e-bootstrap',    sub:'commands/',    layer:'commands', x:-450, z:  40 },
+  { id:'cmd-add',   label:'/p2e-add-story',    sub:'commands/',    layer:'commands', x:-270, z: -40 },
+  { id:'cmd-up',    label:'/p2e-update-story', sub:'commands/',    layer:'commands', x: -90, z:  40 },
+  { id:'cmd-won',   label:'/p2e-work-on-next', sub:'commands/',    layer:'commands', x:  90, z: -40 },
+  { id:'cmd-sync',  label:'/p2e-sync-labels',  sub:'commands/',    layer:'commands', x: 270, z:  40 },
+  { id:'cmd-router',label:'p2e:p2e (router)',  sub:'plain-lang',   layer:'commands', x: 450, z: -40 },
+  // Skills layer
+  { id:'sk-bs',    label:'p2e-bootstrap',     sub:'skills/',   layer:'skills', x:-450, z:  40 },
+  { id:'sk-add',   label:'p2e-add-story',     sub:'skills/',   layer:'skills', x:-270, z: -40 },
+  { id:'sk-up',    label:'p2e-update-story',  sub:'skills/',   layer:'skills', x: -90, z:  40 },
+  { id:'sk-won',   label:'p2e-work-on-next',  sub:'skills/',   layer:'skills', x:  90, z: -40 },
+  { id:'sk-sync',  label:'p2e-sync-labels',   sub:'skills/',   layer:'skills', x: 270, z:  40 },
+  { id:'sk-p2e',   label:'p2e router skill',  sub:'skills/p2e',layer:'skills', x: 450, z: -40 },
+  // Workflows layer
+  { id:'wf-policy', label:'p2e-policy.md',      sub:'shared rules',   layer:'workflows', x:-480, z:  80 },
+  { id:'wf-brief',  label:'first-turn-briefing',sub:'impl turn-1',    layer:'workflows', x:-320, z: -80 },
+  { id:'wf-bs',     label:'p2e-bootstrap.md',   sub:'new+onboarding', layer:'workflows', x:-160, z:  80 },
+  { id:'wf-add',    label:'p2e-add-story.md',   sub:'preview+write',  layer:'workflows', x:   0, z: -80 },
+  { id:'wf-up',     label:'p2e-update-story.md',sub:'thicken+labels', layer:'workflows', x: 170, z:  80 },
+  { id:'wf-won',    label:'p2e-work-on-next.md',sub:'orchestrator',   layer:'workflows', x: 340, z: -80 },
+  { id:'wf-sync',   label:'p2e-sync-labels.md', sub:'bulk labels',    layer:'workflows', x: 490, z:  80 },
+  // Hooks + Agents layer (shared y)
+  { id:'hook-pre',  label:'PreToolUse hook',     sub:'pre-agent-spawn',    layer:'hooks',  x:-480, z:  80 },
+  { id:'ag-arch',   label:'p2e-architect',       sub:'opus',               layer:'agents', x:-240, z: -80 },
+  { id:'ag-staff',  label:'p2e-staff-engineer',  sub:'opus',               layer:'agents', x: -80, z:  80 },
+  { id:'ag-impl',   label:'Implementer',         sub:'sonnet Agent',       layer:'agents', x: 100, z: -80 },
+  { id:'ag-rescue', label:'codex:rescue',        sub:'Codex handoff',      layer:'agents', x: 300, z:  80 },
+  // Scripts layer
+  { id:'sc-label',  label:'sync-github-label.sh',sub:'v0.7 helper',   layer:'scripts', x:-320, z:  60 },
+  { id:'sc-valid',  label:'validate-plugin.py',  sub:'manifest check',layer:'scripts', x: -80, z: -60 },
+  // MCP layer
+  { id:'mcp-st',  label:'stories',      sub:'mcp__p2e__stories',      layer:'mcp', x:-470, z:  60 },
+  { id:'mcp-cr',  label:'criteria',     sub:'mcp__p2e__criteria',     layer:'mcp', x:-280, z: -60 },
+  { id:'mcp-cap', label:'capabilities', sub:'mcp__p2e__capabilities', layer:'mcp', x: -80, z:  60 },
+  { id:'mcp-pr',  label:'projects',     sub:'mcp__p2e__projects',     layer:'mcp', x: 110, z: -60 },
+  { id:'mcp-ux',  label:'uxos',         sub:'mcp__p2e__uxos',         layer:'mcp', x: 290, z:  60 },
+  { id:'mcp-gh',  label:'create_github_issue', sub:'MCP',             layer:'mcp', x: 490, z: -60 },
+  { id:'mcp-ph',  label:'phases',              sub:'mcp__p2e__phases',       layer:'mcp', x:-470, z: -80 },
+  { id:'sp-brain',label:'superpowers:brainstorming',sub:'onboarding interview',layer:'deps',x:-280, z:  60 },
+  { id:'sp-plan', label:'superpowers:writing-plans',sub:'plan doc for impl',  layer:'deps',x:  20, z: -60 },
+  // External layer
+  { id:'ext-mcp',   label:'P2E MCP server',sub:'p2e-mocha.vercel.app',  layer:'external', x:-440, z:  80 },
+  { id:'ext-gh',    label:'GitHub API',    sub:'gh CLI',                layer:'external', x:-220, z: -80 },
+  { id:'ext-cache', label:'Local cache',   sub:'~/.cache/p2e/',         layer:'external', x:  20, z:  80 },
+  { id:'ext-git',   label:'git + worktree',sub:'feat/<story>',          layer:'external', x: 260, z: -80 }
+];
+
+const NODE_W = 150, NODE_H = 42;
+
+const CONNS = [
+  { from:'cmd-bs',to:'sk-bs',type:'wrap'},{from:'cmd-add',to:'sk-add',type:'wrap'},{from:'cmd-up',to:'sk-up',type:'wrap'},
+  { from:'cmd-won',to:'sk-won',type:'wrap'},{from:'cmd-sync',to:'sk-sync',type:'wrap'},{from:'cmd-router',to:'sk-p2e',type:'wrap'},
+  { from:'sk-p2e',to:'sk-bs',type:'wrap'},{from:'sk-p2e',to:'sk-add',type:'wrap'},{from:'sk-p2e',to:'sk-up',type:'wrap'},
+  { from:'sk-p2e',to:'sk-won',type:'wrap'},{from:'sk-p2e',to:'sk-sync',type:'wrap'},
+  { from:'sk-bs',to:'wf-bs',type:'read-doc'},{from:'sk-add',to:'wf-add',type:'read-doc'},{from:'sk-up',to:'wf-up',type:'read-doc'},
+  { from:'sk-won',to:'wf-won',type:'read-doc'},{from:'sk-sync',to:'wf-sync',type:'read-doc'},
+  { from:'wf-bs',to:'wf-policy',type:'read-doc'},{from:'wf-add',to:'wf-policy',type:'read-doc'},
+  { from:'wf-up',to:'wf-policy',type:'read-doc'},{from:'wf-won',to:'wf-policy',type:'read-doc'},
+  { from:'wf-won',to:'wf-brief',type:'read-doc'},{from:'wf-won',to:'wf-up',type:'read-doc'},{from:'wf-won',to:'wf-sync',type:'read-doc'},
+  { from:'wf-bs',to:'mcp-pr',type:'mcp-call'},{from:'wf-bs',to:'mcp-ux',type:'mcp-call'},{from:'wf-bs',to:'mcp-st',type:'mcp-call'},
+  { from:'wf-add',to:'mcp-st',type:'mcp-call'},{from:'wf-add',to:'mcp-cr',type:'mcp-call'},{from:'wf-add',to:'mcp-cap',type:'mcp-call'},
+  { from:'wf-add',to:'mcp-gh',type:'mcp-call'},
+  // === audit additions (workflow <-> workflow handoffs, external skills, missing MCP calls) ===
+  { from:'wf-bs',to:'mcp-ph',type:'mcp-call'},     // phases create
+  { from:'wf-bs',to:'mcp-cap',type:'mcp-call'},    // backfill-built capabilities
+  { from:'mcp-ph',to:'ext-mcp',type:'mcp-call'},   // phases tool -> server
+  { from:'wf-bs',to:'ext-gh',type:'gh-call'},      // gh pr list in backfill-built
+  { from:'wf-bs',to:'sp-brain',type:'skill-invoke'},  // onboarding interview (superpowers:brainstorming)
+  { from:'wf-won',to:'sp-plan',type:'skill-invoke'},  // writing-plans when architect fires
+  { from:'wf-bs',to:'wf-up',type:'handoff'},          // drafts -> thicken
+  { from:'wf-add',to:'wf-up',type:'handoff'},         // --fill deprecated forwards
+  { from:'wf-up',to:'wf-sync',type:'handoff'},        // GH failure repair path
+  { from:'wf-sync',to:'mcp-pr',type:'mcp-call'},      // resolve target repo from project config
+  { from:'wf-up',to:'mcp-st',type:'mcp-call'},{from:'wf-up',to:'mcp-cr',type:'mcp-call'},{from:'wf-up',to:'mcp-cap',type:'mcp-call'},
+  { from:'wf-won',to:'mcp-st',type:'mcp-call'},{from:'wf-won',to:'mcp-cr',type:'mcp-call'},
+  { from:'wf-up',to:'sc-label',type:'gh-call'},{from:'sc-label',to:'ext-gh',type:'gh-call'},
+  { from:'wf-up',to:'ext-cache',type:'cache'},{from:'wf-sync',to:'ext-gh',type:'gh-call'},{from:'wf-add',to:'ext-gh',type:'gh-call'},
+  { from:'wf-won',to:'ag-arch',type:'spawn'},{from:'wf-won',to:'ag-staff',type:'spawn'},
+  { from:'wf-won',to:'ag-impl',type:'spawn'},{from:'wf-won',to:'ag-rescue',type:'spawn'},
+  { from:'hook-pre',to:'ag-impl',type:'hook'},{from:'hook-pre',to:'ext-cache',type:'cache'},{from:'hook-pre',to:'ext-mcp',type:'mcp-call'},
+  { from:'mcp-st',to:'ext-mcp',type:'mcp-call'},{from:'mcp-cr',to:'ext-mcp',type:'mcp-call'},{from:'mcp-cap',to:'ext-mcp',type:'mcp-call'},
+  { from:'mcp-pr',to:'ext-mcp',type:'mcp-call'},{from:'mcp-ux',to:'ext-mcp',type:'mcp-call'},
+  { from:'mcp-gh',to:'ext-mcp',type:'mcp-call'},{from:'mcp-gh',to:'ext-gh',type:'gh-call'},
+  { from:'wf-won',to:'ext-git',type:'gh-call'}
+];
+
+const NODE_DESC = {
+  'cmd-bs':'Slash command. Bootstraps a new P2E project (modes: new greenfield, onboarding existing repo).',
+  'cmd-add':'Slash command. Drafts a new story + AC + capabilities; renders preview before MCP write.',
+  'cmd-up':'Slash command. Updates any field on an existing story. v0.7 added lifecycle label reconciliation on status transitions.',
+  'cmd-won':'Slash command. The orchestrator. Selects OPEN stories, routes them, spawns agents in waves.',
+  'cmd-sync':'Slash command. Bulk-reconciles GH labels for stories where MCP status and label drifted.',
+  'cmd-router':'Plain-language router. Inspects the user message and dispatches into the right workflow.',
+  'sk-bs':'Thin wrapper skill. Reads workflows/p2e-bootstrap.md + p2e-policy.md.',
+  'sk-add':'Thin wrapper skill. Hard rules + pointer to workflows/p2e-add-story.md.',
+  'sk-up':'Thin wrapper skill. Pointer to workflows/p2e-update-story.md + hard rules (preview gate).',
+  'sk-won':'Thin wrapper skill. Pointer to workflows/p2e-work-on-next.md + p2e-policy.md + p2e-first-turn-briefing.md.',
+  'sk-sync':'Thin wrapper skill. Pointer to workflows/p2e-sync-labels.md.',
+  'sk-p2e':'Plain-language router skill. Dispatches into the five workflow skills based on user intent.',
+  'wf-policy':'Shared policy doc. Adaptive router, track mapping, thick-gate, lifecycle, verification matrix, tag hygiene, two-strike. Loaded by every wrapper.',
+  'wf-brief':'Per-story first-turn message template. Maps 1:1 to mcp__p2e__stories op=get fields + tag-matched CLAUDE.md invariants.',
+  'wf-bs':'Bootstrap workflow. Interview or PRD ingestion -> phases + UXOs + DRAFT stories. Single confirm preview.',
+  'wf-add':'Add-story workflow. Description -> preview -> MCP write -> GH issue create with `ready` label -> link back.',
+  'wf-up':'Update-story workflow. Thicken/steer/rename/move/retag/release/AC+cap. v0.7: lifecycle boundary transitions trigger label sync + cache refresh.',
+  'wf-won':'Orchestrator. Thick-gate -> router -> wave plan -> IN_PROGRESS flip -> briefing -> implementer -> verification -> IN_REVIEW -> summary.',
+  'wf-sync':'Bulk label reconciliation. Walks stories, compares MCP status to GH label, writes corrections via gh.',
+  'hook-pre':'PreToolUse hook on Agent tool calls. Regex-extracts story id, reads status via cache (30s TTL) or MCP HTTP (2s timeout). Blocks if status not IN_PROGRESS/IN_REVIEW. Short-circuits on P2E_SKIP_STATUS_GATE=1 or subagent_type in {p2e-architect, p2e-staff-engineer, rescue}. New in v0.7.',
+  'ag-arch':'opus subagent. On approach-review stories: proposes 2-3 approaches with trade-offs + 3-6-step sketch. No code edits.',
+  'ag-staff':'opus subagent. Fires when batch size >= 2: wave dependency graph + file-collision flags. No code edits.',
+  'ag-impl':'sonnet general-purpose Agent. Receives first-turn briefing + architect plan, writes code in the worktree, runs verification.',
+  'ag-rescue':'Codex-side handoff for deeper diagnosis on second-strike failures.',
+  'sc-label':'v0.7 helper. Idempotent gh issue edit wrapper with label map (OPEN=ready, IN_PROGRESS=in-progress, IN_REVIEW=review, DONE=done, BLOCKED=blocked).',
+  'sc-valid':'Validator that keeps .claude-plugin/plugin.json and .codex-plugin/plugin.json in sync.',
+  'mcp-st':'Stories tool. list/get/create/update/delete/move. Human-readable story_id (P-01-L1).',
+  'mcp-cr':'Acceptance criteria. create/update/toggle/delete.',
+  'mcp-cap':'Capabilities. INTRODUCES/MODIFIES/DEPRECATES. isBreaking drives adaptive router.',
+  'mcp-pr':'Projects. list/get/create/update. Project slug scopes every other call.',
+  'mcp-ux':'UXOs (user experience objectives). Anchor phase+tier cells.',
+  'mcp-gh':'Opens a GH issue from a story and links them. Requires project.githubRepo + PAT configured.',
+  'ext-mcp':'Remote MCP server at p2e-mocha.vercel.app. Auth + audit log + persistence.',
+  'ext-gh':'GitHub API via gh CLI on the local machine. Issue create/edit/label/comment.',
+  'ext-cache':'Local JSON cache. Written by /p2e-update-story, read by the PreToolUse hook. 30s TTL.',
+  'ext-git':'Git worktree created by orchestrator before spawning implementers.',
+  'mcp-ph':'Phases. create/update/delete. Journey-level objects. Bootstrap writes phases first before UXOs before stories.',
+  'sp-brain':'External skill: superpowers:brainstorming. The P2E bootstrap workflow invokes it (or the Codex equivalent) to run the onboarding interview in --mode=onboarding. Referenced abstractly in p2e-bootstrap.md line 29.',
+  'sp-plan':'External skill: superpowers:writing-plans. The P2E policy opts in for it on Standard/Architectural stories when constraints include approach-review OR --full-team was passed. Skipped on self-plan-inline single-story runs. Referenced in p2e-policy.md line 28.'
+};
+
+const PRESETS = [
+  { id:'won', label:'Work on next', hint:'orchestrator',
+    desc:'<strong>/p2e-work-on-next B-05-L15</strong> &mdash; thick-gate, wave plan, flip to <code>IN_PROGRESS</code> via <code>/p2e-update-story</code> (triggers label sync + cache write), optional architect + <code>superpowers:writing-plans</code>, implementer spawn. <strong>PreToolUse hook intercepts every Agent spawn</strong> and refuses if status is not IN_PROGRESS/IN_REVIEW.',
+    nodes:['cmd-won','sk-won','wf-won','wf-policy','wf-brief','wf-up','hook-pre','ag-arch','ag-staff','ag-impl','sp-plan','mcp-st','mcp-cr','sc-label','ext-mcp','ext-gh','ext-cache','ext-git'],
+    conns:[['cmd-won','sk-won'],['sk-won','wf-won'],['wf-won','wf-policy'],['wf-won','wf-brief'],['wf-won','wf-up'],['wf-won','mcp-st'],['wf-won','mcp-cr'],['wf-up','sc-label'],['sc-label','ext-gh'],['wf-up','ext-cache'],['wf-won','ag-arch'],['wf-won','ag-staff'],['wf-won','ag-impl'],['wf-won','sp-plan'],['hook-pre','ag-impl'],['hook-pre','ext-cache'],['hook-pre','ext-mcp'],['mcp-st','ext-mcp'],['mcp-cr','ext-mcp'],['wf-won','ext-git']],
+    camera:{ rotY:-0.3, rotX:0.4, dist:1400, fx:0, fy:-30 }
+  },
+  { id:'hook', label:'PreToolUse hook', hint:'v0.7 gate',
+    desc:'<strong>PreToolUse hook on Agent calls.</strong> Extracts story id via regex; checks <code>P2E_SKIP_STATUS_GATE=1</code> + subagent allowlist; reads local cache (30s TTL) or falls back to MCP HTTPS (2s timeout); blocks exit 1 if status not IN_PROGRESS/IN_REVIEW. Fail-closed on auth/network errors. This is the piece that physically prevents the orchestrator from silently skipping the flip.',
+    nodes:['hook-pre','ag-impl','ag-arch','ag-staff','ext-cache','ext-mcp'],
+    conns:[['hook-pre','ag-impl'],['hook-pre','ext-cache'],['hook-pre','ext-mcp']],
+    camera:{ rotY:-0.6, rotX:0.2, dist:900, fx:-100, fy:100 }
+  },
+  { id:'thicken', label:'Thicken a story', hint:'/p2e-update-story',
+    desc:'<strong>/p2e-update-story --thicken X-YY-LZ</strong> &mdash; fetches story, renders annotated preview with provenance, accept, MCP writes. If the staged update crosses a lifecycle boundary, v0.7 triggers <code>sync-github-label.sh</code> + cache refresh in fail-fast order. On GH-reconciliation failure the user is sent to <code>/p2e-sync-labels</code> as the repair path.',
+    nodes:['cmd-up','sk-up','wf-up','wf-policy','wf-sync','mcp-st','mcp-cr','mcp-cap','sc-label','ext-gh','ext-cache','ext-mcp'],
+    conns:[['cmd-up','sk-up'],['sk-up','wf-up'],['wf-up','wf-policy'],['wf-up','mcp-st'],['wf-up','mcp-cr'],['wf-up','mcp-cap'],['wf-up','sc-label'],['sc-label','ext-gh'],['wf-up','ext-cache'],['wf-up','wf-sync'],['mcp-st','ext-mcp'],['mcp-cr','ext-mcp'],['mcp-cap','ext-mcp']],
+    camera:{ rotY:0.1, rotX:0.3, dist:1100, fx:50, fy:0 }
+  },
+  { id:'add', label:'Add a story', hint:'/p2e-add-story',
+    desc:'<strong>/p2e-add-story "..."</strong> &mdash; description -> phase/tier/UXO/RRR/AC/capabilities preview -> MCP batch write (stories -> criteria -> capabilities) -> gh issue create with <code>ready</code> label -> link back.',
+    nodes:['cmd-add','sk-add','wf-add','wf-policy','mcp-st','mcp-cr','mcp-cap','mcp-gh','ext-mcp','ext-gh'],
+    conns:[['cmd-add','sk-add'],['sk-add','wf-add'],['wf-add','wf-policy'],['wf-add','mcp-st'],['wf-add','mcp-cr'],['wf-add','mcp-cap'],['wf-add','mcp-gh'],['wf-add','ext-gh'],['mcp-st','ext-mcp'],['mcp-cr','ext-mcp'],['mcp-cap','ext-mcp'],['mcp-gh','ext-mcp'],['mcp-gh','ext-gh']],
+    camera:{ rotY:-0.1, rotX:0.3, dist:1100, fx:-50, fy:0 }
+  },
+  { id:'bootstrap', label:'Bootstrap a project', hint:'/p2e-bootstrap',
+    desc:'<strong>/p2e-bootstrap --mode={new,onboarding}</strong> &mdash; <code>new</code> reads PRD; <code>onboarding</code> runs <code>superpowers:brainstorming</code> interview + repo introspection (+ optional <code>--backfill-built</code> which reads <code>gh pr list</code> and writes DONE layers with capabilities). Writes phases -> UXOs -> DRAFT stories. Drafts then flow into <code>/p2e-update-story</code> for thickening.',
+    nodes:['cmd-bs','sk-bs','wf-bs','wf-policy','wf-up','sp-brain','mcp-pr','mcp-ph','mcp-ux','mcp-st','mcp-cap','ext-mcp','ext-gh'],
+    conns:[['cmd-bs','sk-bs'],['sk-bs','wf-bs'],['wf-bs','wf-policy'],['wf-bs','sp-brain'],['wf-bs','mcp-ph'],['wf-bs','mcp-ux'],['wf-bs','mcp-st'],['wf-bs','mcp-cap'],['wf-bs','ext-gh'],['wf-bs','wf-up'],['mcp-ph','ext-mcp'],['mcp-pr','ext-mcp'],['mcp-ux','ext-mcp'],['mcp-st','ext-mcp'],['mcp-cap','ext-mcp']],
+    camera:{ rotY:-0.2, rotX:0.3, dist:1200, fx:-150, fy:0 }
+  },
+  { id:'sync', label:'Sync labels', hint:'/p2e-sync-labels',
+    desc:'<strong>/p2e-sync-labels</strong> &mdash; explicit reconcile. Resolves target repo from <code>mcp__p2e__projects</code>, enumerates closed GH issues still carrying <code>review</code>, resolves merge sha per issue, flips <code>review</code> -> <code>done</code> + posts landed-on-main comment. Idempotent. Does <em>not</em> touch P2E stories.',
+    nodes:['cmd-sync','sk-sync','wf-sync','mcp-pr','ext-mcp','ext-gh'],
+    conns:[['cmd-sync','sk-sync'],['sk-sync','wf-sync'],['wf-sync','mcp-pr'],['wf-sync','ext-gh'],['mcp-pr','ext-mcp']],
+    camera:{ rotY:0.3, rotX:0.3, dist:1000, fx:150, fy:0 }
+  },
+  { id:'lifecycle', label:'Draft-to-shipped lifecycle', hint:'cross-flow',
+    desc:'<strong>Full story lifecycle across workflows.</strong> <code>/p2e-bootstrap</code> drafts stories, <code>/p2e-update-story</code> thickens + promotes them (lifecycle label sync fires on transitions), <code>/p2e-work-on-next</code> implements them (with hook-gated agent spawns), and if GH label reconciliation fails at any point, <code>/p2e-sync-labels</code> is the repair path. This view exposes the <em>handoff</em> edges between workflows that the individual-command presets hide.',
+    nodes:['cmd-bs','cmd-add','cmd-up','cmd-won','cmd-sync','sk-bs','sk-add','sk-up','sk-won','sk-sync','wf-bs','wf-add','wf-up','wf-won','wf-sync','wf-policy','hook-pre','ag-impl','sp-brain','sp-plan','sc-label','mcp-st','ext-mcp','ext-gh','ext-cache'],
+    conns:[['wf-bs','wf-up'],['wf-add','wf-up'],['wf-up','wf-sync'],['wf-won','wf-up'],['wf-bs','sp-brain'],['wf-won','sp-plan'],['wf-up','sc-label'],['sc-label','ext-gh'],['wf-up','ext-cache'],['hook-pre','ag-impl']],
+    camera:{ rotY:-0.2, rotX:0.35, dist:1700, fx:0, fy:0 }
+  },
+  { id:'full', label:'Full system', hint:'everything',
+    desc:'<strong>Full view.</strong> 38 nodes, ~55 connections. Use the other presets to isolate a single use case; this one is for the overall shape.',
+    nodes:null, conns:null,
+    camera:{ rotY:-0.35, rotX:0.45, dist:1700, fx:0, fy:0 }
+  }
+];
+
+// =========================================================================
+// State
+// =========================================================================
+
+const state = {
+  preset: 'won',
+  layers: Object.fromEntries(Object.keys(LAYER_META).map(k => [k, true])),
+  connTypes: Object.fromEntries(Object.keys(CONN_TYPES).map(k => [k, true])),
+  comments: [],
+  modalTarget: null,
+  // Camera
+  rotX: 0.4, rotY: -0.3,
+  dist: 1400,
+  fx: 0, fy: -30, // focus offset (camera target)
+  autorotate: false,
+  scale: 1,
+  focusNode: null,   // id of the currently-clicked node (end-to-end highlight mode)
+  dragMoved: false,   // pointer moved between down/up -> suppress the subsequent click
+  // Animation
+  camAnim: null,
+};
+
+// =========================================================================
+// Camera / projection
+// =========================================================================
+
+function project(x, y, z) {
+  // Subtract focus offset (camera looks at fx, fy, 0)
+  const X = x - state.fx, Y = y - state.fy, Z = z;
+  // Rotate Y axis (yaw)
+  const cy = Math.cos(state.rotY), sy = Math.sin(state.rotY);
+  let x1 = X * cy - Z * sy;
+  let z1 = X * sy + Z * cy;
+  // Rotate X axis (pitch)
+  const cx = Math.cos(state.rotX), sx = Math.sin(state.rotX);
+  let y1 = Y * cx - z1 * sx;
+  let z2 = Y * sx + z1 * cx;
+  // Perspective (camera distance) + viewport scale (pure multiplier)
+  const f = state.dist / (state.dist + z2);
+  const k = f * state.scale;
+  return { x: x1 * k, y: y1 * k, scale: k, depth: z2 };
+}
+
+// =========================================================================
+// Scene render
+// =========================================================================
+
+const scene = document.getElementById('scene');
+function sceneSize() {
+  const r = scene.getBoundingClientRect();
+  return { w: r.width, h: r.height };
+}
+
+function render() {
+  const preset = PRESETS.find(p => p.id === state.preset);
+  const { w, h } = sceneSize();
+  scene.setAttribute('viewBox', `${-w/2} ${-h/2} ${w} ${h}`);
+
+  const nodeIsActive = (id) => !preset.nodes || preset.nodes.includes(id);
+  const connIsActive = (c) => !preset.conns || preset.conns.some(([f,t]) => f===c.from && t===c.to);
+  // Focus mode: precompute the set of neighbors of the focused node
+  const focusNeighbors = new Set();
+  if (state.focusNode) {
+    CONNS.forEach(c => {
+      if (c.from === state.focusNode) focusNeighbors.add(c.to);
+      if (c.to === state.focusNode) focusNeighbors.add(c.from);
+    });
+  }
+  const focusMode = !!state.focusNode;
+  const nodeFocusState = (id) => {
+    if (!focusMode) return null;
+    if (id === state.focusNode) return 'focused';
+    if (focusNeighbors.has(id)) return 'neighbor';
+    return 'faded';
+  };
+  const edgeIsIncidentToFocus = (c) => focusMode && (c.from === state.focusNode || c.to === state.focusNode);
+
+  // Project every node
+  const projected = {};
+  NODES.forEach(n => {
+    if (!state.layers[n.layer]) return;
+    const p = project(n.x, LAYER_META[n.layer].y, n.z);
+    projected[n.id] = { ...p, node: n };
+  });
+
+  // Arrowhead defs (per conn type)
+  const defs = Object.entries(CONN_TYPES).map(([k,v]) =>
+    `<marker id="arr-${k}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0, 8 4, 0 8" fill="${v.color}"/></marker>`
+  ).join('');
+
+  // Layer planes (drawn at layer depth)
+  const layerPlanes = Object.entries(LAYER_META)
+    .filter(([k]) => state.layers[k])
+    .map(([k, m]) => {
+      const corners = [
+        project(-600, m.y, -200),
+        project( 600, m.y, -200),
+        project( 600, m.y,  200),
+        project(-600, m.y,  200),
+      ];
+      const pts = corners.map(c => `${c.x},${c.y}`).join(' ');
+      const avgDepth = corners.reduce((s,c) => s+c.depth, 0) / 4;
+      const labelP = project(-620, m.y, -200);
+      return {
+        depth: avgDepth,
+        svg: `<polygon points="${pts}" fill="${m.stroke}" fill-opacity="0.03" stroke="${m.stroke}" stroke-opacity="0.15" stroke-dasharray="3,4"/><text x="${labelP.x}" y="${labelP.y}" font-size="${10*labelP.scale}" font-weight="600" fill="${m.stroke}" fill-opacity="0.6" letter-spacing="1" text-anchor="end" dominant-baseline="middle">${m.label.toUpperCase()}</text>`
+      };
+    });
+
+  // Connections
+  //   spine     - part of the preset's primary flow: active + animated
+  //   visible   - both endpoints active but not on the spine: shown at default brightness
+  //   dimmed    - at least one endpoint is inactive: faded
+  const conns = CONNS
+    .filter(c => state.connTypes[c.type])
+    .filter(c => projected[c.from] && projected[c.to])
+    .map(c => {
+      const a = projected[c.from], b = projected[c.to];
+      const typeMeta = CONN_TYPES[c.type];
+      const bothActive = nodeIsActive(c.from) && nodeIsActive(c.to);
+      const spine = bothActive && connIsActive(c);
+      const incidentFocus = edgeIsIncidentToFocus(c);
+      const active = focusMode ? incidentFocus : spine;
+      const avgDepth = (a.depth + b.depth) / 2;
+      // Curved bezier between the two 2D points, control points pulled toward the center
+      const midx = (a.x + b.x) / 2, midy = (a.y + b.y) / 2;
+      const curve = 30 * Math.min(a.scale, b.scale);
+      const cx1 = a.x, cy1 = midy + curve;
+      const cx2 = b.x, cy2 = midy - curve;
+      const d = `M ${a.x} ${a.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${b.x} ${b.y}`;
+      let cls = 'connection';
+      if (focusMode) cls += incidentFocus ? ' active' : ' dimmed';
+      else if (spine) cls += ' active';
+      else if (!bothActive && preset.nodes) cls += ' dimmed';
+      const dash = active && typeMeta.dash ? typeMeta.dash : (typeMeta.dash || '');
+      return {
+        depth: avgDepth,
+        svg: `<path d="${d}" class="${cls}" stroke="${typeMeta.color}"${dash?` stroke-dasharray="${dash}"`:''} marker-end="url(#arr-${c.type})"/>`
+      };
+    });
+
+  // Nodes
+  const nodes = Object.values(projected).map(p => {
+    const n = p.node;
+    const active = nodeIsActive(n.id);
+    const hasComment = state.comments.some(c => c.target === n.id);
+    const fState = nodeFocusState(n.id);
+    let cls = 'node';
+    if (focusMode) { if (fState === 'focused') cls += ' focused'; else if (fState === 'neighbor') cls += ' neighbor'; else cls += ' faded'; }
+    else if (preset.nodes && !active) cls += ' dimmed';
+    if (hasComment) cls += ' has-comment';
+    const meta = LAYER_META[n.layer];
+    const w = NODE_W * p.scale, h = NODE_H * p.scale;
+    const x = p.x - w/2, y = p.y - h/2;
+    const titleFs = Math.max(8, 11 * p.scale);
+    const subFs = Math.max(7, 9 * p.scale);
+    const badge = hasComment ?
+      `<circle cx="${p.x + w/2 - 8}" cy="${p.y - h/2 + 8}" r="${6*p.scale}" fill="#fbbf24"/><text x="${p.x + w/2 - 8}" y="${p.y - h/2 + 8 + subFs/3}" text-anchor="middle" font-size="${Math.max(7, 9*p.scale)}" font-weight="700" fill="#05080c">${state.comments.filter(c=>c.target===n.id).length}</text>` : '';
+    return {
+      depth: p.depth,
+      svg: `<g class="${cls}" data-id="${n.id}">
+        <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${5*p.scale}" fill="${meta.fill}" stroke="${meta.stroke}"/>
+        <text x="${x + 8*p.scale}" y="${y + 14*p.scale}" class="title" font-size="${titleFs}" dominant-baseline="hanging">${n.label}</text>
+        <text x="${x + 8*p.scale}" y="${y + h - 10*p.scale}" class="sub" font-size="${subFs}">${n.sub}</text>
+        ${badge}
+      </g>`
+    };
+  });
+
+  // Sort everything back-to-front (larger depth = farther)
+  const all = [...layerPlanes, ...conns, ...nodes].sort((a, b) => b.depth - a.depth);
+  scene.innerHTML = `<defs>${defs}</defs>${all.map(o => o.svg).join('')}`;
+
+  // Click handling is delegated at the scene level (see pointer handlers) so render() re-creating the DOM never wipes listeners.
+
+  renderGizmo();
+  document.getElementById('flow-desc').innerHTML = preset.desc;
+}
+
+// Axis gizmo in lower-right corner
+function renderGizmo() {
+  const gizmo = document.getElementById('gizmo');
+  const p3 = (x,y,z) => {
+    const cy = Math.cos(state.rotY), sy = Math.sin(state.rotY);
+    let x1 = x*cy - z*sy, z1 = x*sy + z*cy;
+    const cx = Math.cos(state.rotX), sx = Math.sin(state.rotX);
+    let y1 = y*cx - z1*sx, z2 = y*sx + z1*cx;
+    return { x: x1, y: y1 };
+  };
+  const o = p3(0,0,0), X = p3(35,0,0), Y = p3(0,-35,0), Z = p3(0,0,35);
+  gizmo.innerHTML = `
+    <line x1="${o.x}" y1="${o.y}" x2="${X.x}" y2="${X.y}" stroke="#ef4444" stroke-width="2"/>
+    <line x1="${o.x}" y1="${o.y}" x2="${Y.x}" y2="${Y.y}" stroke="#34d399" stroke-width="2"/>
+    <line x1="${o.x}" y1="${o.y}" x2="${Z.x}" y2="${Z.y}" stroke="#4ea8ff" stroke-width="2"/>
+    <text x="${X.x*1.25}" y="${X.y*1.25}" font-size="10" fill="#ef4444" text-anchor="middle" dominant-baseline="middle">X</text>
+    <text x="${Y.x*1.25}" y="${Y.y*1.25}" font-size="10" fill="#34d399" text-anchor="middle" dominant-baseline="middle">Y</text>
+    <text x="${Z.x*1.25}" y="${Z.y*1.25}" font-size="10" fill="#4ea8ff" text-anchor="middle" dominant-baseline="middle">Z</text>
+  `;
+}
+
+// =========================================================================
+// Controls
+// =========================================================================
+
+function renderControls() {
+  document.getElementById('presets').innerHTML = PRESETS.map(p =>
+    `<button class="preset-btn ${p.id===state.preset?'active':''}" data-id="${p.id}">
+      <span class="dot"></span><span>${p.label}</span><span class="meta">${p.hint}</span>
+    </button>`
+  ).join('');
+  document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => {
+    state.preset = b.dataset.id;
+    const p = PRESETS.find(pr => pr.id === state.preset);
+    if (p.camera) animateCamera(p.camera);
+    renderControls();
+    render();
+    updatePrompt();
+  }));
+
+  document.getElementById('layers').innerHTML = Object.entries(LAYER_META).map(([k,v]) =>
+    `<label class="toggle"><input type="checkbox" ${state.layers[k]?'checked':''} data-layer="${k}"/><span class="swatch" style="background:${v.stroke}"></span><span>${v.label}</span></label>`
+  ).join('');
+  document.querySelectorAll('input[data-layer]').forEach(cb => cb.addEventListener('change', () => {
+    state.layers[cb.dataset.layer] = cb.checked; render(); updatePrompt();
+  }));
+
+  document.getElementById('conns').innerHTML = Object.entries(CONN_TYPES).map(([k,v]) =>
+    `<label class="toggle"><input type="checkbox" ${state.connTypes[k]?'checked':''} data-conn="${k}"/><span class="swatch" style="background:${v.color}"></span><span>${v.label}</span></label>`
+  ).join('');
+  document.querySelectorAll('input[data-conn]').forEach(cb => cb.addEventListener('change', () => {
+    state.connTypes[cb.dataset.conn] = cb.checked; render(); updatePrompt();
+  }));
+}
+
+function renderSelectedPanel() {
+  const sec = document.getElementById('selected-section');
+  const content = document.getElementById('selected-content');
+  document.querySelector('.app').classList.toggle('focusing', !!state.focusNode);
+  if (!state.focusNode) { sec.style.display = 'none'; content.innerHTML = ''; return; }
+  const node = NODES.find(n => n.id === state.focusNode);
+  if (!node) { sec.style.display = 'none'; return; }
+  const meta = LAYER_META[node.layer];
+  const neighbors = [];
+  CONNS.forEach(c => {
+    if (c.from === state.focusNode) neighbors.push({ dir:'out', id:c.to, type:c.type });
+    if (c.to === state.focusNode) neighbors.push({ dir:'in',  id:c.from, type:c.type });
+  });
+  const neighborsOut = neighbors.filter(n=>n.dir==='out');
+  const neighborsIn  = neighbors.filter(n=>n.dir==='in');
+  const nlabel = (id) => { const n = NODES.find(x=>x.id===id); return n ? n.label : id; };
+  const typeColor = (t) => CONN_TYPES[t].color;
+  sec.style.display = '';
+  content.innerHTML = `
+    <div style="display:inline-block; padding:2px 8px; border-radius:3px; font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; background:${meta.stroke}; color:#05080c; margin-bottom:8px;">${meta.label}</div>
+    <div style="font-size:13px; font-weight:600; margin-bottom:2px;">${esc(node.label)}</div>
+    <div class="mono" style="font-size:11px; color:var(--text-dim); margin-bottom:10px;">${esc(node.sub)}</div>
+    <div style="font-size:11px; color:var(--text-dim); line-height:1.5; margin-bottom:10px;">${esc(NODE_DESC[node.id] || '')}</div>
+    ${neighborsOut.length ? `<div style="font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:4px;">Out (${neighborsOut.length})</div><div style="margin-bottom:8px;">${neighborsOut.map(n=>`<div style="font-size:11px; padding:2px 0;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${typeColor(n.type)}; margin-right:6px;"></span>${esc(nlabel(n.id))} <span style="color:var(--text-muted); font-size:10px;">${n.type}</span></div>`).join('')}</div>` : ''}
+    ${neighborsIn.length ? `<div style="font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:4px;">In (${neighborsIn.length})</div><div style="margin-bottom:8px;">${neighborsIn.map(n=>`<div style="font-size:11px; padding:2px 0;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${typeColor(n.type)}; margin-right:6px;"></span>${esc(nlabel(n.id))} <span style="color:var(--text-muted); font-size:10px;">${n.type}</span></div>`).join('')}</div>` : ''}
+    <div style="display:flex; gap:6px; margin-top:10px;">
+      <button class="ctrl-btn" onclick="openModal('${node.id}')">Add comment</button>
+      <button class="ctrl-btn" onclick="clearFocus()">Clear focus</button>
+    </div>
+  `;
+}
+window.clearFocus = function() { state.focusNode = null; renderSelectedPanel(); render(); };
+
+function renderComments() {
+  const el = document.getElementById('comments-list');
+  document.getElementById('comment-count').textContent = state.comments.length ? `(${state.comments.length})` : '';
+  if (state.comments.length === 0) {
+    el.innerHTML = '<div class="empty">Click a node to add a comment.</div>';
+    return;
+  }
+  el.innerHTML = state.comments.map(c =>
+    `<div class="comment"><div class="target">${esc(c.targetLabel)}</div><div class="text">${esc(c.text)}</div><button class="del" data-id="${c.id}">&times;</button></div>`
+  ).join('');
+  el.querySelectorAll('.del').forEach(b => b.addEventListener('click', () => {
+    state.comments = state.comments.filter(c => String(c.id) !== b.dataset.id);
+    renderComments(); render(); updatePrompt();
+  }));
+}
+
+function updatePrompt() {
+  const preset = PRESETS.find(p => p.id === state.preset);
+  const parts = [];
+  parts.push('I want to explore the P2E plugin architecture (v0.7.0).');
+  if (state.preset === 'full') {
+    parts.push('Viewing the full system in 3D: commands -> skills (thin wrappers) -> workflows (markdown docs with the actual behavior) -> hooks + agents + scripts (runtime plumbing) -> MCP tools -> external services.');
+  } else {
+    parts.push(`Focused on: ${preset.label} - ${stripHtml(preset.desc)}`);
+  }
+  const hiddenLayers = Object.entries(state.layers).filter(([,v])=>!v).map(([k])=>LAYER_META[k].label);
+  if (hiddenLayers.length) parts.push(`Hidden layers: ${hiddenLayers.join(', ')}.`);
+  if (state.comments.length) {
+    parts.push('', 'Specific questions on components:');
+    state.comments.forEach(c => { parts.push('', `**${c.targetLabel}** (${c.targetFile}):`, c.text); });
+  } else {
+    parts.push('', 'Help me understand this architecture - especially where I would hook into it.');
+  }
+  document.getElementById('prompt-text').textContent = parts.join('\n');
+}
+
+// =========================================================================
+// Mouse / wheel interaction
+// =========================================================================
+
+let drag = null;
+
+function onPointerMove(e) {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (Math.abs(dx) + Math.abs(dy) > 8) state.dragMoved = true;
+  if (drag.pan) {
+    const cy = Math.cos(state.rotY), cx = Math.cos(state.rotX);
+    const sensY = (cy >= 0 ? 1 : -1) * Math.max(0.2, Math.abs(cy));
+    const sensX = (cx >= 0 ? 1 : -1) * Math.max(0.2, Math.abs(cx));
+    state.fx = drag.fx - dx / (sensY * state.scale);
+    state.fy = drag.fy - dy / (sensX * state.scale);
+  } else {
+    state.rotY = drag.rotY + dx * 0.006;
+    state.rotX = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, drag.rotX + dy * 0.006));
+  }
+  render();
+}
+function onPointerUp() {
+  drag = null;
+  scene.classList.remove('dragging');
+  scene.style.cursor = '';
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
+}
+
+scene.addEventListener('pointerdown', e => {
+  // Only hijack drag for primary button or explicit pan modifiers. Let the click path flow through.
+  const pan = e.shiftKey || e.button === 1 || e.button === 2;
+  state.dragMoved = false;
+  drag = { x: e.clientX, y: e.clientY, rotX: state.rotX, rotY: state.rotY, fx: state.fx, fy: state.fy, pan };
+  scene.classList.add('dragging');
+  scene.style.cursor = pan ? 'move' : 'grabbing';
+  hideHelp();
+  state.autorotate = false; updateAutorotateBtn();
+  // Window-level so the drag continues if cursor leaves the SVG. No setPointerCapture — it
+  // redirects pointerup away from the original target and breaks the browser's click heuristic,
+  // which silently swallowed every node click in the previous build.
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+});
+// Single delegated click handler: node -> focus toggle; empty canvas -> clear focus.
+// Delegation survives the SVG innerHTML rewrites that render() does on every drag-move.
+scene.addEventListener('click', e => {
+  if (state.dragMoved) { state.dragMoved = false; return; }
+  let t = e.target;
+  while (t && t !== scene) {
+    if (t.classList && t.classList.contains('node')) {
+      const id = t.dataset.id;
+      state.focusNode = (state.focusNode === id) ? null : id;
+      renderSelectedPanel();
+      render();
+      return;
+    }
+    t = t.parentNode;
+  }
+  if (state.focusNode) { state.focusNode = null; renderSelectedPanel(); render(); }
+});
+scene.addEventListener('contextmenu', e => e.preventDefault()); // right-drag pans, so suppress the menu
+scene.addEventListener('wheel', e => {
+  e.preventDefault();
+  // Normalize deltaY (mouse wheels give ~100, trackpads give small values).
+  // Map to a small per-event factor, capped so one big scroll doesn't jump.
+  const delta = Math.max(-50, Math.min(50, e.deltaY));
+  const factor = Math.exp(-delta * 0.0025); // ~1.13 at max in, ~0.88 at max out
+  state.scale = Math.max(0.25, Math.min(4, state.scale * factor));
+  render();
+  hideHelp();
+}, { passive: false });
+
+function resetView() {
+  state.scale = 1; animateCamera({ rotY: -0.3, rotX: 0.4, dist: 1400, fx: 0, fy: -30 });
+}
+
+function toggleAutorotate() {
+  state.autorotate = !state.autorotate;
+  updateAutorotateBtn();
+  if (state.autorotate) animateAutorotate();
+}
+function updateAutorotateBtn() {
+  const b = document.getElementById('autorotate-btn');
+  b.textContent = state.autorotate ? 'Stop rotate' : 'Auto-rotate';
+  b.classList.toggle('primary', state.autorotate);
+}
+function animateAutorotate() {
+  if (!state.autorotate || drag || state.camAnim) return;
+  state.rotY += 0.003;
+  if (state.rotY > Math.PI) state.rotY -= 2*Math.PI;
+  render();
+  requestAnimationFrame(animateAutorotate);
+}
+
+// Smooth camera animation toward target
+function animateCamera(target) {
+  state.camAnim = { start: Date.now(), dur: 800, from: { rotX: state.rotX, rotY: state.rotY, dist: state.dist, fx: state.fx, fy: state.fy }, to: target };
+  function step() {
+    const a = state.camAnim; if (!a) return;
+    const t = Math.min(1, (Date.now() - a.start) / a.dur);
+    const e = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; // easeInOutQuad
+    // Shortest-path yaw
+    let dy = a.to.rotY - a.from.rotY;
+    while (dy > Math.PI) dy -= 2*Math.PI;
+    while (dy < -Math.PI) dy += 2*Math.PI;
+    state.rotX = a.from.rotX + (a.to.rotX - a.from.rotX) * e;
+    state.rotY = a.from.rotY + dy * e;
+    state.dist = a.from.dist + (a.to.dist - a.from.dist) * e;
+    state.fx = a.from.fx + (a.to.fx - a.from.fx) * e;
+    state.fy = a.from.fy + (a.to.fy - a.from.fy) * e;
+    render();
+    if (t < 1) requestAnimationFrame(step); else { state.camAnim = null; if (state.autorotate) animateAutorotate(); }
+  }
+  requestAnimationFrame(step);
+}
+
+// =========================================================================
+// Modal
+// =========================================================================
+
+function openModal(nodeId) {
+  const node = NODES.find(n => n.id === nodeId); if (!node) return;
+  state.modalTarget = node;
+  const meta = LAYER_META[node.layer];
+  const k = document.getElementById('modal-kind');
+  k.textContent = meta.label; k.style.background = meta.stroke; k.style.color = '#05080c';
+  document.getElementById('modal-title').textContent = node.label;
+  document.getElementById('modal-subtitle').textContent = node.sub;
+  document.getElementById('modal-desc').textContent = NODE_DESC[node.id] || '';
+  document.getElementById('modal-input').value = '';
+  document.getElementById('modal-backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('modal-input').focus(), 10);
+}
+function closeModal() { document.getElementById('modal-backdrop').classList.remove('open'); state.modalTarget = null; }
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-backdrop').addEventListener('click', e => { if (e.target.id === 'modal-backdrop') closeModal(); });
+document.getElementById('modal-save').addEventListener('click', () => {
+  const text = document.getElementById('modal-input').value.trim();
+  if (!text || !state.modalTarget) { closeModal(); return; }
+  const n = state.modalTarget;
+  state.comments.push({ id: Date.now(), target: n.id, targetLabel: n.label, targetFile: n.sub, text });
+  closeModal(); renderComments(); render(); updatePrompt();
+});
+
+// =========================================================================
+// Utility
+// =========================================================================
+
+document.getElementById('copy-btn').addEventListener('click', async () => {
+  const text = document.getElementById('prompt-text').textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Prompt'; btn.classList.remove('copied'); }, 1200);
+  } catch { alert('Copy failed'); }
+});
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function stripHtml(s) { const d = document.createElement('div'); d.innerHTML = s; return d.textContent; }
+
+let helpTimer = setTimeout(hideHelp, 5000);
+function hideHelp() { document.getElementById('help-hint').classList.add('hidden'); clearTimeout(helpTimer); }
+
+function zoomBy(factor) {
+  // factor < 1 = zoom in (bigger), factor > 1 = zoom out (smaller)
+  state.scale = Math.max(0.25, Math.min(4, state.scale / factor));
+  render();
+  hideHelp();
+}
+function toggleZen() {
+  const app = document.querySelector('.app');
+  app.classList.toggle('zen');
+  const btn = document.getElementById('zen-toggle');
+  btn.innerHTML = app.classList.contains('zen') ? '&#x2B1A;' : '&#x2B1C;';
+  btn.title = app.classList.contains('zen') ? 'Exit zen (H)' : 'Zen mode (H) — hide panels for full-canvas view';
+  // Re-render so the viewBox picks up the new canvas size
+  setTimeout(render, 0);
+}
+window.toggleZen = toggleZen;
+document.getElementById('zen-toggle').addEventListener('click', toggleZen);
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  const panStep = 60 / state.scale;
+  if (e.key === '+' || e.key === '=') zoomBy(0.9);
+  else if (e.key === '-' || e.key === '_') zoomBy(1.11);
+  else if (e.key === 'r' || e.key === 'R') resetView();
+  else if (e.key === 'ArrowLeft')  { state.fx -= panStep; render(); e.preventDefault(); }
+  else if (e.key === 'ArrowRight') { state.fx += panStep; render(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp')    { state.fy -= panStep; render(); e.preventDefault(); }
+  else if (e.key === 'ArrowDown')  { state.fy += panStep; render(); e.preventDefault(); }
+  else if (e.key === 'Escape')     { if (state.focusNode) { state.focusNode = null; renderSelectedPanel(); render(); } }
+  else if (e.key === 'h' || e.key === 'H') toggleZen();
+});
+window.resetView = resetView; window.toggleAutorotate = toggleAutorotate; window.zoomBy = zoomBy;
+
+// =========================================================================
+// Init
+// =========================================================================
+
+window.addEventListener('resize', render);
+renderControls();
+renderComments();
+updatePrompt();
+render();
+</script>
+</body>
+</html>
