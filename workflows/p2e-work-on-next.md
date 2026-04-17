@@ -20,7 +20,12 @@ This is the canonical orchestrator workflow. Adapter-specific entrypoints should
 6. Present the selected queue, routing decisions, and wave plan to the user.
 7. Ensure the work is happening in an appropriate git worktree for the batch.
 8. If batch size >= 2, ask the staff engineer for a wave plan and use it to organize the run.
-9. For each wave, move selected stories to `IN_PROGRESS` (`op=update status=IN_PROGRESS`), materialize the first-turn briefing per `workflows/p2e-first-turn-briefing.md` for each story, spawn implementers with the briefing as turn 1, and gate the wave with verification.
+9. For each wave:
+   - **9a. Move selected stories to IN_PROGRESS** — run `/p2e-update-story <story_id> status=IN_PROGRESS` for each story in the wave. This triggers the lifecycle label reconciliation phase in `workflows/p2e-update-story.md`: the MCP status write, the GitHub label flip (`ready` → `in-progress`), and the local cache refresh all happen as part of this step. Do not skip this step or inline the `op=update` call directly — the label and cache writes are required side effects.
+   - **9b. Materialize first-turn briefing** — per `workflows/p2e-first-turn-briefing.md` for each story in the wave.
+   - **9c. Spawn implementers** — with the briefing as turn 1, and gate the wave with verification.
+
+   > Note: the `hooks/pre-agent-spawn-story-status.sh` PreToolUse hook enforces step 9a independently — an implementer spawn (Agent tool call) against a story still at `OPEN` will be blocked with a remediation message pointing at step 9a. The hook short-circuits automatically for `subagent_type` values in `{p2e-architect, p2e-staff-engineer, rescue}` and when `P2E_SKIP_STATUS_GATE=1` is set.
 10. If the architect was skipped for a single-story thick run, the implementer self-plans inline from the briefing (no external `writing-plans` call).
 11. On a passing story, move it to `IN_REVIEW` (`op=update status=IN_REVIEW`), toggle its acceptance criteria (`mcp__p2e__criteria op=toggle`), and post the summary back to the linked issue.
 12. On a failing verification, apply the two-strike rule (`## Two-strike escalation` in policy): one re-brief, then on the second failure set `status=BLOCKED` and route to `p2e-architect` (Claude Code caller) or `codex:rescue` (Codex caller).

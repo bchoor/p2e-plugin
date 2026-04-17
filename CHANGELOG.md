@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.6.1 — 2026-04-17
+
+Patch release on top of v0.6.0. Implements B-05-L15: lifecycle-aware `/p2e-update-story` label reconciliation and the `PreToolUse` implementer status gate. No breaking changes; fully additive behavior.
+
+### Added
+- **Lifecycle label reconciliation in `/p2e-update-story`** (`workflows/p2e-update-story.md`): every lifecycle-boundary status transition (OPEN→IN_PROGRESS, IN_PROGRESS→IN_REVIEW, IN_REVIEW→DONE, any→BLOCKED) now runs a 3-phase fail-fast write: (1) MCP `stories.update`, (2) `scripts/sync-github-label.sh` to flip the GitHub label, (3) local cache refresh at `~/.cache/p2e/<slug>/<story_id>.json`. Non-lifecycle updates (thicken/steer/rename/move/retag/release/AC/capabilities diff) are unchanged.
+- **`scripts/sync-github-label.sh`** — POSIX bash helper that calls `gh issue edit --add-label / --remove-label` using the 5-entry label map (OPEN=ready, IN_PROGRESS=in-progress, IN_REVIEW=review, DONE=done, BLOCKED=blocked). Idempotent; "label not found on repo" exits 0 with a stderr warning rather than failing the overall update.
+- **`hooks/pre-agent-spawn-story-status.sh`** — Claude Code `PreToolUse` hook that fires on every `Agent` tool call. Extracts P2E story id from the agent prompt via the regex `[A-Z]{1,2}-[0-9]+(-L[0-9]+)?`, checks status via 30-second TTL local cache or MCP HTTP (2-second timeout), blocks (exit 1) if status ∉ {IN_PROGRESS, IN_REVIEW}. Fails closed when MCP is unreachable. Short-circuits on `P2E_SKIP_STATUS_GATE=1` and on `subagent_type` ∈ {p2e-architect, p2e-staff-engineer, rescue}.
+- **`hooks/hooks.json`** — Claude Code hook registration for the `PreToolUse` / `Agent` event, pointing at `pre-agent-spawn-story-status.sh` with a 5-second timeout.
+
+### Changed
+- **`workflows/p2e-work-on-next.md` step 9** split into 9a (move to IN_PROGRESS via `/p2e-update-story`), 9b (materialize briefing), 9c (spawn implementer). Added a note that the PreToolUse hook enforces step 9a independently.
+- **`.codex-plugin/plugin.json`** version bumped to `0.6.1`.
+- **`.claude-plugin/marketplace.json`** version bumped to `0.6.1`.
+
+### Notes
+- The hook is Claude Code-only. Codex does not implement `PreToolUse` hooks; the `.codex-plugin/plugin.json` is unchanged and the asymmetry is documented in README.
+- The `bun run preflight` `verificationCmd` applies to downstream consumer repos, not this markdown+shell plugin repo. Plugin-level verification: `python3 scripts/validate-plugin.py` + `bash -n` syntax checks on the new scripts.
+
 ## v0.6.0 — 2026-04-17
 
 Completes the v0.6 autonomy cluster by shipping `/p2e-update-story` (B-05-L11) and the `/p2e-bootstrap --mode={new,onboarding}` reshape (B-05-L12). With L13 already in place as v0.5.0, the L11 + L12 pair closes the loop: bootstrap drafts DRAFT stories for both greenfield and onboarding paths, update-story thickens them, and work-on-next gates on the thickness predicate at pickup.

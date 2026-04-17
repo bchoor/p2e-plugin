@@ -4,21 +4,26 @@
     "name": "bchoor"
   },
   "metadata": {
-    "description": "Marketplace for the p2e Claude Code plugin — shared workflow parity backed by the P2E MCP."
+    "description": "Marketplace for the p2e Claude Code plugin \u2014 shared workflow parity backed by the P2E MCP."
   },
   "plugins": [
     {
       "name": "p2e",
       "source": "./",
       "description": "Adds /p2e-bootstrap, /p2e-add-story, /p2e-update-story, /p2e-work-on-next, /p2e-sync-labels, and the p2e-architect / p2e-staff-engineer agents. Backed by the P2E MCP server (configurable via P2E_MCP_URL).",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "author": {
         "name": "bchoor"
       },
       "homepage": "https://github.com/bchoor/p2e-plugin",
       "repository": "https://github.com/bchoor/p2e-plugin",
       "license": "MIT",
-      "keywords": ["p2e", "product-management", "story-map", "mcp"]
+      "keywords": [
+        "p2e",
+        "product-management",
+        "story-map",
+        "mcp"
+      ]
     }
   ]
 }
