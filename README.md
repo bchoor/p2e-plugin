@@ -10,6 +10,18 @@ Primary workflows:
 - `/p2e-update-story` and `p2e-update-story` — thicken or steer any existing story (replaces `/p2e-add-story --fill`)
 - `/p2e-work-on-next` and `p2e-work-on-next`
 - `/p2e-sync-labels` and `p2e-sync-labels`
+- `/p2e-bind` and `p2e-bind` — bind this repo checkout to a P2E project for automatic slug calibration
+
+## Auto-calibration via `.p2e/project.json`
+
+Run `/p2e-bind` once per repo checkout. It derives `owner/name` from `git remote get-url origin`, matches against the P2E projects you are a member of, and writes `.p2e/project.json` at the repo root. Commit this file so all team members share the same binding.
+
+Once the file is present, two plugin hooks activate automatically:
+
+- **SessionStart** — injects a system-reminder at the start of every Claude Code session naming the bound `project_slug` and `github_repo`.
+- **PreToolUse** — intercepts every `mcp__plugin_p2e_p2e__*` tool call and blocks it if `project_slug` does not match the bound slug, printing a clear mismatch error with the bound value.
+
+Neither hook does anything in repos that lack `.p2e/project.json` — non-P2E repos are unaffected.
 
 ## What it does
 
@@ -68,6 +80,7 @@ For Codex specifically, the plugin ships with the hosted production URL as its d
 | Update story | `/p2e-update-story <story_id> [source=<prd-or-issue>] [--dry-run]` | `p2e-update-story` or natural-language request | Thicken empty fields, steer populated ones, rename, re-parent, retag, or adjust release on any existing story. Enforces the P-07-L1 thickness predicate on DRAFT → OPEN. |
 | Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [--full-team] [--dry-run]` | `p2e-work-on-next` or natural-language request | Pick up planned work, classify it, orchestrate implementation, and run the normal sync path. |
 | Sync labels | `/p2e-sync-labels` | `p2e-sync-labels` or natural-language request | Run explicit label reconciliation after external changes, partial runs, or missed automatic sync. |
+| Bind repo | `/p2e-bind` | `p2e-bind` or natural-language request | Derive `owner/name` from git remote, match against your P2E projects, and write `.p2e/project.json`. Run once per checkout; commit the file. |
 
 ## Sync behavior
 
