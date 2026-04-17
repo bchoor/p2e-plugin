@@ -67,6 +67,7 @@ def validate_json_files():
 def validate_expected_files():
     expected_commands = {
         "p2e-add-story.md",
+        "p2e-archaeology.md",
         "p2e-bind.md",
         "p2e-bootstrap.md",
         "p2e-sync-labels.md",
@@ -78,6 +79,7 @@ def validate_expected_files():
 
     expected_workflows = {
         "p2e-add-story.md",
+        "p2e-archaeology.md",
         "p2e-bind.md",
         "p2e-bootstrap.md",
         "p2e-first-turn-briefing.md",
@@ -92,6 +94,7 @@ def validate_expected_files():
     expected_skill_paths = {
         ROOT / "skills" / "p2e" / "SKILL.md",
         ROOT / "skills" / "p2e-add-story" / "SKILL.md",
+        ROOT / "skills" / "p2e-archaeology" / "SKILL.md",
         ROOT / "skills" / "p2e-bind" / "SKILL.md",
         ROOT / "skills" / "p2e-bootstrap" / "SKILL.md",
         ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
@@ -107,12 +110,14 @@ def validate_expected_files():
 def validate_wrapper_references():
     workflow_map = {
         "commands/p2e-add-story.md": "workflows/p2e-add-story.md",
+        "commands/p2e-archaeology.md": "workflows/p2e-archaeology.md",
         "commands/p2e-bind.md": "workflows/p2e-bind.md",
         "commands/p2e-bootstrap.md": "workflows/p2e-bootstrap.md",
         "commands/p2e-sync-labels.md": "workflows/p2e-sync-labels.md",
         "commands/p2e-update-story.md": "workflows/p2e-update-story.md",
         "commands/p2e-work-on-next.md": "workflows/p2e-work-on-next.md",
         "skills/p2e-add-story/SKILL.md": "workflows/p2e-add-story.md",
+        "skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
         "skills/p2e-bind/SKILL.md": "workflows/p2e-bind.md",
         "skills/p2e-bootstrap/SKILL.md": "workflows/p2e-bootstrap.md",
         "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
