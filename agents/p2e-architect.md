@@ -20,6 +20,7 @@ The orchestrator passes you:
 
 1. A story id (e.g. `B-05-L2`) and project slug (e.g. `p2e`).
 2. The working-directory root (typically a worktree).
+3. The first-turn briefing for the story (rendered per `workflows/p2e-first-turn-briefing.md`) as your turn-1 input message. You may still call `mcp__p2e__stories op=get` to fetch fields the briefing doesn't carry (e.g. relations, audit log).
 
 ## What to do
 

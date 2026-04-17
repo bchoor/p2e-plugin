@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "P2E authoring and execution workflows for Codex, backed by the P2E MCP.",
   "author": {
     "name": "bchoor",

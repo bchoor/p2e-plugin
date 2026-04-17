@@ -71,6 +71,7 @@ Wrappers should reserve higher-capacity specialist roles for architect and staff
 - After each implementer pass the orchestrator runs the story's verification (the `verificationCmd` from the thick-spec, or the batch-level verification command).
 - First failure: the orchestrator re-briefs the implementer with the failure output and allows one more pass.
 - Second failure: the orchestrator stops. It sets the story's `status` to `BLOCKED` via `mcp__p2e__stories op=update`, posts the failure summary back to the linked issue, and routes the story to either the `p2e-architect` agent for a fresh approach OR the `codex:rescue` skill for a deeper diagnosis — the choice depends on the caller (Claude Code → architect; Codex → `codex:rescue`).
+- Every escalation comment posted to the linked GitHub issue ends with the `— bchoor-claude` signature line, matching the project-wide convention.
 - There is no third retry.
 
 ## Self-plan inline
@@ -78,6 +79,23 @@ Wrappers should reserve higher-capacity specialist roles for architect and staff
 - For **single-story thick runs** where the shape-aware router skipped the architect (no `approach-review` constraint and no `--full-team`), the implementer self-plans inline from the first-turn briefing.
 - No external `superpowers:writing-plans` call is made in this path.
 - For batch size >= 2, the staff-engineer wave plan runs regardless.
+- TDD discipline is preserved on the self-plan-inline path whenever the story has any capability with `isBreaking: true`. The implementer writes tests before implementation regardless of whether `superpowers:writing-plans` was invoked.
+
+## Verification matrix
+
+For stories without a `verificationCmd` set on the thick-spec, the orchestrator falls back to a per-track default:
+
+| Track | Default verification |
+| --- | --- |
+| Fast | typecheck + lint (`bun run typecheck && bun run lint`) |
+| Standard | `bun run preflight` |
+| Architectural | `bun run preflight && bunx --bun prisma validate` |
+
+Tag-additive checks layer on top of the track default:
+
+- Tag `ui`: append a browser-QA step (placeholder until the QA harness lands in a follow-up story).
+
+Per-story override: when `story.verificationCmd` is non-null, that command runs INSTEAD of the track default. Tag-additive checks still apply.
 
 ## Batch behavior
 

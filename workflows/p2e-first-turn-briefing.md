@@ -54,3 +54,22 @@ Run: `<verificationCmd>`
 - Missing `verificationCmd`: render `Run: (no verification command specified — ask the user)` so the implementer surfaces the gap.
 - On two-strike re-brief the orchestrator appends a `## Previous failure` section below `Verification` with the failure output; keep the template above unchanged.
 - This template is loaded by every wrapper that routes a story into implementation. Do not inline it elsewhere.
+
+## Constraints sourcing
+
+The Constraints section in the briefing pulls from TWO sources:
+
+1. **Story-level constraints** — every entry in `story.constraints[]` is inlined verbatim.
+2. **Tag-mapped project invariants** — for each tag on the story, the orchestrator appends the matching invariant lines from the project's `CLAUDE.md` (or the workflow-level invariant catalog when no `CLAUDE.md` mapping exists). Default tag→invariant map for the `p2e` project:
+
+| Tag | Invariant lines to inline |
+| --- | --- |
+| Schema | Prisma schema changes require a migration that backfills cleanly; AuditLog every field change. |
+| MCP | Every MCP mutation must round-trip through the same code path the UI uses (MCP↔UI parity). |
+| UI | Multi-project scoping: every component reads `projectSlug` from context, never hardcodes `p2e`. |
+| Server | Server actions enforce the same gates as MCP tools (no bypass paths). |
+| Plugin | Wrappers stay thin pointers; behavior lives in `workflows/*.md`, not in the wrapper file. |
+| Infra | Reversible migrations only; CI must pass on the PR before merge. |
+| Docs | Documentation updates land in the same PR as the behavior change. |
+
+Wrappers may extend this map per project. The orchestrator selects only the invariants whose tag appears on the current story.
