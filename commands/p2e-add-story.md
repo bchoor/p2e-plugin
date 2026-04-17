@@ -1,6 +1,6 @@
 ---
 name: p2e-add-story
-description: Thin wrapper for the shared P2E add-story workflow.
+description: Draft a new P2E story from a free-form description; add `--dry-run` to preview without writing.
 argument-hint: <free-form description> [--dry-run]
 ---
 
