@@ -1,6 +1,21 @@
 # Changelog
 
-## v0.6.1 — 2026-04-17
+## v0.6.3 — 2026-04-17
+
+Rewrites the user-facing `description:` frontmatter on every `/p2e-*` slash command so the Claude Code command menu surfaces what each command does and hints at its most relevant flag(s). Wrappers stay thin — only the human-facing `description:` fields change; no workflow, routing, or MCP behavior is touched. `argument-hint:` remains authoritative for full argument shape.
+
+### Changed
+- `commands/p2e-add-story.md` — description rewritten to cover draft creation with preview/confirm gate.
+- `commands/p2e-bootstrap.md` — description covers both `--mode=new` and `--mode=onboarding`.
+- `commands/p2e-sync-labels.md` — description covers the explicit reconcile path.
+- `commands/p2e-update-story.md` — description covers thicken/steer/rename/move/retag/release/AC+cap + lifecycle label sync.
+- `commands/p2e-work-on-next.md` — description covers queue selection + router + wave plan + `--full-team`.
+
+### Notes
+- Implements B-05-L16. Refs bchoor/p2e#181. Closes bchoor/p2e-plugin#12.
+- `python3 scripts/validate-plugin.py` passes.
+
+## v0.6.2 — 2026-04-17
 
 Patch release on top of v0.6.0. Implements B-05-L15: lifecycle-aware `/p2e-update-story` label reconciliation and the `PreToolUse` implementer status gate. No breaking changes; fully additive behavior.
 
@@ -12,12 +27,22 @@ Patch release on top of v0.6.0. Implements B-05-L15: lifecycle-aware `/p2e-updat
 
 ### Changed
 - **`workflows/p2e-work-on-next.md` step 9** split into 9a (move to IN_PROGRESS via `/p2e-update-story`), 9b (materialize briefing), 9c (spawn implementer). Added a note that the PreToolUse hook enforces step 9a independently.
-- **`.codex-plugin/plugin.json`** version bumped to `0.6.1`.
-- **`.claude-plugin/marketplace.json`** version bumped to `0.6.1`.
+- **`.codex-plugin/plugin.json`** version bumped to `0.6.3`.
+- **`.claude-plugin/marketplace.json`** version bumped to `0.6.3` (after consolidating v0.6.1 docs + v0.6.2 feature + v0.6.3 docs-rewrite entries).
 
 ### Notes
 - The hook is Claude Code-only. Codex does not implement `PreToolUse` hooks; the `.codex-plugin/plugin.json` is unchanged and the asymmetry is documented in README.
 - The `bun run preflight` `verificationCmd` applies to downstream consumer repos, not this markdown+shell plugin repo. Plugin-level verification: `python3 scripts/validate-plugin.py` + `bash -n` syntax checks on the new scripts.
+
+## v0.6.1 — 2026-04-17
+
+Ships `docs/architecture-explorer.html` — a self-contained, single-file interactive 3D playground that visualizes every command / skill / workflow / hook / agent / script / MCP tool / external service in the plugin, plus the edges between them.
+
+### Added
+- **`docs/architecture-explorer.html`** — hand-rolled SVG projection (no external deps). Six use-case presets (add-story, thicken, work-on-next, bootstrap, sync-labels, PreToolUse hook flow) plus a cross-workflow "draft-to-shipped lifecycle" view that exposes the workflow-to-workflow handoff edges. Controls: drag to orbit, shift+drag to pan, wheel / + / - to scale, click a node to focus end-to-end, H to toggle zen mode.
+
+### Notes
+- Docs-only. No code or workflow changes. Derived from an audit of the workflow markdown so the edge set (MCP calls, handoffs, external `superpowers:*` skill invocations) reflects the shipped behavior rather than guessed relationships.
 
 ## v0.6.0 — 2026-04-17
 
