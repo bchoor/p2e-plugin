@@ -69,6 +69,7 @@ def validate_expected_files():
         "p2e-add-story.md",
         "p2e-bootstrap.md",
         "p2e-sync-labels.md",
+        "p2e-update-story.md",
         "p2e-work-on-next.md",
     }
     actual_commands = {p.name for p in (ROOT / "commands").glob("*.md")}
@@ -80,6 +81,7 @@ def validate_expected_files():
         "p2e-first-turn-briefing.md",
         "p2e-policy.md",
         "p2e-sync-labels.md",
+        "p2e-update-story.md",
         "p2e-work-on-next.md",
     }
     actual_workflows = {p.name for p in (ROOT / "workflows").glob("*.md")}
@@ -90,6 +92,7 @@ def validate_expected_files():
         ROOT / "skills" / "p2e-add-story" / "SKILL.md",
         ROOT / "skills" / "p2e-bootstrap" / "SKILL.md",
         ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
+        ROOT / "skills" / "p2e-update-story" / "SKILL.md",
         ROOT / "skills" / "p2e-work-on-next" / "SKILL.md",
     }
     actual_skill_paths = set((ROOT / "skills").glob("*/SKILL.md"))
@@ -103,10 +106,12 @@ def validate_wrapper_references():
         "commands/p2e-add-story.md": "workflows/p2e-add-story.md",
         "commands/p2e-bootstrap.md": "workflows/p2e-bootstrap.md",
         "commands/p2e-sync-labels.md": "workflows/p2e-sync-labels.md",
+        "commands/p2e-update-story.md": "workflows/p2e-update-story.md",
         "commands/p2e-work-on-next.md": "workflows/p2e-work-on-next.md",
         "skills/p2e-add-story/SKILL.md": "workflows/p2e-add-story.md",
         "skills/p2e-bootstrap/SKILL.md": "workflows/p2e-bootstrap.md",
         "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
+        "skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
         "skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
     }
 
@@ -126,6 +131,7 @@ def validate_wrapper_references():
         "workflows/p2e-policy.md",
         "workflows/p2e-bootstrap.md",
         "workflows/p2e-add-story.md",
+        "workflows/p2e-update-story.md",
         "workflows/p2e-work-on-next.md",
         "workflows/p2e-sync-labels.md",
     ):
@@ -160,11 +166,54 @@ def validate_add_story_contract():
         )
 
 
+def validate_update_story_contract():
+    update_story_skill = read_text(ROOT / "skills" / "p2e-update-story" / "SKILL.md")
+    update_story_workflow = read_text(ROOT / "workflows" / "p2e-update-story.md")
+    add_story_command = read_text(ROOT / "commands" / "p2e-add-story.md")
+    add_story_workflow = read_text(ROOT / "workflows" / "p2e-add-story.md")
+
+    for required_phrase in (
+        "ALWAYS show an annotated preview",
+        "NEVER silently mutate",
+        "stop and report the concrete blocker briefly",
+    ):
+        assert_true(
+            required_phrase in update_story_skill,
+            f"skills/p2e-update-story/SKILL.md missing update-story guardrail: {required_phrase}",
+        )
+
+    for required_phrase in (
+        "## Required preview contents",
+        "## Required confirm step",
+        "## Thicken rules",
+        "## Steer rules",
+        "## Thick-gate on DRAFT → OPEN",
+        "## GitHub issue reconciliation",
+        "Accept and write",
+        "If the user does not accept, do not write.",
+        "failingClauses",
+    ):
+        assert_true(
+            required_phrase in update_story_workflow,
+            f"workflows/p2e-update-story.md missing update-story contract phrase: {required_phrase}",
+        )
+
+    for surface, content in (
+        ("commands/p2e-add-story.md", add_story_command),
+        ("workflows/p2e-add-story.md", add_story_workflow),
+    ):
+        assert_true(
+            "/p2e-update-story" in content,
+            f"{surface} must document the --fill deprecation shim pointing at /p2e-update-story",
+        )
+
+
 def main():
     validate_json_files()
     validate_expected_files()
     validate_wrapper_references()
     validate_add_story_contract()
+    validate_update_story_contract()
     print("plugin validation passed")
 
 

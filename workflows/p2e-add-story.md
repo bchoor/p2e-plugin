@@ -12,14 +12,16 @@ This workflow drafts a single story, its acceptance criteria, and its capabiliti
 ## Purpose
 
 - Turn a story description into a structured P2E story entry.
-- Support both create mode and fill mode.
 - Create the GitHub issue after the MCP write succeeds with the `ready` label, then link it back to the story.
+
+## Deprecated fill mode
+
+The legacy `--fill <storyId>` path is deprecated as of v0.6 and now delegates to the shared `workflows/p2e-update-story.md` contract for one release before being removed. Any wrapper that still accepts `--fill` must forward the call verbatim to `/p2e-update-story` (Claude) or `p2e-update-story` (Codex) with the same story id. The fill-mode shim does not implement its own preview or write path; it is a pointer only. New thickening work should target `/p2e-update-story` directly.
 
 ## Preconditions
 
 - The target project must exist.
 - The target UXO must exist or be created as part of the flow.
-- If the story is being filled from a thin draft, the workflow should update the existing story instead of creating a new one.
 
 ## Workflow
 
