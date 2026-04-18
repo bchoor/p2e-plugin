@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.1 — 2026-04-17
+## v0.6.4 — 2026-04-17
 
 Implements B-05-L17 — the plugin-side layer of the sizing enum shipped by P-07-L6. Adds a canonical 6-tier agent-centric sizing rubric and surfaces sizing in the `/p2e-add-story` + `/p2e-update-story` preview/confirm flows. Doc + prompt work only; no schema or MCP changes.
 
@@ -16,7 +16,7 @@ Implements B-05-L17 — the plugin-side layer of the sizing enum shipped by P-07
 - **`workflows/p2e-update-story.md`** — `Required preview contents`, `Required confirm step`, new `Sizing inference` subsection under `Thicken rules`, sizing-specific paragraph under `Steer rules`, `Write behavior` phase 1 includes `sizing`, and the `Dry-run behavior` section explicitly covers the sizing row's provenance rendering.
 - **`commands/p2e-add-story.md`** + **`commands/p2e-update-story.md`** — each surfaces a `Preview rendering (sizing)` section pointing at the rubric.
 - **`skills/p2e-add-story/SKILL.md`** + **`skills/p2e-update-story/SKILL.md`** — read-list extended with `workflows/p2e-sizing-rubric.md`; hard rules clarify the default-M-at-add / infer-on-thicken / user-override semantics.
-- **`.claude-plugin/marketplace.json`** + **`.codex-plugin/plugin.json`** versions bumped to `0.7.1`.
+- **`.claude-plugin/marketplace.json`** + **`.codex-plugin/plugin.json`** versions bumped to `0.6.4` (patch release on top of v0.6.3 — the prior `0.7.0` manifest value was never tagged or released, so the realigned release line continues from v0.6.3).
 
 ### Notes
 - Implements B-05-L17. Refs bchoor/p2e#184.
