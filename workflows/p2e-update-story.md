@@ -117,6 +117,36 @@ When the user picks **Steer a specific field**, the wrapper prompts for which fi
 
 When the user picks **Adjust sizing** (equivalent to steering the `sizing` field), the wrapper prompts for one of `XS | S | M | L | XL | XXL`. The user's choice overrides both the previously populated value and any thicken-inferred proposal unconditionally — the rubric in `workflows/p2e-sizing-rubric.md` is advisory, not gating. The preview re-renders with the chosen value annotated `steered-by-user` (with the before/after pair shown inline) and returns to the confirm prompt; the write only happens on Accept.
 
+## Brainstorming escalation
+
+When the thicken path runs and the staged draft still leaves ≥ 2 of the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) empty AND the provided source does not support filling them, the wrapper invokes a shared brainstorming primitive **exactly once per flow** to batch clarifying questions in a single turn. The Claude wrapper resolves the reference against the `superpowers:brainstorming` skill; the Codex wrapper resolves it against its native brainstorming primitive (the same pattern used by `workflows/p2e-bootstrap.md --mode=onboarding` and `workflows/p2e-add-story.md` thick mode).
+
+### When to escalate
+
+Escalate **only** when ALL of the following are true after the first thicken pass:
+
+1. Two or more of the six thick-spec fields are still empty.
+2. The provided source (the `source` argument, if any) does not contain evidence to fill them, and no sibling story under the same UXO supplies matching capabilities or AC patterns.
+3. The user's original invocation did not explicitly opt out (for example via a `--no-brainstorm` flag on the wrapper, if implemented).
+
+Do NOT escalate when the gap is a single optional field. Do NOT escalate more than once per flow — if answers still leave major gaps, leave the cells empty and continue to the preview. Empty cells are preferred over filler, consistent with `## Thicken rules`.
+
+### Question shape
+
+The wrapper batches 2–4 concrete questions in a single turn. Prefer multiple-choice or closed-form questions over open-ended prose. Typical questions:
+
+- Which files or modules does this story touch? (pick from detected candidates under the same UXO, or free-form)
+- What are the non-negotiable constraints? (timezone / currency / backwards-compat / visible-screen / etc.)
+- What is explicitly out of scope?
+- Which existing document or sibling story most closely describes the shape of this work?
+- What command would verify this story is done? (defaults to the track's `verificationCmd`)
+
+### Fold-back rules
+
+- Answers fold back into the staged draft as if they had been in the original source. Any field populated from the interview is annotated `derived-from-brainstorming` in the re-rendered preview (in addition to the existing `empty` / `populated` / `derived-from-source` / `steered-by-user` set).
+- The brainstorming interview does not bypass the preview/confirm gate — the wrapper must still render the preview and return to the Thicken / Steer / Accept / Abort prompt.
+- If the user aborts the interview (or declines to answer), continue to the preview with the fields left empty. Do not force-answer on the user's behalf.
+
 ## Write behavior
 
 On Accept, issue MCP writes in this exact order and stop at the first failure:

@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "description": "P2E authoring and execution workflows for Codex, backed by the P2E MCP. Includes bootstrap (new + onboarding modes), add-story, update-story, work-on-next, and sync-labels.",
   "author": {
     "name": "bchoor",
@@ -38,6 +38,7 @@
       "Bootstrap a P2E project from this PRD",
       "Onboard this existing repo into P2E",
       "Create a new P2E story from this feature idea",
+      "Draft a thick P2E story from this feature idea",
       "Thicken this draft story"
     ],
     "brandColor": "#0f766e",
