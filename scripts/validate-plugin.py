@@ -84,6 +84,7 @@ def validate_expected_files():
         "p2e-bootstrap.md",
         "p2e-first-turn-briefing.md",
         "p2e-policy.md",
+        "p2e-sizing-rubric.md",
         "p2e-sync-labels.md",
         "p2e-update-story.md",
         "p2e-work-on-next.md",
@@ -218,12 +219,76 @@ def validate_update_story_contract():
         )
 
 
+def validate_sizing_contract():
+    rubric = read_text(ROOT / "workflows" / "p2e-sizing-rubric.md")
+    add_story_workflow = read_text(ROOT / "workflows" / "p2e-add-story.md")
+    update_story_workflow = read_text(ROOT / "workflows" / "p2e-update-story.md")
+    add_story_command = read_text(ROOT / "commands" / "p2e-add-story.md")
+    update_story_command = read_text(ROOT / "commands" / "p2e-update-story.md")
+    add_story_skill = read_text(ROOT / "skills" / "p2e-add-story" / "SKILL.md")
+    update_story_skill = read_text(ROOT / "skills" / "p2e-update-story" / "SKILL.md")
+
+    for tier in ("### XS", "### S", "### M", "### L", "### XL", "### XXL"):
+        assert_true(
+            tier in rubric,
+            f"workflows/p2e-sizing-rubric.md missing tier heading: {tier}",
+        )
+
+    for required_phrase in (
+        "Weighting rules",
+        "isBreaking",
+        "files_hint",
+        "Acceptance criteria count",
+        "Inference inputs",
+        "User override",
+    ):
+        assert_true(
+            required_phrase in rubric,
+            f"workflows/p2e-sizing-rubric.md missing sizing rubric phrase: {required_phrase}",
+        )
+
+    for surface, content in (
+        ("workflows/p2e-add-story.md", add_story_workflow),
+        ("workflows/p2e-update-story.md", update_story_workflow),
+        ("commands/p2e-add-story.md", add_story_command),
+        ("commands/p2e-update-story.md", update_story_command),
+        ("skills/p2e-add-story/SKILL.md", add_story_skill),
+        ("skills/p2e-update-story/SKILL.md", update_story_skill),
+    ):
+        assert_true(
+            "workflows/p2e-sizing-rubric.md" in content,
+            f"{surface} must reference workflows/p2e-sizing-rubric.md",
+        )
+
+    for required_phrase in (
+        "sizing",
+        "defaulted",
+        "Sizing rules",
+    ):
+        assert_true(
+            required_phrase in add_story_workflow,
+            f"workflows/p2e-add-story.md missing sizing contract phrase: {required_phrase}",
+        )
+
+    for required_phrase in (
+        "Sizing inference",
+        "Adjust sizing",
+        "derived-from-source",
+        "steered-by-user",
+    ):
+        assert_true(
+            required_phrase in update_story_workflow,
+            f"workflows/p2e-update-story.md missing sizing contract phrase: {required_phrase}",
+        )
+
+
 def main():
     validate_json_files()
     validate_expected_files()
     validate_wrapper_references()
     validate_add_story_contract()
     validate_update_story_contract()
+    validate_sizing_contract()
     print("plugin validation passed")
 
 

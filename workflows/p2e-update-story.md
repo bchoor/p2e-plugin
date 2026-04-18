@@ -38,9 +38,10 @@ This workflow updates any field of an existing P2E story — thickening empty fi
    - Move UXO
    - Retag
    - Adjust release
+   - Adjust sizing
    - Accept and write
    - Abort
-5. After every Thicken / Steer / Rename / Move UXO / Retag / Adjust release selection, re-render the preview with the new state and return to the same prompt. Only Accept exits into the write path; Abort exits with no changes.
+5. After every Thicken / Steer / Rename / Move UXO / Retag / Adjust release / Adjust sizing selection, re-render the preview with the new state and return to the same prompt. Only Accept exits into the write path; Abort exits with no changes.
 6. On Accept, perform the batched MCP write in order and stop at the first failure. Surface the failing phase + item index so earlier successful writes can be reconciled manually.
 
 ## Required preview contents
@@ -55,6 +56,7 @@ Before any write, the preview must show at least:
 - acceptance criteria with per-item diff (add / edit / remove / keep)
 - capabilities with per-item diff (add / edit / remove / keep), including `action` and `isBreaking`
 - thick-spec fields: `filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`
+- `sizing` row — current value and proposed value, annotated with its provenance: `populated` when the story already has a sizing and the thicken path leaves it alone, `derived-from-source: <evidence>` when the thicken path infers a new tier (see `## Thicken rules` and `workflows/p2e-sizing-rubric.md`), or `steered-by-user` when the user manually overrode it via Adjust sizing
 - current `isThick` and proposed `isThick` (with `failingClauses` if the proposal still fails)
 - linked GitHub issue state: create-new / patch-existing / leave-alone
 - provenance annotation on every field: `empty`, `populated`, or `derived-from-source` with the concrete source cited
@@ -71,6 +73,7 @@ The confirm step must support:
 - Move UXO
 - Retag
 - Adjust release
+- Adjust sizing (override the inferred or populated value with any of `XS | S | M | L | XL | XXL`; preview re-renders with the chosen value before write — see `## Steer rules` for the sizing-specific override path)
 - Accept and write
 - Abort
 
@@ -86,15 +89,39 @@ When the user picks **Thicken empty fields**, infer proposed values from these s
 
 Each thickened field must be annotated with the concrete derivation source in the re-rendered preview. If no source supports a field, leave it empty — empty cells are preferred over filler.
 
+### Sizing inference
+
+Sizing is a special case: it is always populated (every Story row has a `sizing` value after P-07-L6), so the thicken path does not fill an empty cell — it **re-infers** a proposed tier from the staged state of the story and compares it to the current value. If the inferred tier differs from the current one, the preview shows a before/after diff with a `derived-from-source` annotation; otherwise the row is annotated `populated` and left alone.
+
+The inference reads five inputs from the staged state (the post-thicken projection, not the pre-thicken values):
+
+1. **Title** — scanned for the bump-triggers `rewrite`, `migrate`, `redesign`, `refactor`, `extract`.
+2. **Capabilities** — count of capabilities and whether any has `isBreaking: true`.
+3. **Acceptance criteria count** — `≤ 3` and `≥ 8` thresholds per the rubric.
+4. **Tags** — normalized (lowercased, trimmed, whitespace→`-`), matched against the weighting table.
+5. **`files_hint` length** — `≥ 7` and `≥ 12` thresholds per the rubric.
+
+The canonical tier definitions, weighting rules, and worked examples live in `workflows/p2e-sizing-rubric.md` — the thicken path must not re-invent them.
+
+The annotation cites the specific inputs that forced the tier. Examples the preview renderer should emit:
+
+> `derived-from-source: 3 capabilities + 6 AC + Schema tag → L`
+> `derived-from-source: 2 capabilities + 2 AC + Docs tag + 1 file_hint → S`
+> `derived-from-source: isBreaking capability + UI tag + 9 AC → XL`
+
+The inferred value is a proposal; the user can override it in the confirm step via the **Adjust sizing** action (see `## Steer rules`).
+
 ## Steer rules
 
 When the user picks **Steer a specific field**, the wrapper prompts for which field and the new value (or a follow-up interactive flow for criteria / capabilities / thick-spec arrays). Steering overwrites the existing value; the previous value is preserved in the AuditLog (server-side) and shown in the before/after diff in the preview.
+
+When the user picks **Adjust sizing** (equivalent to steering the `sizing` field), the wrapper prompts for one of `XS | S | M | L | XL | XXL`. The user's choice overrides both the previously populated value and any thicken-inferred proposal unconditionally — the rubric in `workflows/p2e-sizing-rubric.md` is advisory, not gating. The preview re-renders with the chosen value annotated `steered-by-user` (with the before/after pair shown inline) and returns to the confirm prompt; the write only happens on Accept.
 
 ## Write behavior
 
 On Accept, issue MCP writes in this exact order and stop at the first failure:
 
-1. `mcp__p2e__stories op=update` — RRR fields, background, release, tags, `status` (if a transition is staged), `specFile`, `new_story_id` (if a rename is staged), `uxo_id` (if a move is staged), and the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`).
+1. `mcp__p2e__stories op=update` — RRR fields, background, release, tags, `status` (if a transition is staged), `specFile`, `new_story_id` (if a rename is staged), `uxo_id` (if a move is staged), `sizing` (always included if the staged value differs from the current value — whether derived-from-source or steered-by-user), and the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`).
 2. `mcp__p2e__criteria op=create/update/delete` — the add/edit/remove diff from the criteria preview.
 3. `mcp__p2e__capabilities op=create/update/delete` — the add/edit/remove diff from the capabilities preview.
 4. GitHub issue reconciliation (see below).
@@ -164,8 +191,8 @@ Every mutation on `Story`, `AcceptanceCriterion`, or `StoryCapability` writes an
 ## Dry-run behavior
 
 - `--dry-run` is read-only.
-- The workflow must still fetch the story, render the annotated preview, and print the exact MCP payloads it would have written at each phase (stories.update body, criteria upserts, capabilities upserts, GH issue create/patch body).
-- Dry-run must skip all side effects, including MCP writes, GH issue creation/patching, and audit-log emission.
+- The workflow must still fetch the story, render the annotated preview (including the `sizing` row with its `populated` / `derived-from-source` / `steered-by-user` provenance), and print the exact MCP payloads it would have written at each phase (stories.update body, criteria upserts, capabilities upserts, GH issue create/patch body).
+- Dry-run must skip all side effects, including MCP writes, GH issue creation/patching, and audit-log emission. No `mcp__p2e__stories op=update` call is issued until the user accepts outside dry-run.
 
 ## Error behavior
 
