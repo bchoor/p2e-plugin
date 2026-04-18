@@ -282,6 +282,72 @@ def validate_sizing_contract():
         )
 
 
+def validate_thick_mode_contract():
+    add_story_workflow = read_text(ROOT / "workflows" / "p2e-add-story.md")
+    add_story_command = read_text(ROOT / "commands" / "p2e-add-story.md")
+    add_story_skill = read_text(ROOT / "skills" / "p2e-add-story" / "SKILL.md")
+    update_story_workflow = read_text(ROOT / "workflows" / "p2e-update-story.md")
+    update_story_command = read_text(ROOT / "commands" / "p2e-update-story.md")
+    update_story_skill = read_text(ROOT / "skills" / "p2e-update-story" / "SKILL.md")
+
+    for required_phrase in (
+        "--thick",
+        "thick mode",
+        "## Modes",
+        "## Brainstorming escalation",
+        "derived-from-brainstorming",
+    ):
+        assert_true(
+            required_phrase in add_story_workflow,
+            f"workflows/p2e-add-story.md missing thick-mode contract phrase: {required_phrase}",
+        )
+
+    for required_phrase in (
+        "--thick",
+        "Brainstorming escalation",
+    ):
+        assert_true(
+            required_phrase in add_story_command,
+            f"commands/p2e-add-story.md missing thick-mode contract phrase: {required_phrase}",
+        )
+
+    for required_phrase in (
+        "--thick",
+        "Brainstorming escalation",
+        "derived-from-brainstorming",
+    ):
+        assert_true(
+            required_phrase in add_story_skill,
+            f"skills/p2e-add-story/SKILL.md missing thick-mode contract phrase: {required_phrase}",
+        )
+
+    for required_phrase in (
+        "## Brainstorming escalation",
+        "derived-from-brainstorming",
+    ):
+        assert_true(
+            required_phrase in update_story_workflow,
+            f"workflows/p2e-update-story.md missing brainstorming contract phrase: {required_phrase}",
+        )
+
+    for required_phrase in (
+        "Brainstorming escalation",
+    ):
+        assert_true(
+            required_phrase in update_story_command,
+            f"commands/p2e-update-story.md missing brainstorming reference: {required_phrase}",
+        )
+
+    for required_phrase in (
+        "Brainstorming escalation",
+        "derived-from-brainstorming",
+    ):
+        assert_true(
+            required_phrase in update_story_skill,
+            f"skills/p2e-update-story/SKILL.md missing brainstorming reference: {required_phrase}",
+        )
+
+
 def main():
     validate_json_files()
     validate_expected_files()
@@ -289,6 +355,7 @@ def main():
     validate_add_story_contract()
     validate_update_story_contract()
     validate_sizing_contract()
+    validate_thick_mode_contract()
     print("plugin validation passed")
 
 

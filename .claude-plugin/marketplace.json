@@ -11,7 +11,7 @@
       "name": "p2e",
       "source": "./",
       "description": "Adds /p2e-bootstrap, /p2e-add-story, /p2e-update-story, /p2e-work-on-next, /p2e-sync-labels, and the p2e-architect / p2e-staff-engineer agents. Backed by the P2E MCP server (configurable via P2E_MCP_URL).",
-      "version": "0.6.4",
+      "version": "0.7.0",
       "author": {
         "name": "bchoor"
       },

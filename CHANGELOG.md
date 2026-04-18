@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.7.0 — 2026-04-18
+
+Adds opt-in `--thick` mode to `/p2e-add-story` and wires a bounded brainstorming escalation into both `/p2e-add-story --thick` and `/p2e-update-story` thicken. Additive; the default `/p2e-add-story` invocation and every existing `/p2e-update-story` path are unchanged.
+
+### Added
+- **`/p2e-add-story --thick`** — new opt-in flag that populates ALL thick-spec fields at add time (the same six fields `/p2e-update-story` thicken populates: `filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`), runs the sizing inference heuristic against the staged projection per `workflows/p2e-sizing-rubric.md`, and renders the annotated preview with provenance labels on every field. Thin mode (the default) is unchanged.
+- **Sizing inference at add time (thick mode only)** — the drafter runs the rubric's inference inputs (title + capabilities + AC count + tags + `files_hint` length) and annotates the proposed tier `derived-from-source: <evidence>` instead of the thin-mode `defaulted-M`. The user may still override the inferred tier in the confirm step's **Adjust sizing** action.
+- **Brainstorming escalation** in both `/p2e-add-story --thick` and `/p2e-update-story` thicken — when the source signal is insufficient to credibly fill ≥ 2 thick-spec fields, the wrapper invokes the host brainstorming primitive (`superpowers:brainstorming` on Claude; Codex's native equivalent) to batch 2–4 concrete questions in a single turn. Answers fold back into the staged draft before preview re-render, annotated `derived-from-brainstorming`. Single round per flow; never bypasses the preview/confirm gate. Empty cells are still preferred over filler when answers leave gaps.
+- **`--thick`-mode confirm step extensions in `workflows/p2e-add-story.md`** — the confirm step now supports adjusting any of the six thick-spec fields inline, with the override annotated `steered-by-user` in the re-rendered preview.
+- **New `Draft a thick P2E story from this feature idea` entry** in the Codex `defaultPrompt` list (`.codex-plugin/plugin.json`).
+- **Validator coverage** in `scripts/validate-plugin.py` (`validate_thick_mode_contract`) asserting the new `--thick`, `## Modes`, `## Brainstorming escalation`, and `derived-from-brainstorming` phrases exist on the expected surfaces (both workflows, both commands, both skills).
+
+### Changed
+- **`workflows/p2e-add-story.md`** — adds `## Modes`, augments the `## Workflow` steps to branch on thick vs thin, extends `## Required preview contents` and `## Required confirm step` for the six thick-spec fields and the `derived-from-brainstorming` provenance label, rewrites `## Sizing rules` to cover both modes, and adds `## Brainstorming escalation` with explicit escalation-trigger + fold-back rules.
+- **`workflows/p2e-update-story.md`** — adds `## Brainstorming escalation` with the same shared contract, and extends the sizing-row provenance set with `derived-from-brainstorming`.
+- **`commands/p2e-add-story.md`** — argument hint adds `[--thick]`; body describes thin vs thick mode + the brainstorming escalation.
+- **`commands/p2e-update-story.md`** — body adds a `Brainstorming escalation` paragraph pointing at the workflow contract.
+- **`skills/p2e-add-story/SKILL.md`** + **`skills/p2e-update-story/SKILL.md`** — hard-rule blocks cover the thick-mode inference path and the bounded brainstorming escalation.
+- **`.claude-plugin/marketplace.json`** + **`.codex-plugin/plugin.json`** versions bumped to `0.7.0`.
+
+### Notes
+- No breaking changes. The default `/p2e-add-story <description>` invocation stays thin; `--thick` is purely opt-in.
+- Brainstorming escalation is bounded to one round per flow and only fires when ≥ 2 thick-spec fields would otherwise land empty. It never bypasses the preview/confirm gate. The Claude wrapper resolves the reference against `superpowers:brainstorming`; the Codex wrapper resolves it against its native brainstorming primitive (the same pattern already used by `workflows/p2e-bootstrap.md --mode=onboarding`).
+- `python3 scripts/validate-plugin.py` passes.
+
 ## v0.6.4 — 2026-04-17
 
 Implements B-05-L17 — the plugin-side layer of the sizing enum shipped by P-07-L6. Adds a canonical 6-tier agent-centric sizing rubric and surfaces sizing in the `/p2e-add-story` + `/p2e-update-story` preview/confirm flows. Doc + prompt work only; no schema or MCP changes.
