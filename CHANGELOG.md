@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.7.1 — 2026-04-17
+
+Implements B-05-L17 — the plugin-side layer of the sizing enum shipped by P-07-L6. Adds a canonical 6-tier agent-centric sizing rubric and surfaces sizing in the `/p2e-add-story` + `/p2e-update-story` preview/confirm flows. Doc + prompt work only; no schema or MCP changes.
+
+### Added
+- **`workflows/p2e-sizing-rubric.md`** — canonical 6-tier rubric (XS → XXL) with agent-centric complexity + review-cost criteria, weighting rules (FE/redesign bumped higher, backend with `verificationCmd` bumped lower), inference inputs for the thicken path, and a concrete example per tier. M is the default.
+- **Sizing row in `/p2e-add-story` preview** — every new story renders with `sizing: M` annotated `defaulted`; the confirm step's new **Adjust sizing** action overrides to any of `XS | S | M | L | XL | XXL` before the `mcp__p2e__stories op=create` write.
+- **Sizing inference on `/p2e-update-story` thicken path** — re-infers a proposed tier from the staged title + capabilities + AC count + tags + `files_hint` length per the rubric, annotated `derived-from-source: <evidence>` with the inputs cited inline. The write body includes `sizing` when the staged value differs from the current value.
+- **Steer override for sizing** — the confirm step's **Adjust sizing** (equivalent to steering the `sizing` field) overrides the inferred or populated value unconditionally, annotated `steered-by-user` in the re-rendered preview.
+- **Sizing contract check in `scripts/validate-plugin.py`** — asserts the rubric tiers + weighting rules exist, and that every surface (both workflows, both commands, both skills) references `workflows/p2e-sizing-rubric.md` rather than inlining the rubric.
+
+### Changed
+- **`workflows/p2e-add-story.md`** — `Required preview contents`, `Required confirm step`, and new `Sizing rules` section added.
+- **`workflows/p2e-update-story.md`** — `Required preview contents`, `Required confirm step`, new `Sizing inference` subsection under `Thicken rules`, sizing-specific paragraph under `Steer rules`, `Write behavior` phase 1 includes `sizing`, and the `Dry-run behavior` section explicitly covers the sizing row's provenance rendering.
+- **`commands/p2e-add-story.md`** + **`commands/p2e-update-story.md`** — each surfaces a `Preview rendering (sizing)` section pointing at the rubric.
+- **`skills/p2e-add-story/SKILL.md`** + **`skills/p2e-update-story/SKILL.md`** — read-list extended with `workflows/p2e-sizing-rubric.md`; hard rules clarify the default-M-at-add / infer-on-thicken / user-override semantics.
+- **`.claude-plugin/marketplace.json`** + **`.codex-plugin/plugin.json`** versions bumped to `0.7.1`.
+
+### Notes
+- Implements B-05-L17. Refs bchoor/p2e#184.
+- Consumes the `Story.sizing` enum shipped by P-07-L6 (DONE); DEPENDS_ON relation already exists in the graph.
+- No breaking changes; fully additive to the existing `/p2e-add-story` and `/p2e-update-story` contracts.
+- `python3 scripts/validate-plugin.py` passes.
+
 ## v0.6.3 — 2026-04-17
 
 Rewrites the user-facing `description:` frontmatter on every `/p2e-*` slash command so the Claude Code command menu surfaces what each command does and hints at its most relevant flag(s). Wrappers stay thin — only the human-facing `description:` fields change; no workflow, routing, or MCP behavior is touched. `argument-hint:` remains authoritative for full argument shape.

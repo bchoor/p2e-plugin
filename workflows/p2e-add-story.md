@@ -45,6 +45,7 @@ Before any write, the preview must show at least:
 - user story / RRR fields
 - drafted acceptance criteria
 - drafted capabilities
+- `sizing` — always rendered with value `M` and the annotation `defaulted` (see `## Sizing rules` below and `workflows/p2e-sizing-rubric.md` for the canonical rubric)
 - a note that the GitHub issue will be created with the `ready` label on acceptance
 
 The preview may be rendered in a host-specific visual format, but the user must be able to review the inferred values clearly.
@@ -59,6 +60,7 @@ The confirm step must support:
 - adjust story fields
 - adjust acceptance criteria
 - adjust capabilities
+- adjust sizing (override the defaulted `M` with any of `XS | S | M | L | XL | XXL`; preview re-renders with the chosen value before write)
 - abort
 
 If the user does not accept, do not write.
@@ -69,6 +71,13 @@ If the user does not accept, do not write.
 - Capabilities should describe distinct behavior changes.
 - Breaking changes must be marked explicitly.
 - Release defaults should be derived from existing planned stories when available.
+
+## Sizing rules
+
+- Every new story is drafted with `sizing: M` and the annotation `defaulted`. No heuristic runs at add time — at add time the story usually has only a title and a small AC list, which is not enough signal to credibly infer a tier. Heuristic inference lives in `/p2e-update-story` thicken (see `workflows/p2e-update-story.md` and `workflows/p2e-sizing-rubric.md`).
+- The drafter never asks the LLM to pick a sizing at add time. The confirm step is the only place where sizing may change before the write.
+- The MCP write passes the final accepted `sizing` value through to `mcp__p2e__stories op=create`. If the user does not override, `sizing=M` is written.
+- The canonical rubric (XS → XXL) and the inference inputs used during thicken are documented in `workflows/p2e-sizing-rubric.md`; commands and skills must not inline that rubric — they only reference it.
 
 ## Error behavior
 

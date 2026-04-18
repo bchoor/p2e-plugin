@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "P2E authoring and execution workflows for Codex, backed by the P2E MCP. Includes bootstrap (new + onboarding modes), add-story, update-story, work-on-next, and sync-labels.",
   "author": {
     "name": "bchoor",
