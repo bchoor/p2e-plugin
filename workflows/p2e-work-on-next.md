@@ -49,3 +49,54 @@ This is the canonical orchestrator workflow. Adapter-specific entrypoints should
 - The workflow should still show the selected queue, routing decisions, wave plan, and the writes it would have performed.
 - Dry-run must skip all side effects, including issue updates and label reconciliation.
 - Dry-run still shows the first-turn briefing it WOULD have handed to each implementer.
+
+## Story log checkpoint policy
+
+The orchestrator writes to `mcp__p2e__story_log` (op=append) at exactly 4 checkpoints per story. No per-tool-call logging — only these lifecycle events.
+
+### Checkpoint 1 — Wave-start (step 9a, after OPEN→IN_PROGRESS flip)
+
+```json
+{ "kind": "DECISION", "author": "orchestrator", "message": "Wave-started: moved to IN_PROGRESS" }
+```
+
+### Checkpoint 2 — AC toggle (step 11, after vitest success, one entry per AC toggled)
+
+```json
+{ "kind": "AC_CHANGE", "author": "orchestrator", "message": "Toggled AC<n>: <criterion text>" }
+```
+
+Replace `<n>` with the criterion ordinal (1-based) and `<criterion text>` with the exact criterion text.
+
+### Checkpoint 3 — Verification failure / BLOCKED (step 12)
+
+Strike 1 (first failure, re-brief issued):
+```json
+{ "kind": "BLOCKER", "author": "orchestrator", "message": "Verification failed (strike 1): <short reason>" }
+```
+
+Strike 2 (second failure, story set to BLOCKED):
+```json
+{ "kind": "BLOCKER", "author": "orchestrator", "message": "Verification failed (strike 2): <short reason> — escalated to architect" }
+```
+
+### Checkpoint 4 — IN_REVIEW transition (step 11, after verification passes)
+
+```json
+{ "kind": "DECISION", "author": "orchestrator", "message": "Verified, moved to IN_REVIEW" }
+```
+
+### MCP call shape
+
+All checkpoint writes use `items:[{...}]` form (never flat form — arrays/bools round-trip correctly in items form only):
+
+```
+mcp__p2e__story_log op=append project_slug=<slug> items=[{ "story_id": "<id>", "kind": "...", "author": "orchestrator", "message": "..." }]
+```
+
+### Notes
+
+- These 4 checkpoints are the **only** times the orchestrator writes to the log. No per-file, per-tool-call, or per-subtask logging.
+- Checkpoint writes happen in the same step as the status/AC mutation — not as a separate wave step.
+- The MCP tool is append-only; there is no op=update or op=delete for log entries.
+- `stories op=get` returns the last 50 log entries inline as `logEntries` + `logCount` — no second round-trip needed.
