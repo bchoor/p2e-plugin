@@ -79,6 +79,18 @@ The confirm step must support:
 
 If the user does not accept, do not write.
 
+## UXO placement re-evaluation
+
+When the user picks **Move UXO**, or when the thicken path infers the story might belong to a different UXO in the same cell, re-evaluate placement using `title + objective + objectives[]` from each candidate UXO.
+
+### Signal construction
+
+For each candidate UXO in the target phase+tier cell:
+- Build the match signal from `title` + `objective` (prose, may be null) + `objectives[]` (short goal bullets, may be empty).
+- If `objectives[]` is empty, fall back to `title + objective` only — equivalent to pre-A-03-L4 behavior.
+
+The updated UXO choice must be included in the re-rendered preview. If the re-evaluation surfaces a better match than the current UXO, annotate it `derived-from-source: objectives match` and include a one-line explanation. If the current UXO is still the best match, annotate `populated` and leave it.
+
 ## Thicken rules
 
 When the user picks **Thicken empty fields**, infer proposed values from these sources in priority order:
