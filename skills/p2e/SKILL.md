@@ -13,7 +13,8 @@ Then choose the one best-fit workflow, load it, and execute it end-to-end:
 - requests about creating a new story -> read `workflows/p2e-add-story.md`, then follow that workflow exactly
 - requests about updating, thickening, steering, renaming, re-parenting, or retagging an existing story -> read `workflows/p2e-update-story.md`, then follow that workflow exactly (this is the canonical path for what used to be `/p2e-add-story --fill`)
 - requests about implementing planned work -> read `workflows/p2e-work-on-next.md` AND `workflows/p2e-first-turn-briefing.md`, then follow the work-on-next workflow exactly
-- requests about label or issue reconciliation -> read `workflows/p2e-sync-labels.md`, then follow that workflow exactly
+- requests about label or lifecycle reconciliation -> read `workflows/p2e-sync-labels.md`, then follow that workflow exactly
+- requests about drift reconciliation between a story and its linked GitHub issue body (on-demand, field-level) -> read `workflows/p2e-sync.md`, then follow that workflow exactly
 
 ## Persona routing (work-on-next only)
 
