@@ -70,6 +70,7 @@ def validate_expected_files():
         "p2e-archaeology.md",
         "p2e-bind.md",
         "p2e-bootstrap.md",
+        "p2e-sync.md",
         "p2e-sync-labels.md",
         "p2e-update-story.md",
         "p2e-work-on-next.md",
@@ -85,6 +86,7 @@ def validate_expected_files():
         "p2e-first-turn-briefing.md",
         "p2e-policy.md",
         "p2e-sizing-rubric.md",
+        "p2e-sync.md",
         "p2e-sync-labels.md",
         "p2e-update-story.md",
         "p2e-work-on-next.md",
@@ -98,6 +100,7 @@ def validate_expected_files():
         ROOT / "skills" / "p2e-archaeology" / "SKILL.md",
         ROOT / "skills" / "p2e-bind" / "SKILL.md",
         ROOT / "skills" / "p2e-bootstrap" / "SKILL.md",
+        ROOT / "skills" / "p2e-sync" / "SKILL.md",
         ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
         ROOT / "skills" / "p2e-update-story" / "SKILL.md",
         ROOT / "skills" / "p2e-work-on-next" / "SKILL.md",
@@ -114,6 +117,7 @@ def validate_wrapper_references():
         "commands/p2e-archaeology.md": "workflows/p2e-archaeology.md",
         "commands/p2e-bind.md": "workflows/p2e-bind.md",
         "commands/p2e-bootstrap.md": "workflows/p2e-bootstrap.md",
+        "commands/p2e-sync.md": "workflows/p2e-sync.md",
         "commands/p2e-sync-labels.md": "workflows/p2e-sync-labels.md",
         "commands/p2e-update-story.md": "workflows/p2e-update-story.md",
         "commands/p2e-work-on-next.md": "workflows/p2e-work-on-next.md",
@@ -121,6 +125,7 @@ def validate_wrapper_references():
         "skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
         "skills/p2e-bind/SKILL.md": "workflows/p2e-bind.md",
         "skills/p2e-bootstrap/SKILL.md": "workflows/p2e-bootstrap.md",
+        "skills/p2e-sync/SKILL.md": "workflows/p2e-sync.md",
         "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
         "skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
         "skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
@@ -145,6 +150,7 @@ def validate_wrapper_references():
         "workflows/p2e-update-story.md",
         "workflows/p2e-work-on-next.md",
         "workflows/p2e-sync-labels.md",
+        "workflows/p2e-sync.md",
     ):
         assert_true(workflow_ref in router, f"Router skill missing {workflow_ref}")
 
@@ -348,6 +354,65 @@ def validate_thick_mode_contract():
         )
 
 
+def validate_sync_contract():
+    """Assert /p2e-sync satisfies the B-05-L4 acceptance criteria contract."""
+    sync_workflow = read_text(ROOT / "workflows" / "p2e-sync.md")
+    sync_command = read_text(ROOT / "commands" / "p2e-sync.md")
+    sync_skill = read_text(ROOT / "skills" / "p2e-sync" / "SKILL.md")
+
+    # Workflow must document all four reconciliation directions
+    for required_phrase in (
+        "Update GH from story",
+        "Update story from GH",
+        "Cherry-pick per-field",
+        "Abort",
+    ):
+        assert_true(
+            required_phrase in sync_workflow,
+            f"workflows/p2e-sync.md missing reconciliation direction: {required_phrase}",
+        )
+
+    # Workflow must describe the gh issue edit write path
+    assert_true(
+        "gh issue edit" in sync_workflow,
+        "workflows/p2e-sync.md must reference 'gh issue edit' for story→GH direction",
+    )
+
+    # Workflow must reference AuditLog
+    assert_true(
+        "AuditLog" in sync_workflow,
+        "workflows/p2e-sync.md must reference AuditLog",
+    )
+
+    # Workflow must be explicit about user-invoked (not automatic)
+    assert_true(
+        "user-invoked" in sync_workflow,
+        "workflows/p2e-sync.md must state it is user-invoked (no polling/webhook/git-hook)",
+    )
+
+    # Workflow must describe template-mismatch abort with a diagnostic
+    assert_true(
+        "p2e-sync:start" in sync_workflow,
+        "workflows/p2e-sync.md must reference the p2e-sync fence for template-mismatch abort",
+    )
+
+    # Command must reference AskUserQuestion (Claude host confirm)
+    assert_true(
+        "AskUserQuestion" in sync_command,
+        "commands/p2e-sync.md must reference AskUserQuestion for the direction confirm step",
+    )
+
+    # Skill must note Codex lacks cherry-pick mode
+    assert_true(
+        "Cherry-pick" in sync_skill or "cherry-pick" in sync_skill,
+        "skills/p2e-sync/SKILL.md must note the cherry-pick mode limitation in Codex host",
+    )
+    assert_true(
+        "Codex" in sync_skill,
+        "skills/p2e-sync/SKILL.md must note Codex host limitations",
+    )
+
+
 def main():
     validate_json_files()
     validate_expected_files()
@@ -356,6 +421,7 @@ def main():
     validate_update_story_contract()
     validate_sizing_contract()
     validate_thick_mode_contract()
+    validate_sync_contract()
     print("plugin validation passed")
 
 

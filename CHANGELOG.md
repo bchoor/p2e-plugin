@@ -1,5 +1,28 @@
 # Changelog
 
+### Unreleased — B-05-L4
+
+Adds `/p2e-sync <story_id>` — on-demand drift reconciliation between a P2E story and its linked GitHub issue body. Widens `formatIssueBody` (src/lib/github.ts) to include background, capabilities, and release sections with a `<!-- p2e-sync:start v1 -->` fence so the body is machine-parseable in both directions.
+
+#### Added
+- **`/p2e-sync <story_id>`** — user-invoked command (no polling, no webhook, no git-hook) that fetches both the P2E story via MCP `stories.get` and the linked GH issue body via `gh api`, computes a field-level diff (title, RRR, background, AC text, capabilities, release), and presents one confirm step: `Update GH from story` / `Update story from GH` / `Cherry-pick per-field` / `Abort`. Cherry-pick mode is Claude-host-only. Writes AuditLog rows via MCP on every mutation; posts a GH comment summarizing direction + fields after each reconcile. `--dry-run` renders the diff without writing.
+- **`workflows/p2e-sync.md`** — canonical workflow describing fetch-both, diff render, four direction paths, AC and capability reconciliation semantics, template-mismatch abort diagnostic, and dry-run behavior.
+- **`commands/p2e-sync.md`** — thin Claude command wrapper with `argument-hint: <story_id>`.
+- **`skills/p2e-sync/SKILL.md`** — thin Codex skill wrapper; Codex exposes only A/B/D (no cherry-pick).
+- **`scripts/parse-gh-issue-body.sh`** — shell wrapper that fetches a GH issue body via `gh api` and pipes it through the TypeScript `parseIssueBody` parser via bun. Passes `bash -n` syntax check.
+- **Widened `formatIssueBody`** (`src/lib/github.ts`) — adds `## Background`, `## Capabilities` (one line per capability: `- <name> (<action>[, breaking]): <description>`), and `## Release` sections, plus `<!-- p2e-sync:start v1 -->` / `<!-- p2e-sync:end v1 -->` fence. Signature extended with optional `background?`, `capabilities?`, `release?` fields — all callers remain backward-compatible (optional fields default to absent).
+- **`parseIssueBody`** (`src/lib/github.ts`) — new pure function that is the exact inverse of `formatIssueBody`. Throws with a precise diagnostic if the sync fence is missing (pre-B-05-L4 bodies or hand-edited bodies that dropped the fence). Exported as `ParsedIssueBody` + `IssueBodyCapability` types.
+- **`createGithubIssueForStory`** (`src/lib/actions/github.ts`) — updated to include `capabilities` in the Prisma query and pass them mapped to `IssueBodyCapability` into the widened `formatIssueBody`.
+- **Validator coverage** in `scripts/validate-plugin.py` — added `p2e-sync.md` to all expected sets (commands, workflows, skills), added `commands/p2e-sync.md` and `skills/p2e-sync/SKILL.md` to `workflow_map`, added `workflows/p2e-sync.md` to the router check, and added `validate_sync_contract()` asserting the four directions, `gh issue edit`, AuditLog, user-invoked, fence reference, `AskUserQuestion`, and Codex cherry-pick limitation.
+- **Round-trip test** (`tests/lib/github-body.test.ts`) — 10 vitest unit tests covering `formatIssueBody` → `parseIssueBody` for all fields, backward-compat minimal story, and fence-missing diagnostics. All pass.
+
+#### Changed
+- **`skills/p2e/SKILL.md`** (router) — added routing rule for drift reconciliation requests → `workflows/p2e-sync.md`.
+
+#### Notes
+- No version bump — lands under the post-v0.7.0 unreleased block. The user has an explicit memory "Never cut a release without explicit approval."
+- `python3 scripts/validate-plugin.py` passes. `bash -n scripts/parse-gh-issue-body.sh` passes. `bunx tsc --noEmit` passes. `bunx vitest run tests/lib/github-body.test.ts` — 10/10 pass.
+
 ## v0.7.0 — 2026-04-18
 
 Adds opt-in `--thick` mode to `/p2e-add-story` and wires a bounded brainstorming escalation into both `/p2e-add-story --thick` and `/p2e-update-story` thicken. Additive; the default `/p2e-add-story` invocation and every existing `/p2e-update-story` path are unchanged.
