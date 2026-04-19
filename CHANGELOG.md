@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.2 — 2026-04-19
+
+### Fixed
+- **`.claude-plugin/plugin.json`** now declares `version`, so Claude Code / Claude Desktop can detect newer plugin releases and surface update notifications. Previously only `marketplace.json` carried the version, which the host doesn't read for installed-plugin version comparison.
+
 ## v0.7.1 — 2026-04-19
 
 Rolls up four plugin-side changes that land on top of v0.7.0: a new `/p2e-sync` drift-reconciliation command, smarter UXO placement in the drafter, a story-log checkpoint policy doc, and an MCP tool surface section in the README. Plugin-side only; all paired backend work ships in `bchoor/p2e`.
