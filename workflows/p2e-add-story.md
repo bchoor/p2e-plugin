@@ -32,10 +32,36 @@ The legacy `--fill <storyId>` path is deprecated as of v0.6 and now delegates to
 - The target project must exist.
 - The target UXO must exist or be created as part of the flow.
 
+## UXO placement matching
+
+When a phase+tier cell has more than one UXO, the drafter MUST score each candidate against the story description using `title + objective + objectives[]` and pick the best match — never by cuid sort order.
+
+### Matching algorithm
+
+1. Fetch candidate UXOs via `mcp__p2e__uxos op=get` (or from the project data already in context).
+2. For each candidate, build a match signal from:
+   - `title` (always present)
+   - `objective` (prose description, may be null)
+   - `objectives[]` (array of short goal bullets; may be empty — falls back to `title + objective` only)
+3. Score the story description against each candidate's signal. Pick the highest-scoring UXO.
+4. Record the match reason as a single phrase, e.g. `"surfaces relevant signals matches 'reduce time-to-first-insight'"` or `"title 'Technical charting' matches charting work"`.
+5. If no `objectives[]` are set on any candidate, the fallback signal is `title + objective` — equivalent to pre-A-03-L4 behavior.
+
+### Preview output
+
+The preview MUST include a `UXO match reason:` line immediately after the UXO row:
+
+```
+UXO: P-01 — Discover product  (attach)
+UXO match reason: objective bullet "reduce time-to-first-insight" matches story intent
+```
+
+If the cell has only one UXO, omit the match reason (no ambiguity to explain).
+
 ## Workflow
 
 1. Resolve the source description or the existing story being filled. Note whether `--thick` is set; if so, enter thick mode.
-2. Determine phase, tier, UXO, release, title, RRR fields, acceptance criteria, and capabilities. In thick mode, additionally draft the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) and run sizing inference per `workflows/p2e-sizing-rubric.md`.
+2. Determine phase, tier, UXO (using `## UXO placement matching` when multiple UXOs share the cell), release, title, RRR fields, acceptance criteria, and capabilities. In thick mode, additionally draft the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) and run sizing inference per `workflows/p2e-sizing-rubric.md`.
 3. Signal check (thick mode only): if after the first draft pass ≥ 2 thick-spec fields are still empty AND the source lacks evidence to fill them, invoke the brainstorming primitive once per `## Brainstorming escalation`, fold the answers back into the staged draft, and re-run the draft.
 4. The wrapper must render a preview that annotates what was matched, inferred, defaulted, or derived-from-source (see `## Required preview contents`).
 5. The wrapper must ask for a single confirm step with adjustment options for phase/tier, UXO, story fields, acceptance criteria, capabilities, sizing, thick-spec fields (thick mode), or abort.
@@ -51,6 +77,7 @@ Before any write, the preview must show at least:
 - tier
 - release
 - UXO action (`attach` vs `create new`) and UXO title/id
+- `UXO match reason:` one-liner when the cell has multiple UXOs (see `## UXO placement matching`); omit when the cell has exactly one UXO
 - story title
 - user story / RRR fields
 - drafted acceptance criteria
