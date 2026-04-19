@@ -1,6 +1,24 @@
 # Changelog
 
-### Unreleased — B-05-L4
+## v0.7.1 — 2026-04-19
+
+Rolls up four plugin-side changes that land on top of v0.7.0: a new `/p2e-sync` drift-reconciliation command, smarter UXO placement in the drafter, a story-log checkpoint policy doc, and an MCP tool surface section in the README. Plugin-side only; all paired backend work ships in `bchoor/p2e`.
+
+### Added
+- **`/p2e-sync <story_id>`** (#18, B-05-L4) — user-invoked on-demand drift reconciliation between a P2E story and its linked GitHub issue body. Renders a field-level diff (title, RRR, background, AC text, capabilities, release) and reconciles one direction via `AskUserQuestion`: `Update GH from story` / `Update story from GH` / `Cherry-pick per-field` (Claude host only) / `Abort`. `--dry-run` renders the diff without writing. Template parser asserts the `<!-- p2e-sync:start v1 -->` fence and aborts with a diagnostic on pre-fence bodies. Ships `workflows/p2e-sync.md`, `commands/p2e-sync.md`, `skills/p2e-sync/SKILL.md`, `scripts/parse-gh-issue-body.sh`, router update in `skills/p2e/SKILL.md`, and `validate_sync_contract()` in the validator.
+- **UXO placement matching via `objectives[]`** (#19, A-03-L4) — `/p2e-add-story` scores UXO placement on `title + objective + objectives[]` (falls back to `title + objective` when `objectives[]` is empty, preserving pre-A-03-L4 behavior). Preview renders a `UXO match reason:` line when the phase+tier cell has multiple UXOs. `/p2e-update-story` re-evaluates placement on Move UXO or thicken with the same signal, annotated in the preview.
+- **Story log checkpoint policy** (#17, P-07-L7) — `workflows/p2e-work-on-next.md` documents the four defined checkpoints (wave-start, AC toggle, verification failure + BLOCKED, IN_REVIEW transition), the exact entry shapes written via `mcp__p2e__story_log op=append`, the `items:[{...}]` call form, and the append-only contract. Pairs with `bchoor/p2e#209`.
+- **MCP tool surface section in README** (#20, B-01-L10) — enumerates every MCP tool the plugin exposes with a one-line summary per op, plus an inline multi-value `stories.list` example showing `statuses`, `releases` (with `null`), `tags` + `tag_mode`.
+
+### Changed
+- **`.claude-plugin/marketplace.json`** + **`.codex-plugin/plugin.json`** versions bumped to `0.7.1`.
+
+### Notes
+- No breaking changes; no schema or MCP surface changes plugin-side.
+- `/p2e-sync` end-to-end requires the widened `formatIssueBody` template to have landed in `bchoor/p2e` (B-05-L4 parent PR). Pre-fence bodies abort cleanly with a diagnostic pointing at `/p2e-update-story`.
+- UXO `objectives[]` matching requires `bchoor/p2e#238` (ships the `Uxo.objectives String[]` column + MCP + UxoForm editor).
+
+### Prior unreleased — B-05-L4 (rolled into v0.7.1)
 
 Adds `/p2e-sync <story_id>` — on-demand drift reconciliation between a P2E story and its linked GitHub issue body. Widens `formatIssueBody` (src/lib/github.ts) to include background, capabilities, and release sections with a `<!-- p2e-sync:start v1 -->` fence so the body is machine-parseable in both directions.
 
