@@ -49,3 +49,67 @@ This is the canonical orchestrator workflow. Adapter-specific entrypoints should
 - The workflow should still show the selected queue, routing decisions, wave plan, and the writes it would have performed.
 - Dry-run must skip all side effects, including issue updates and label reconciliation.
 - Dry-run still shows the first-turn briefing it WOULD have handed to each implementer.
+
+## Story log checkpoint policy
+
+### Intent
+
+The story log is a narrative of events during implementation that **do not already have their own first-class surface**. State transitions (`OPEN → IN_PROGRESS → IN_REVIEW`) are recorded in `story.status` and `AuditLog`; duplicating them here would be noise. The log carries the things that would otherwise scatter across GH comments and agent transcripts: AC changes, verifications, blockers, decisions, scope changes, and user notes.
+
+The `kind` chip is a taxonomy so a skimmer can filter ("show me blockers", "show me scope changes") — it must honestly categorize the event.
+
+### Orchestrator-authored checkpoints (exactly 3)
+
+The orchestrator writes to `mcp__p2e__story_log` (op=append) at these 3 checkpoints per story. No per-tool-call logging; no entries for status transitions alone.
+
+#### Checkpoint 1 — AC toggle (step 11, after verification passes, one entry per AC toggled)
+
+```json
+{ "kind": "AC_CHANGE", "author": "orchestrator", "message": "Toggled AC<n>: <criterion text>" }
+```
+
+Replace `<n>` with the criterion ordinal (1-based) and `<criterion text>` with the exact criterion text.
+
+#### Checkpoint 2 — Verification pass (step 11, right before IN_REVIEW flip)
+
+```json
+{ "kind": "VERIFICATION", "author": "orchestrator", "message": "Verified: <verificationCmd> — <short summary, e.g. tests passed, build clean>" }
+```
+
+One entry per verification run that passed. The state flip to `IN_REVIEW` itself is NOT logged — it lives in `story.status` + `AuditLog`.
+
+#### Checkpoint 3 — Verification failure (step 12)
+
+Strike 1 (first failure, re-brief issued):
+```json
+{ "kind": "BLOCKER", "author": "orchestrator", "message": "Verification failed (strike 1): <short reason>" }
+```
+
+Strike 2 (second failure, story set to BLOCKED):
+```json
+{ "kind": "BLOCKER", "author": "orchestrator", "message": "Verification failed (strike 2): <short reason> — escalated to architect" }
+```
+
+The state flip to `BLOCKED` on strike 2 is NOT a separate log entry — it's implied by the strike-2 BLOCKER message and recorded in `story.status`.
+
+### Human-authored kinds (not orchestrator checkpoints)
+
+These kinds are written by humans via the UI or MCP; the orchestrator never emits them:
+
+- `DECISION` — a human judgment call (e.g., "picked Approach A because...", "overrode architect's recommendation")
+- `SCOPE_CHANGE` — mid-flight change to the story spec (e.g., "dropped retroactive backfill, covered in Non-goals")
+- `NOTE` — free-form observation worth preserving
+
+### MCP call shape
+
+All checkpoint writes use `items:[{...}]` form (never flat form — arrays/bools round-trip correctly in items form only):
+
+```
+mcp__p2e__story_log op=append project_slug=<slug> items=[{ "story_id": "<id>", "kind": "...", "author": "orchestrator", "message": "..." }]
+```
+
+### Notes
+
+- State transitions (`OPEN → IN_PROGRESS → IN_REVIEW → DONE`) are NOT log events. Read them from `story.status` or `AuditLog`.
+- The MCP tool is append-only; there is no op=update or op=delete for log entries.
+- `stories op=get` returns the last 50 log entries inline as `logEntries` + `logCount` — no second round-trip needed.
