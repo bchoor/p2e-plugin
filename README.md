@@ -177,6 +177,55 @@ TTL: **30 seconds**. A warm-cache read completes in <500ms (p99). Cold-cache rea
 
 If the hook cannot verify the story status (MCP unreachable, auth required, or unparseable response), it **blocks** the spawn with a remediation message. This is intentional: a missing gate check is treated as a failed check.
 
+## MCP tool surface
+
+The plugin exposes the P2E MCP server tools via `mcp__plugin_p2e_p2e__*`. Each tool accepts an `op` parameter to select the operation.
+
+| Tool | Ops | Summary |
+|------|-----|---------|
+| `stories` | `list`, `get`, `create`, `update`, `delete`, `move` | Core story CRUD. `list` supports multi-value filters (see below). `get` returns full detail including audit log, capabilities, and acceptance criteria. `create` / `update` use an `items:[{...}]` array payload. `move` re-parents a story to another UXO. |
+| `criteria` | `list`, `get`, `create`, `update`, `delete` | Acceptance criteria attached to a story. |
+| `capabilities` | `list`, `get`, `create`, `update`, `delete` | Story capabilities (INTRODUCES / MODIFIES / DEPRECATES change entries). |
+| `relations` | `list`, `get`, `create`, `delete` | Inter-story relations (BUILDS_ON, DEPENDS_ON, SUPERSEDES, FIXES, etc.). |
+| `projects` | `list`, `get`, `create`, `update` | Project management including UXO health summary and member roster. |
+| `uxos` | `list`, `get`, `create`, `update`, `delete` | UXO (feature objective) CRUD. UXOs live in a Phase × Tier cell. |
+| `phases` | `list`, `get`, `create`, `update`, `delete` | Journey phases that contain UXOs. |
+| `features` | `list`, `get`, `create`, `update`, `delete` | Features that group UXOs across phases. |
+| `tags` | `list` | Project-scoped tag registry derived from story tags. |
+| `members` | `list`, `invite`, `remove`, `update` | Project membership management. |
+| `coverage` | `get` | UXO coverage report: counts of DONE/partial/gap stories per UXO. |
+| `story_assets` | `list`, `get`, `create`, `delete` | File assets attached to a story (e.g. screenshots, specs). |
+| `validate` | `run` | Run the P2E story-thickness predicate against a story and return failing clauses. |
+| `create_github_issue` | — | Create a linked GitHub issue for a story (one-shot). |
+| `sync_github_status` | — | Reconcile P2E story status with the linked GitHub issue label. |
+
+### Multi-value `stories.list` example
+
+Single-value filters (legacy, still work):
+
+```json
+{ "op": "list", "project_slug": "p2e", "status": "DONE", "release": "v0.9", "tag": "auth" }
+```
+
+Multi-value filters (B-01-L10):
+
+```json
+{
+  "op": "list",
+  "project_slug": "p2e",
+  "statuses": ["DONE", "IN_REVIEW"],
+  "releases": ["v0.9", "v1.0", null],
+  "tags": ["auth", "ui"],
+  "tag_mode": "all"
+}
+```
+
+- `statuses` — `StoryStatus[]`; matches stories whose status is in the array (IN semantics). Overrides single `status`.
+- `releases` — `(string | null)[]`; matches stories whose release is in the array. A `null` entry matches stories with no release set. Overrides single `release`.
+- `tags` + `tag_mode` — `tags` is a `string[]`; `tag_mode` is `"any"` (default, OR) or `"all"` (AND — story must carry every listed tag). Overrides single `tag`.
+
+All three filters compose with AND semantics against each other and with other filters (`phase`, `tier`, `uxo_id`, `feature_id`).
+
 ## Requirements
 
 - a host that supports the plugin surface you want to use: Claude Code or Codex
