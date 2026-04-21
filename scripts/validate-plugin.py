@@ -70,6 +70,7 @@ def validate_expected_files():
         "p2e-archaeology.md",
         "p2e-bind.md",
         "p2e-bootstrap.md",
+        "p2e-manage-uxo.md",
         "p2e-sync.md",
         "p2e-sync-labels.md",
         "p2e-update-story.md",
@@ -84,6 +85,7 @@ def validate_expected_files():
         "p2e-bind.md",
         "p2e-bootstrap.md",
         "p2e-first-turn-briefing.md",
+        "p2e-manage-uxo.md",
         "p2e-policy.md",
         "p2e-sizing-rubric.md",
         "p2e-sync.md",
@@ -101,6 +103,7 @@ def validate_expected_files():
         ROOT / "skills" / "p2e-archaeology" / "SKILL.md",
         ROOT / "skills" / "p2e-bind" / "SKILL.md",
         ROOT / "skills" / "p2e-bootstrap" / "SKILL.md",
+        ROOT / "skills" / "p2e-manage-uxo" / "SKILL.md",
         ROOT / "skills" / "p2e-sync" / "SKILL.md",
         ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
         ROOT / "skills" / "p2e-update-story" / "SKILL.md",
@@ -118,6 +121,7 @@ def validate_wrapper_references():
         "commands/p2e-archaeology.md": "workflows/p2e-archaeology.md",
         "commands/p2e-bind.md": "workflows/p2e-bind.md",
         "commands/p2e-bootstrap.md": "workflows/p2e-bootstrap.md",
+        "commands/p2e-manage-uxo.md": "workflows/p2e-manage-uxo.md",
         "commands/p2e-sync.md": "workflows/p2e-sync.md",
         "commands/p2e-sync-labels.md": "workflows/p2e-sync-labels.md",
         "commands/p2e-update-story.md": "workflows/p2e-update-story.md",
@@ -126,6 +130,7 @@ def validate_wrapper_references():
         "skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
         "skills/p2e-bind/SKILL.md": "workflows/p2e-bind.md",
         "skills/p2e-bootstrap/SKILL.md": "workflows/p2e-bootstrap.md",
+        "skills/p2e-manage-uxo/SKILL.md": "workflows/p2e-manage-uxo.md",
         "skills/p2e-sync/SKILL.md": "workflows/p2e-sync.md",
         "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
         "skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
@@ -152,6 +157,8 @@ def validate_wrapper_references():
         "workflows/p2e-work-on-next.md",
         "workflows/p2e-sync-labels.md",
         "workflows/p2e-sync.md",
+        "workflows/p2e-manage-uxo.md",
+        "workflows/p2e-uxo-recipe.md",
     ):
         assert_true(workflow_ref in router, f"Router skill missing {workflow_ref}")
 
