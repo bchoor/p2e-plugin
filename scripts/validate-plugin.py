@@ -89,6 +89,7 @@ def validate_expected_files():
         "p2e-sync.md",
         "p2e-sync-labels.md",
         "p2e-update-story.md",
+        "p2e-uxo-recipe.md",
         "p2e-work-on-next.md",
     }
     actual_workflows = {p.name for p in (ROOT / "workflows").glob("*.md")}
