@@ -91,6 +91,8 @@ For each candidate UXO in the target phase+tier cell:
 
 The updated UXO choice must be included in the re-rendered preview. If the re-evaluation surfaces a better match than the current UXO, annotate it `derived-from-source: objectives match` and include a one-line explanation. If the current UXO is still the best match, annotate `populated` and leave it.
 
+If the re-evaluation shows that the *target* UXO itself has weak or absent `description` / `objectives[]` — so the signal is thin in either direction — surface the gap to the user and point them at `workflows/p2e-uxo-recipe.md` rather than silently guessing placement. A UXO whose scope isn't articulated cannot reliably receive new layers.
+
 ## Thicken rules
 
 When the user picks **Thicken empty fields**, infer proposed values from these sources in priority order:

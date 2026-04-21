@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.8.0 — 2026-04-20
+
+Adds a canonical recipe for writing UXO `description` and `objectives[]` fields (`workflows/p2e-uxo-recipe.md`), a new preview/confirm command `/p2e-manage-uxo (--edit | --add)` that operationalizes the recipe, and cross-references from the existing bootstrap / update-story / router surfaces. Pairs with [bchoor/p2e#250](https://github.com/bchoor/p2e/issues/250) (P2E story B-05-L21).
+
+### Added
+- **`workflows/p2e-uxo-recipe.md`** (B-05-L21, [bchoor/p2e#250](https://github.com/bchoor/p2e/issues/250)) — reference recipe for UXO `description` + `objectives[]`: **objectives[] first → MECE-audit within the UXO → description as succinct articulation**. Ships with a grammar template, a 10-verb capability palette (Establish / Broker / Enforce / Govern / Issue / Provide / Enable / Expose / Deliver / Detect), 3 quality gates (substitution / narrative-smell / sibling-MECE), a gap-flagging protocol, and 5 worked examples drawn from the P2E Authenticate phase (AU-01..AU-05) that were hand-calibrated on 2026-04-20. Anti-patterns table explicitly rules out narrative/storyboard, implementation catalogs, aspirational metrics, feature-list grab bags, sibling-overlapping scope, and tautological descriptions.
+- **`/p2e-manage-uxo (--edit | --add)`** (B-05-L21, [bchoor/p2e#250](https://github.com/bchoor/p2e/issues/250)) — user-invoked command that applies the recipe with an annotated preview + confirm gate, mirroring the `/p2e-update-story` UX pattern. `--edit <uxo_id>` (default) fetches the target UXO plus its story stack and runs a MECE audit with a story-landing coverage table (orphan + multi-landed stories flagged). `--add <uxo_id> --phase=<title> --tier=<name>` scaffolds a blank UXO and runs the same preview/confirm flow. Confirm step supports Accept / Thicken objectives[] / Steer `<field>` / **Flag gap** (writes a thin-DRAFT story under this UXO per the recipe's gap-flagging protocol) / Abort. `--dry-run` renders preview + exact MCP payload without writing. Both modes use the `items:[{...}]` MCP call form to round-trip `objectives` as a native array.
+- **`workflows/p2e-manage-uxo.md`** — shared behavior spec covering preview contents, confirm actions, thicken/steer rules, brainstorming escalation (invoked when staged `objectives[]` has fewer than 3 bullets and evidence is thin), write ordering, dry-run behavior, and error handling. Mirrors `workflows/p2e-update-story.md` structure.
+- **`commands/p2e-manage-uxo.md`** — thin Claude command wrapper with `argument-hint: <uxo_id> [--edit | --add] [--phase=<title>] [--tier=<name>] [--dry-run]`.
+- **`skills/p2e-manage-uxo/SKILL.md`** — thin Codex skill wrapper with the same hard rules and brainstorming escalation contract.
+- **Validator coverage** in `scripts/validate-plugin.py` — `p2e-manage-uxo.md` added to `expected_commands`, `expected_workflows`, and `expected_skill_paths`; `commands/p2e-manage-uxo.md` and `skills/p2e-manage-uxo/SKILL.md` added to `workflow_map`; router check tuple extended with `workflows/p2e-manage-uxo.md` and `workflows/p2e-uxo-recipe.md`.
+
+### Changed
+- **`workflows/p2e-bootstrap.md`** — "Drafting rules" references `workflows/p2e-uxo-recipe.md` for UXO `description` + `objectives[]` shape so bootstrap-generated UXOs follow the same discipline as `/p2e-manage-uxo`-authored ones.
+- **`workflows/p2e-update-story.md`** — "UXO placement re-evaluation" surfaces the recipe when a target UXO's scope articulation is too thin to reliably match against; the wrapper now directs the user to `/p2e-manage-uxo --edit <uxo_id>` instead of silently guessing placement.
+- **`skills/p2e/SKILL.md`** (router) — two new routing rules: one for UXO writing/refining/auditing requests (points at the recipe), and one for explicit edit/add requests (points at `workflows/p2e-manage-uxo.md`).
+- **`.claude-plugin/plugin.json`**, **`.claude-plugin/marketplace.json`**, **`.codex-plugin/plugin.json`** versions bumped to `0.8.0`.
+
+### Notes
+- No breaking changes. Existing wrappers (`/p2e-bootstrap`, `/p2e-add-story`, `/p2e-update-story`, `/p2e-work-on-next`, `/p2e-sync`, `/p2e-sync-labels`) continue to work unchanged; the recipe is additive guidance they now reference, and `/p2e-manage-uxo` is a net-new command.
+- `python3 scripts/validate-plugin.py` passes.
+- Companion P2E stories filed during drafting: [bchoor/p2e#250](https://github.com/bchoor/p2e/issues/250) (B-05-L21, this release), plus two thick DRAFT stories for gaps the recipe surfaced in the Authenticate phase (AU-01-L7 account deletion, AU-05-L2 PAT expiry), and two new UXOs (AU-06 MFA, AU-07 multi-device session management) ready for their own L1 layers.
+
 ## v0.7.3 — 2026-04-19
 
 Test release — no functional changes. Validates that Claude Desktop correctly detects plugin updates now that `.claude-plugin/plugin.json` carries a `version` field (added in v0.7.2). Bumps all three version markers to `0.7.3`.

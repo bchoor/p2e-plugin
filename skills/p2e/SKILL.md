@@ -15,6 +15,8 @@ Then choose the one best-fit workflow, load it, and execute it end-to-end:
 - requests about implementing planned work -> read `workflows/p2e-work-on-next.md` AND `workflows/p2e-first-turn-briefing.md`, then follow the work-on-next workflow exactly
 - requests about label or lifecycle reconciliation -> read `workflows/p2e-sync-labels.md`, then follow that workflow exactly
 - requests about drift reconciliation between a story and its linked GitHub issue body (on-demand, field-level) -> read `workflows/p2e-sync.md`, then follow that workflow exactly
+- requests about writing, refining, or auditing a UXO's `description` / `objectives[]` -> read `workflows/p2e-uxo-recipe.md` and apply the recipe (objectives[] first → MECE-audit within the UXO → description as succinct articulation); this is a reference recipe, loadable standalone or mid-flow from bootstrap / update-story
+- requests about editing an existing UXO or adding a new UXO via the preview/confirm flow -> read `workflows/p2e-manage-uxo.md` (shared behavior) and `workflows/p2e-uxo-recipe.md` (the recipe it applies), then follow that workflow exactly. `--edit <uxo_id>` (default) steers an existing UXO; `--add <uxo_id> --phase=<title> --tier=<name>` creates a new UXO through the same preview/confirm UX. `--dry-run` renders preview + MCP payload without writing.
 
 ## Persona routing (work-on-next only)
 

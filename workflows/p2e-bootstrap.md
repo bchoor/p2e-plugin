@@ -74,7 +74,7 @@ Optional sub-step after the phases + UXOs are accepted in `--mode=onboarding`:
 ## Drafting rules
 
 - Phases should be action-oriented and reflect the user journey.
-- UXOs should be concrete objectives, not abstract benefits.
+- UXOs should be concrete objectives, not abstract benefits. **When drafting or refining a UXO's `description` and `objectives[]`, follow the canonical recipe in `workflows/p2e-uxo-recipe.md` — objectives[] first, MECE-audit within the UXO, then description as succinct articulation.**
 - Empty cells are allowed and are better than inventing filler.
 - CORE rows should capture the baseline viable journey.
 - ADVANCED and STRETCH rows should only appear when the source text (or the onboarding-mode repo evidence) supports them.
