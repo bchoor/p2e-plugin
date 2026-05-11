@@ -32,9 +32,9 @@ For the other variants, override the pill colors inline (the `.pill` base class 
 <div class="card">
   <p class="label">TL;DR</p>
   <ul class="tldr-list">
-    <li><span><strong>{Bullet 1 lead.</strong> {Detail prose.}</span></li>
-    <li><span><strong>{Bullet 2 lead.</strong> {Detail prose.}</span></li>
-    <li><span><strong>{Bullet 3 lead.</strong> {Detail prose.}</span></li>
+    <li><span><strong>{Bullet 1 lead.}</strong> {Detail prose.}</span></li>
+    <li><span><strong>{Bullet 2 lead.}</strong> {Detail prose.}</span></li>
+    <li><span><strong>{Bullet 3 lead.}</strong> {Detail prose.}</span></li>
   </ul>
 </div>
 ```
@@ -46,10 +46,38 @@ For the other variants, override the pill colors inline (the `.pill` base class 
   <p class="label">Recommendation in one diagram</p>
   <div class="diagram-wrap">
     <svg viewBox="0 0 720 360" role="img" aria-label="{accessible description}">
-      <!-- inline SVG markup; never use Mermaid. See template.html for the marker/defs/styles pattern. -->
+      <!-- inline SVG markup; never use Mermaid. -->
     </svg>
   </div>
 </div>
+```
+
+Minimal worked SVG (box + labeled arrow with an arrowhead marker) — copy and adapt for your diagram. The arrowhead `<marker>` only needs to be defined once per SVG even if you use multiple arrows.
+
+```html
+<svg viewBox="0 0 720 360" role="img" aria-label="Two boxes connected by a labeled arrow">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <!-- Box 1 -->
+  <rect x="60"  y="140" width="180" height="80" rx="10"
+        fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="150" y="185" text-anchor="middle"
+        font-family="Inter" font-size="14" fill="#0f172a">Source</text>
+  <!-- Arrow + label -->
+  <line x1="240" y1="180" x2="480" y2="180"
+        stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="360" y="170" text-anchor="middle"
+        font-family="Inter" font-size="12" fill="#475569">transforms</text>
+  <!-- Box 2 -->
+  <rect x="480" y="140" width="180" height="80" rx="10"
+        fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="570" y="185" text-anchor="middle"
+        font-family="Inter" font-size="14" fill="#0f172a">Target</text>
+</svg>
 ```
 
 ## Decision card (open)
