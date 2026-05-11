@@ -1,7 +1,7 @@
 {
   "name": "p2e",
   "version": "0.9.0",
-  "description": "P2E authoring + workflow commands for Claude Code. Adds /p2e-bootstrap, /p2e-add-story, /p2e-update-story, /p2e-work-on-next, /p2e-sync-labels, and /p2e-bind, backed by the p2e MCP. Use /p2e-bind once per repo to anchor it to a P2E project for automatic slug calibration.",
+  "description": "P2E authoring + workflow commands for Claude Code. Adds /p2e-bootstrap, /p2e-add-story, /p2e-update-story, /p2e-work-on-next, /p2e-sync-labels, /p2e-bind, /p2e-html, /p2e-md, and /p2e-md-to-html, plus the writing-rich-html-docs skill for opinionated rich-HTML doc rendering. Backed by the p2e MCP. Use /p2e-bind once per repo to anchor it to a P2E project for automatic slug calibration.",
   "author": {
     "name": "bchoor",
     "email": "noreply@users.noreply.github.com"

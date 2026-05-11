@@ -126,7 +126,10 @@ def validate_wrapper_references():
         "commands/p2e-archaeology.md": "workflows/p2e-archaeology.md",
         "commands/p2e-bind.md": "workflows/p2e-bind.md",
         "commands/p2e-bootstrap.md": "workflows/p2e-bootstrap.md",
+        "commands/p2e-html.md": "workflows/p2e-rich-html-docs.md",
         "commands/p2e-manage-uxo.md": "workflows/p2e-manage-uxo.md",
+        "commands/p2e-md.md": "workflows/p2e-rich-html-docs.md",
+        "commands/p2e-md-to-html.md": "workflows/p2e-rich-html-docs.md",
         "commands/p2e-sync.md": "workflows/p2e-sync.md",
         "commands/p2e-sync-labels.md": "workflows/p2e-sync-labels.md",
         "commands/p2e-update-story.md": "workflows/p2e-update-story.md",
@@ -140,14 +143,25 @@ def validate_wrapper_references():
         "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
         "skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
         "skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
+        "skills/writing-rich-html-docs/SKILL.md": "workflows/p2e-rich-html-docs.md",
+    }
+
+    # Doc-output override commands + the writing-rich-html-docs skill are not
+    # bound to the P2E story-workflow policy — they sit outside that contract.
+    skip_policy_check = {
+        "commands/p2e-html.md",
+        "commands/p2e-md.md",
+        "commands/p2e-md-to-html.md",
+        "skills/writing-rich-html-docs/SKILL.md",
     }
 
     for rel_path, workflow_ref in workflow_map.items():
         content = read_text(ROOT / rel_path)
-        assert_true(
-            "workflows/p2e-policy.md" in content,
-            f"{rel_path} must reference workflows/p2e-policy.md",
-        )
+        if rel_path not in skip_policy_check:
+            assert_true(
+                "workflows/p2e-policy.md" in content,
+                f"{rel_path} must reference workflows/p2e-policy.md",
+            )
         assert_true(
             workflow_ref in content,
             f"{rel_path} must reference {workflow_ref}",

@@ -15,9 +15,9 @@ A doc-producing skill is invoked. Decide the output format:
 
 ## When producing HTML
 
-1. Read `references/template.html` and use it as the structural skeleton — DO NOT modify the `<style>` block, the `<head>` `<link>`, or the `.wrap`/`.doc-header` shell.
+1. Read `skills/writing-rich-html-docs/references/template.html` and use it as the structural skeleton — DO NOT modify the `<style>` block, the `<head>` `<link>`, or the `.wrap`/`.doc-header` shell.
 2. Fill in the placeholders (`{{TITLE}}`, `{{TYPE}}`, `{{STATUS}}`, `{{DATE}}`, `{{OWNER}}`, `{{HASH}}`) from the doc's metadata. Default `{{STATUS}}` is `DRAFT` and the pill stays amber.
-3. For each section in the template, pick the appropriate components from `references/components.md` and the strategies from `references/strategies.md`. The agent's job is content + strategy choice; the components handle rendering.
+3. For each section in the template, pick the appropriate components from `skills/writing-rich-html-docs/references/components.md` and the strategies from `skills/writing-rich-html-docs/references/strategies.md`. The agent's job is content + strategy choice; the components handle rendering.
 4. Inline SVG diagrams only. Never `<script>`, `<details>`, anchor-link nav, or sticky positioning. Refer to the doc-reviewer compatibility rules in `feedback_html_doc_no_interactive` memory.
 5. Doc-reviewer's rail handles the outline — never add an in-doc TOC or sidebar.
 6. Element IDs on each `<section>` and major `<h2>`/`<h3>` should be stable so doc-reviewer can anchor comments.
@@ -30,7 +30,7 @@ Pass through to the calling skill's normal MD output. Apply the existing CLAUDE.
 
 1. Read the target `.md` file.
 2. Parse its YAML front-matter into the HTML `<meta>` slots.
-3. Map each MD section to a section shape from `references/strategies.md`:
+3. Map each MD section to a section shape from `skills/writing-rich-html-docs/references/strategies.md`:
    - The first paragraph after the title becomes the TL;DR card body (split into 3 bullets if it doesn't already have them).
    - "Background" / "Context" / "Problem" → Problem & context section with premise-list extraction if there's a numbered list.
    - "Approaches" / "Alternatives considered" → Comparison table.
@@ -59,7 +59,7 @@ The agent's job is choosing pedagogy. Picking colors / fonts / spacing / compone
 
 | Agent does | Agent does NOT |
 |---|---|
-| Choose strategy from `references/strategies.md` | Pick colors, fonts, spacing |
+| Choose strategy from `skills/writing-rich-html-docs/references/strategies.md` | Pick colors, fonts, spacing |
 | Write the prose | Re-derive callout/card/table CSS |
 | Decide what's above the fold | Reach for Tailwind / Bootstrap |
 | Adapt placeholders to content | Re-discover doc-reviewer constraints |

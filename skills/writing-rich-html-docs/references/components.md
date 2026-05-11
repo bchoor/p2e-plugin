@@ -127,7 +127,7 @@ After the decision is made, transform the open card with emerald accent + RESOLV
 
 ## Callouts
 
-Four variants — use them consistently across docs:
+Three variants — use them consistently across docs:
 
 | Variant | Use for |
 |---|---|

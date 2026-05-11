@@ -376,7 +376,7 @@
     </header>
 
     <!-- ────────────── 5-min brief ────────────── -->
-    <section>
+    <section id="five-min-brief">
       <h2>5-minute brief</h2>
       <p class="lead">Stop here if you only have 2 minutes.</p>
       <!-- TL;DR card with 3 emerald-arrow bullets covering: (1) the change, (2) the mechanism, (3) why it matters -->
@@ -384,7 +384,7 @@
     </section>
 
     <!-- ────────────── Decisions ────────────── -->
-    <section>
+    <section id="decisions">
       <h2>Decisions you need to make</h2>
       <!-- One decision-card per open question requiring the reader's input. Each card has: numbered badge, question title, short description, and an .options grid listing the named choices with tradeoffs. Use amber (--warn-border) for open decisions; swap to emerald (--good-border) + RESOLVED pill once closed. -->
     </section>
@@ -392,7 +392,7 @@
     <hr />
 
     <!-- ────────────── Problem & context ────────────── -->
-    <section>
+    <section id="problem-context">
       <h2>Problem &amp; context</h2>
       <!-- Thesis callout-info at the top: one bold objective sentence + one bold bottleneck sentence. -->
       <!-- Prose paragraph(s) establishing the situation — what exists today, why it's inadequate. -->
@@ -401,21 +401,21 @@
     </section>
 
     <!-- ────────────── Approaches ────────────── -->
-    <section>
+    <section id="approaches">
       <h2>Approaches considered</h2>
       <!-- Lead sentence: how many variants were explored and on which axes. -->
       <!-- Comparison table with columns: Approach | Pros | Cons | Concession / verdict. Mark the chosen row with .row-chosen and a .verdict-chosen pill; rejected rows get .verdict-rejected. -->
     </section>
 
     <!-- ────────────── Recommendation ────────────── -->
-    <section>
+    <section id="recommendation">
       <h2>Recommended approach</h2>
       <!-- .three-pieces grid: one .piece per top-level component of the recommendation (badge number, component name, .path, description). Use for anything with 2–4 distinct moving parts. -->
       <!-- Supporting sub-sections as needed (h3): classification tables, anatomy grids, quality bar callouts, override-mechanics code blocks. Each sub-section illuminates one dimension of the recommendation without duplicating what the 5-min brief already covered. -->
     </section>
 
     <!-- ────────────── Implementation plan ────────────── -->
-    <section>
+    <section id="implementation-plan">
       <h2>Implementation plan</h2>
       <!-- Lead: re-scope note if applicable, total token-day estimate, step count. -->
       <!-- .steps ordered list: each step has .step-num badge, .step-title (bold), .step-desc (what + why), .step-cost (td · output tokens · LoC equivalent). -->
@@ -423,7 +423,7 @@
     </section>
 
     <!-- ────────────── Deferred ────────────── -->
-    <section>
+    <section id="deferred">
       <h2>Deferred / out of scope</h2>
       <!-- Lead: "Things that came up but don't need to ship in v1." -->
       <!-- .deferred-list: one bullet per deferred item. Bold the item name; follow with one sentence on why it's deferred and how it's tracked (e.g. P2E story label). -->
