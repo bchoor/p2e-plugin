@@ -70,7 +70,10 @@ def validate_expected_files():
         "p2e-archaeology.md",
         "p2e-bind.md",
         "p2e-bootstrap.md",
+        "p2e-html.md",
         "p2e-manage-uxo.md",
+        "p2e-md.md",
+        "p2e-md-to-html.md",
         "p2e-sync.md",
         "p2e-sync-labels.md",
         "p2e-update-story.md",
@@ -87,6 +90,7 @@ def validate_expected_files():
         "p2e-first-turn-briefing.md",
         "p2e-manage-uxo.md",
         "p2e-policy.md",
+        "p2e-rich-html-docs.md",
         "p2e-sizing-rubric.md",
         "p2e-sync.md",
         "p2e-sync-labels.md",
@@ -108,6 +112,7 @@ def validate_expected_files():
         ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
         ROOT / "skills" / "p2e-update-story" / "SKILL.md",
         ROOT / "skills" / "p2e-work-on-next" / "SKILL.md",
+        ROOT / "skills" / "writing-rich-html-docs" / "SKILL.md",
     }
     actual_skill_paths = set((ROOT / "skills").glob("*/SKILL.md"))
     assert_equal(actual_skill_paths, expected_skill_paths, "Unexpected Codex skill set")
