@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rich HTML doc rendering — design</title>
+
+  <meta name="doc-title" content="Rich HTML doc rendering" />
+  <meta name="doc-status" content="DRAFT" />
+  <meta name="doc-date" content="2026-05-10" />
+  <meta name="doc-owner" content="bchoor" />
+  <meta name="doc-hash" content="rich-html-docs-v1" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Tokens ────────────────────────────────────────────── */
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-2: #f1f5f9;
+      --border: #e2e8f0;
+      --border-2: #cbd5e1;
+      --text: #0f172a;
+      --text-2: #334155;
+      --text-3: #64748b;
+      --text-4: #94a3b8;
+      --accent: #4f46e5;
+      --accent-bg: #eef2ff;
+      --good: #047857;
+      --good-bg: #ecfdf5;
+      --good-border: #6ee7b7;
+      --warn: #92400e;
+      --warn-bg: #fffbeb;
+      --warn-border: #fbbf24;
+      --bad: #9f1239;
+      --bad-bg: #fff1f2;
+      --info: #075985;
+      --info-bg: #eff6ff;
+      --info-border: #7dd3fc;
+      --code-bg: #f1f5f9;
+      --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    /* ── Base ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 40px 28px 96px;
+    }
+    code, pre, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+    code {
+      background: var(--code-bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--text-2);
+    }
+    h1, h2, h3, h4 { margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
+    h1 { font-size: 28px; font-weight: 700; }
+    h2 { font-size: 22px; font-weight: 700; margin: 0 0 14px; }
+    h3 { font-size: 16px; font-weight: 600; }
+    p { margin: 0 0 12px; color: var(--text-2); }
+    a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+    hr { border: 0; border-top: 1px solid var(--border); margin: 36px 0; }
+
+    /* ── Header ────────────────────────────────────────────── */
+    .doc-header { margin-bottom: 36px; }
+    .doc-header .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .doc-meta { color: var(--text-3); font-size: 12px; margin-top: 6px; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--warn-bg); color: var(--warn);
+      border: 1px solid var(--warn-border);
+    }
+    .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; }
+
+    /* ── Section spacing ───────────────────────────────────── */
+    section { margin-bottom: 36px; }
+    section .lead { color: var(--text-3); font-size: 13px; margin-top: -10px; margin-bottom: 16px; }
+
+    /* ── Cards ─────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+    }
+    .card + .card { margin-top: 14px; }
+    .card .label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-4);
+      margin-bottom: 10px;
+    }
+
+    /* ── TL;DR list (emerald arrows) ───────────────────────── */
+    .tldr-list { list-style: none; padding: 0; margin: 0; }
+    .tldr-list li {
+      display: flex; gap: 12px;
+      padding: 6px 0;
+      color: var(--text-2);
+      font-size: 15px; line-height: 1.55;
+    }
+    .tldr-list li::before {
+      content: "→";
+      color: var(--good);
+      font-weight: 700;
+      flex: none;
+    }
+    .tldr-list strong { color: var(--text); }
+
+    /* ── Decision cards ────────────────────────────────────── */
+    .decision-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--warn-border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .decision-card + .decision-card { margin-top: 12px; }
+    .decision-card .head { display: flex; align-items: flex-start; gap: 12px; }
+    .decision-card .num {
+      flex: none;
+      width: 28px; height: 28px;
+      border-radius: 999px;
+      background: var(--warn-bg);
+      color: var(--warn);
+      font-weight: 700; font-size: 13px;
+      display: grid; place-items: center;
+    }
+    .decision-card h3 { margin-bottom: 4px; }
+    .decision-card .desc { font-size: 13px; color: var(--text-3); margin: 4px 0 12px; }
+    .options {
+      display: grid; gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .option {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      background: var(--surface);
+    }
+    .option .opt-title { font-size: 12px; font-weight: 600; color: var(--text-2); }
+    .option .opt-rec { font-size: 11px; color: var(--text-4); font-weight: 400; margin-left: 4px; }
+    .option .opt-mono { display: block; margin-top: 4px; color: var(--text-3); font-size: 11px; line-height: 1.5; }
+    .option .opt-note { font-size: 12px; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
+
+    /* ── Callouts ──────────────────────────────────────────── */
+    .callout {
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      border-left: 4px solid;
+    }
+    .callout .kicker {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .callout p { margin: 0; }
+    .callout-info { background: var(--info-bg); border-color: var(--info-border); }
+    .callout-info .kicker { color: var(--info); }
+    .callout-info p { color: var(--text); }
+    .callout-warn { background: var(--warn-bg); border-color: var(--warn-border); }
+    .callout-warn .kicker { color: var(--warn); }
+    .callout-good { background: var(--good-bg); border-color: var(--good-border); }
+    .callout-good .kicker { color: var(--good); }
+
+    /* ── Premise list ──────────────────────────────────────── */
+    .premise-list {
+      list-style: none; padding: 0; margin: 0;
+      counter-reset: prem;
+    }
+    .premise-list li {
+      display: flex; gap: 12px;
+      padding: 7px 0;
+      font-size: 14px; color: var(--text-2);
+      counter-increment: prem;
+    }
+    .premise-list li::before {
+      content: "P" counter(prem);
+      flex: none;
+      width: 30px; height: 22px;
+      background: var(--surface-2);
+      color: var(--text-3);
+      border-radius: 4px;
+      font-size: 11px; font-weight: 600;
+      display: grid; place-items: center;
+    }
+
+    /* ── Tables ────────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      font-size: 13px;
+    }
+    thead {
+      background: var(--surface-2);
+    }
+    th {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-2);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    td {
+      padding: 12px 14px;
+      vertical-align: top;
+      color: var(--text-2);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr:last-child td { border-bottom: 0; }
+    th.col-pros { color: var(--good); }
+    th.col-cons { color: var(--bad); }
+    .row-chosen { background: rgba(16, 185, 129, 0.06); }
+    .verdict-pill {
+      display: inline-block;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 999px;
+      margin-top: 6px;
+    }
+    .verdict-chosen { background: var(--good); color: white; }
+    .verdict-rejected { background: var(--surface-2); color: var(--text-3); }
+    .audience-default {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600;
+    }
+    .audience-default::before {
+      content: "●"; font-size: 10px;
+    }
+    .audience-html { color: var(--good); }
+    .audience-md { color: var(--text-3); }
+
+    /* ── Three-pieces grid (recommendation) ────────────────── */
+    .three-pieces {
+      display: grid; gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin-bottom: 16px;
+    }
+    .piece {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+    .piece .badge {
+      display: inline-grid; place-items: center;
+      width: 24px; height: 24px;
+      background: var(--accent-bg); color: var(--accent);
+      border-radius: 6px;
+      font-size: 11px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .piece h3 { font-size: 14px; margin-bottom: 4px; }
+    .piece .path { font-family: var(--font-mono); font-size: 11px; color: var(--text-4); margin-bottom: 8px; }
+    .piece p { font-size: 13px; margin: 0; }
+
+    /* ── Anatomy grid ──────────────────────────────────────── */
+    .anatomy-grid {
+      display: grid; gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      font-size: 13px;
+    }
+    .anatomy-grid > div {
+      background: var(--surface-2);
+      padding: 10px 12px; border-radius: 8px;
+      color: var(--text-2);
+    }
+    .anatomy-grid strong { color: var(--text); }
+
+    /* ── Code block ────────────────────────────────────────── */
+    pre.code-block {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 12px;
+      line-height: 1.65;
+      overflow-x: auto;
+      margin: 10px 0 0;
+    }
+    pre.code-block .com { color: #64748b; }
+
+    /* ── Steps (implementation) ────────────────────────────── */
+    .steps { list-style: none; padding: 0; margin: 0; }
+    .steps li {
+      display: flex; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .steps li:last-child { border-bottom: 0; }
+    .steps .step-num {
+      flex: none;
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-weight: 700; font-size: 12px;
+      display: grid; place-items: center;
+    }
+    .steps p { margin: 0; }
+    .steps .step-title { color: var(--text); font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .steps .step-desc { font-size: 13px; color: var(--text-3); }
+    .steps .step-cost { font-size: 11px; color: var(--text-4); margin-top: 4px; }
+    .total-card {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      display: flex; align-items: baseline; gap: 12px;
+      font-size: 13px; color: var(--text-2);
+    }
+    .total-card .total-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3);
+    }
+
+    /* ── Deferred bullets ──────────────────────────────────── */
+    .deferred-list { list-style: none; padding: 0; margin: 0; }
+    .deferred-list li {
+      display: flex; gap: 10px;
+      padding: 8px 0;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+    .deferred-list li::before {
+      content: "·"; color: var(--text-4); flex: none;
+    }
+    .deferred-list strong { color: var(--text); }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    .doc-footer {
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--text-4);
+    }
+
+    /* ── SVG diagram caption ───────────────────────────────── */
+    .diagram-wrap { text-align: center; margin-top: 8px; }
+    .diagram-wrap svg { max-width: 100%; height: auto; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- ────────────── Header ────────────── -->
+    <header class="doc-header">
+      <div class="row">
+        <h1>Rich HTML doc rendering</h1>
+        <span class="pill"><span class="dot"></span>DRAFT</span>
+      </div>
+      <p class="doc-meta">design · 2026-05-10 · owner: bchoor · hash: rich-html-docs-v1</p>
+    </header>
+
+    <!-- ────────────── 5-min brief ────────────── -->
+    <section>
+      <h2>5-minute brief</h2>
+      <p class="lead">Stop here if you only have 2 minutes.</p>
+
+      <div class="card">
+        <p class="label">TL;DR</p>
+        <ul class="tldr-list">
+          <li><span><strong>Human-review docs become rich single-file HTML</strong>; AI-execution docs stay markdown. The split is by audience, not by doc type.</span></li>
+          <li><span><strong>Three pieces, no superpowers edits.</strong> A new section in CLAUDE.md classifies docs and overrides the markdown default. A companion skill in the <code>bchoor/p2e-plugin</code> family carries the opinionated template + design system. Slash commands <code>/p2e-html</code>, <code>/p2e-md</code>, and <code>/p2e-md-to-html</code> override per-invocation and convert legacy MD on demand.</span></li>
+          <li><span><strong>Why it matters:</strong> the bottleneck on velocity is your cognition at decision time. Rich HTML restructures the doc so the 2-minute scan finds the 80% — full read becomes optional.</span></li>
+        </ul>
+      </div>
+
+      <div class="card" style="margin-top: 14px;">
+        <p class="label">Recommendation in one diagram</p>
+        <div class="diagram-wrap">
+          <svg viewBox="0 0 720 360" role="img" aria-label="Flow: user invokes a skill, CLAUDE.md classifies it as human-review or AI-execution, routing to rich HTML or markdown output. Override commands /p2e-html and /p2e-md flip the routing.">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8" />
+              </marker>
+              <marker id="arrow-emerald" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 Z" fill="#10b981" />
+              </marker>
+              <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 Z" fill="#64748b" />
+              </marker>
+            </defs>
+            <style>
+              .nbox { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 1.5; }
+              .ndiamond { fill: #fef3c7; stroke: #fbbf24; stroke-width: 1.5; }
+              .nhtml { fill: #10b981; stroke: #047857; stroke-width: 1.5; }
+              .nmd { fill: #64748b; stroke: #334155; stroke-width: 1.5; }
+              .nfile { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; stroke-dasharray: 0; }
+              .lbl { font-family: Inter, sans-serif; font-size: 12px; fill: #0f172a; text-anchor: middle; }
+              .lbl-w { font-family: Inter, sans-serif; font-size: 12px; fill: #ffffff; text-anchor: middle; font-weight: 600; }
+              .lbl-sm { font-family: Inter, sans-serif; font-size: 10px; fill: #475569; text-anchor: middle; }
+              .lbl-tag { font-family: Inter, sans-serif; font-size: 10px; fill: #475569; text-anchor: middle; font-style: italic; }
+              .edge { fill: none; stroke: #94a3b8; stroke-width: 1.5; }
+              .edge-html { fill: none; stroke: #10b981; stroke-width: 1.5; }
+              .edge-md { fill: none; stroke: #64748b; stroke-width: 1.5; }
+              .edge-override { fill: none; stroke: #4f46e5; stroke-width: 1.3; stroke-dasharray: 5 4; }
+              .lbl-override { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #4f46e5; text-anchor: middle; }
+            </style>
+
+            <!-- User -->
+            <rect class="nbox" x="270" y="20" width="180" height="44" rx="8" />
+            <text class="lbl" x="360" y="40">User invokes</text>
+            <text class="lbl" x="360" y="55">doc-producing skill</text>
+
+            <!-- Edge: User -> Classifier -->
+            <path class="edge" d="M360,64 L360,108" marker-end="url(#arrow)" />
+
+            <!-- Classifier diamond-ish -->
+            <rect class="ndiamond" x="280" y="108" width="160" height="48" rx="6" />
+            <text class="lbl" x="360" y="130">CLAUDE.md</text>
+            <text class="lbl" x="360" y="146">classifies</text>
+
+            <!-- Classifier -> HTML (left) -->
+            <path class="edge-html" d="M310,156 L185,210" marker-end="url(#arrow-emerald)" />
+            <text class="lbl-tag" x="220" y="190">human-review</text>
+            <text class="lbl-tag" x="220" y="202">spec / design / ADR</text>
+
+            <!-- Classifier -> MD (right) -->
+            <path class="edge-md" d="M410,156 L535,210" marker-end="url(#arrow-slate)" />
+            <text class="lbl-tag" x="500" y="190">AI-execution</text>
+            <text class="lbl-tag" x="500" y="202">plan / hooks / READMEs</text>
+
+            <!-- HTML node -->
+            <rect class="nhtml" x="60" y="216" width="250" height="48" rx="8" />
+            <text class="lbl-w" x="185" y="237">Rich HTML</text>
+            <text class="lbl-w" x="185" y="252" style="font-weight: 400;">via p2e-plugin skill</text>
+
+            <!-- MD node -->
+            <rect class="nmd" x="410" y="216" width="250" height="48" rx="8" />
+            <text class="lbl-w" x="535" y="237">Markdown</text>
+            <text class="lbl-w" x="535" y="252" style="font-weight: 400;">existing pattern</text>
+
+            <!-- HTML -> file -->
+            <path class="edge-html" d="M185,264 L185,294" marker-end="url(#arrow-emerald)" />
+            <rect class="nfile" x="80" y="294" width="210" height="40" rx="6" />
+            <text class="lbl" x="185" y="312">docs/feat-X/design.html</text>
+            <text class="lbl-sm" x="185" y="325">canonical artifact</text>
+
+            <!-- MD -> file -->
+            <path class="edge-md" d="M535,264 L535,294" marker-end="url(#arrow-slate)" />
+            <rect class="nfile" x="430" y="294" width="210" height="40" rx="6" />
+            <text class="lbl" x="535" y="312">docs/feat-X/plan.md</text>
+            <text class="lbl-sm" x="535" y="325">canonical artifact</text>
+
+            <!-- Override arrows from User -->
+            <path class="edge-override" d="M270,42 C 130,42 130,240 60,240" marker-end="url(#arrow)" />
+            <text class="lbl-override" x="80" y="115">/p2e-html</text>
+            <text class="lbl-override" x="80" y="128" style="font-style:italic; fill:#64748b;">override</text>
+
+            <path class="edge-override" d="M450,42 C 600,42 600,240 660,240" marker-end="url(#arrow)" />
+            <text class="lbl-override" x="640" y="115">/p2e-md</text>
+            <text class="lbl-override" x="640" y="128" style="font-style:italic; fill:#64748b;">override</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- ────────────── Decisions ────────────── -->
+    <section>
+      <h2 style="color: var(--good);">Decisions resolved</h2>
+      <p class="lead">All 3 decisions closed during review. Implementation plan below is unblocked.</p>
+
+      <div class="decision-card" data-review-id="5d0b4f28-f247-4fc4-b2ca-d1790d1fb254" style="border-left-color: var(--good-border);">
+        <div class="head">
+          <div class="num" style="background: var(--good-bg); color: var(--good);">1</div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <h3 style="margin:0;">File naming inside <code>docs/feat-&lt;name&gt;/</code></h3>
+              <span class="pill" style="background: var(--good-bg); color: var(--good); border-color: var(--good-border);"><span class="dot" style="background:#10b981;"></span>RESOLVED</span>
+            </div>
+            <p class="desc" style="margin: 6px 0 0;">Closed via review (T46d3c603 — picked <strong>A</strong>): flat layout. One file per doc-type at <code>docs/feat-X/design.html</code>, <code>docs/feat-X/spec.html</code>, <code>docs/feat-X/plan.md</code>. Mirrors the current MD convention; folder-per-doc deferred unless an asset-heavy doc demands it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="decision-card" data-review-id="313cdb76-cbeb-4037-b4e2-773a5cfdb6d4" style="border-left-color: var(--good-border);">
+        <div class="head">
+          <div class="num" style="background: var(--good-bg); color: var(--good);">2</div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <h3 style="margin:0;">Companion skill packaging</h3>
+              <span class="pill" style="background: var(--good-bg); color: var(--good); border-color: var(--good-border);"><span class="dot" style="background:#10b981;"></span>RESOLVED</span>
+            </div>
+            <p class="desc" style="margin: 6px 0 0;">Closed via review threads T2 + T6: skill ships in the <code>bchoor/p2e-plugin</code> family alongside the existing <code>/p2e-*</code> workflows. Authored once for cross-tool compatibility — same SKILL.md works in <strong>codex / claude / cursor / opencode</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="decision-card" style="border-left-color: var(--good-border);">
+        <div class="head">
+          <div class="num" style="background: var(--good-bg); color: var(--good);">3</div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <h3 style="margin:0;">Existing markdown specs</h3>
+              <span class="pill" style="background: var(--good-bg); color: var(--good); border-color: var(--good-border);"><span class="dot" style="background:#10b981;"></span>RESOLVED</span>
+            </div>
+            <p class="desc" style="margin: 6px 0 0;">Closed via review thread T8: no bulk migration. The new <code>/p2e-md-to-html</code> command handles on-demand conversion when a legacy spec is next touched.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr />
+
+    <!-- ────────────── Problem & context ────────────── -->
+    <section>
+      <h2>Problem & context</h2>
+
+      <div class="callout callout-info" style="margin-bottom: 14px;">
+        <p class="kicker">Thesis</p>
+        <p><strong>Objective:</strong> high-quality decisions at high velocity. <strong>Bottleneck:</strong> human cognition at design/spec time. The format of the doc is the lever — restructure it for cognition, not for the writer's convenience.</p>
+      </div>
+
+      <p>Today the brainstorming and planning skills produce markdown. Markdown is excellent for AI agents (token-efficient, parseable, diff-friendly) and for terminal reading. But the human-review path — where the high-stakes decisions actually get made — runs through long-form prose that takes ~10–15 minutes per spec to absorb before a confident decision is possible.</p>
+
+      <div class="card">
+        <p class="label">Premise stack</p>
+        <ol class="premise-list">
+          <li>Quality decisions require deep understanding of the scenario.</li>
+          <li>Deep understanding from a markdown wall is slow, tedious, manual, and high cognitive-load.</li>
+          <li>Across many specs, this produces <em>cross-pollination errors</em> — context from doc N bleeds into the decision on doc N+1.</li>
+          <li>Long reads cause <em>context rot</em> mid-decision: by the time you reach the asks, you've forgotten the constraints.</li>
+          <li>Context switching is brutal. Past 2–3 concurrent specs, decision quality degrades fast.</li>
+          <li>Therefore: optimize the doc format around the bottleneck — human cognition at decision time.</li>
+        </ol>
+      </div>
+
+      <p style="margin-top: 14px;" data-review-id="a5a96b53-f755-4027-8cdd-45760ad3c1b1">The win isn't prettier docs. It's <strong>amortized comprehension</strong> — the cost of <em>structuring the doc for cognition</em> (visual hierarchy, surfaced decisions, diagrams in place of prose, the 5-minute brief at the top) is paid once by the agent producing it, and that one-time investment gets paid back across every reader and every re-read. A 12-minute prose wall becomes a 2-minute scan that yields ~80% of the decision-relevant signal; the remaining 20% sits in clearly-labeled deeper sections, drilled into only when the decision needs it.</p>
+
+      <div class="callout callout-info" style="margin: 6px 0 14px;">
+        <p class="kicker">Etymology — why this name</p>
+        <p style="margin: 0;"><strong>Amortization</strong> (finance / CS amortized analysis) — spreading a high one-time cost across many small increments so the average cost per increment is low. <strong>Comprehension</strong> — grasping the meaning of complex information. Combined: the doc pays the structuring cost <em>once</em>, and every reader after that scans cheaply. Mental effort — the real cost — gets broken down over time and across people, the same way a mortgage breaks a $500K cost into 360 affordable monthly payments.</p>
+      </div>
+
+      <p>Without amortization, every reader pays the full 12-minute cost from scratch — and across many concurrent docs, that cost compounds into the bottleneck the doc itself was meant to remove.</p>
+
+      <div class="callout callout-warn" style="margin-top: 14px;">
+        <p class="kicker">Honest cost</p>
+        <p style="margin: 0;">HTML output runs ~2–4× more output tokens and ~2–4× longer to generate than the MD equivalent (per Thariq's <em>Unreasonable Effectiveness of HTML</em> field notes). The amortized-comprehension thesis is that this one-time author-side cost is dwarfed by the reader-side savings that compound across every reader and every re-read. We accept the trade because reads outnumber writes, and reader cognition is the bottleneck — not author throughput.</p>
+      </div>
+    </section>
+
+    <!-- ────────────── Approaches ────────────── -->
+    <section>
+      <h2>Approaches considered</h2>
+      <p class="lead">Three variants on each of two axes (HTML's role, and how it's triggered) were explored. Below are the dominant variants and why we picked the recommended one.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 22%;">Approach</th>
+            <th class="col-pros" style="width: 26%;">Pros</th>
+            <th class="col-cons" style="width: 26%;">Cons</th>
+            <th style="width: 26%;">Concession / verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-chosen">
+            <td>
+              <strong>A. HTML replaces MD</strong><br>
+              <span style="font-size: 12px; color: var(--text-3);">Skills write rich HTML directly. CLAUDE.md overrides their MD default.</span><br>
+              <span class="verdict-pill verdict-chosen">Chosen</span>
+            </td>
+            <td>Single canonical artifact. No sync overhead. Doc-reviewer already supports <code>.html</code>. Highest-priority instruction layer (CLAUDE.md) cleanly overrides skill defaults.</td>
+            <td>Harder to PR-diff than MD. Existing MD convention in CLAUDE.md needs replacement. Browser needed to view (cheap concession).</td>
+            <td>Restrict to <strong>human-review</strong> docs only — AI-execution docs stay MD. PR diff issue is real but bounded; mitigate later with rendered-preview tooling.</td>
+          </tr>
+          <tr>
+            <td>
+              <strong>B. HTML supplements MD</strong><br>
+              <span style="font-size: 12px; color: var(--text-3);">MD stays canonical. HTML is generated from MD on demand.</span><br>
+              <span class="verdict-pill verdict-rejected">Rejected</span>
+            </td>
+            <td>Zero workflow disruption. MD stays diffable. Doc-reviewer keeps working on MD as today.</td>
+            <td>Two artifacts to sync. Generation step required (when? by whom?). Rich elements (callouts, decision cards) don't have a natural MD source — they'd need extension syntax that defeats the simplicity premise.</td>
+            <td>The richness we want isn't translatable from MD without a new authoring layer. That's just HTML with extra steps.</td>
+          </tr>
+          <tr>
+            <td>
+              <strong>C. Hybrid per-doc choice</strong><br>
+              <span style="font-size: 12px; color: var(--text-3);">Author flags HTML or MD per doc.</span><br>
+              <span class="verdict-pill verdict-rejected">Rejected as default</span>
+            </td>
+            <td>Right tool per job. Maximum flexibility.</td>
+            <td>Most cognitive overhead at the moment of authoring. Easy to drift. Defeats "high velocity" — author has to think about format before content.</td>
+            <td>Rolled into <strong>A</strong> as the override mechanism (<code>/p2e-html</code> · <code>/p2e-md</code>) rather than the default policy. You get the flexibility without the per-author decision tax.</td>
+          </tr>
+          <tr>
+            <td>
+              <strong>D. No skill — just prompt for HTML each time</strong><br>
+              <span style="font-size: 12px; color: var(--text-3);">Per Thariq's <em>Unreasonable Effectiveness of HTML</em> essay: skip the skill, just say "make an HTML file" when you want one.</span><br>
+              <span class="verdict-pill verdict-rejected">Rejected</span>
+            </td>
+            <td>Zero infrastructure. Maximum agent freedom on visuals. Works fine for one-offs viewed in a generic browser.</td>
+            <td>(1) <strong>Inconsistent docs across the corpus</strong> — every doc re-derives the design system, structure, and section shapes; the reader's "amortized comprehension" never accrues across docs. (2) <strong>Comment-anchor breakage</strong> — doc-reviewer threads anchor on element IDs/structure; if those drift between regenerations, comments come unstuck. (3) <strong>Doesn't auto-steer superpowers skills</strong> — brainstorming, writing-plans, executing-plans, requesting-code-review etc. are the workhorse here, and they default to MD without active intervention. "Just prompt" doesn't fix the default; the skill does.</td>
+            <td>Thariq's "just prompt" works because his target is one-off general HTML viewed in a browser. Ours has constraints he doesn't: doc-reviewer's commenting + outline rail are the review surface, and superpowers skills are the production surface. The skill exists to steer those skills consistently and to produce stable structure the comment system can anchor to.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ────────────── Recommendation ────────────── -->
+    <section>
+      <h2 data-review-id="17e8320f-9ebd-4a22-95a1-524c2f0e36ae">Recommended approach</h2>
+
+      <!-- Three pieces -->
+      <div class="three-pieces">
+        <div class="piece">
+          <div class="badge">1</div>
+          <h3>CLAUDE.md rule</h3>
+          <p class="path">~/.claude/CLAUDE.md</p>
+          <p>A new <em>Doc Output Conventions</em> section replaces the existing <em>Markdown Conventions</em> section. Contains the audience classification table and override syntax. Highest-priority instruction layer — wins over any baked-in MD default in skills.</p>
+        </div>
+        <div class="piece">
+          <div class="badge">2</div>
+          <h3>Companion skill</h3>
+          <p class="path">bchoor/p2e-plugin · cross-tool</p>
+          <p>Ships in the <code>bchoor/p2e-plugin</code> family alongside the existing <code>/p2e-*</code> workflows. Carries an <strong>opinionated</strong> template + design system: ready-made theme tokens, component library (callouts, cards, tables, premise/step lists), layout templates, pedagogical-strategy menu, and the doc-reviewer compatibility rules. Authored once for <strong>codex / claude / cursor / opencode</strong> — same SKILL.md surfaces consistently in each runtime.</p>
+        </div>
+        <div class="piece">
+          <div class="badge">3</div>
+          <h3>Override + convert commands</h3>
+          <p class="path">bchoor/p2e-plugin · /p2e-{html,md,md-to-html}</p>
+          <p>Three thin slash commands in the same plugin. <code>/p2e-html</code> forces HTML on the next doc-producing skill; <code>/p2e-md</code> forces MD; <code>/p2e-md-to-html</code> converts an existing <code>.md</code> doc to a rich <code>.html</code> applying the full design system. Each loads override instructions into the next turn's context — no wrapping logic.</p>
+        </div>
+      </div>
+
+      <!-- Audience classification table -->
+      <h3 style="margin: 22px 0 8px;">Audience classification</h3>
+      <p class="lead" style="margin-top: 0;">Used by CLAUDE.md to pick HTML or MD by default.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Doc type</th>
+            <th>Primary audience</th>
+            <th>Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>spec.html</code></td><td>human review</td><td><span class="audience-default audience-html">HTML</span></td></tr>
+          <tr><td><code>design.html</code></td><td>human review</td><td><span class="audience-default audience-html">HTML</span></td></tr>
+          <tr><td><code>adr-*.html</code></td><td>human review</td><td><span class="audience-default audience-html">HTML</span></td></tr>
+          <tr><td><code>retro.html · postmortem.html</code></td><td>human review</td><td><span class="audience-default audience-html">HTML</span></td></tr>
+          <tr><td><code>plan.md</code></td><td>AI execution (with human spot-check)</td><td><span class="audience-default audience-md">MD</span></td></tr>
+          <tr><td><code>README.md · CLAUDE.md</code></td><td>mixed</td><td><span class="audience-default audience-md">MD</span></td></tr>
+          <tr><td><code>test fixtures · hook configs</code></td><td>AI / system</td><td><span class="audience-default audience-md">MD</span></td></tr>
+        </tbody>
+      </table>
+
+      <!-- Template anatomy -->
+      <h3 style="margin: 22px 0 8px;" data-review-id="43c59e1a-f25d-49e3-bab0-cedae3fef3b9">Template anatomy — what makes the HTML "rich"</h3>
+      <p class="lead" style="margin-top: 0;">Every element here serves the cognitive-amortization thesis and is doc-reviewer-compatible (no JS, no sticky, no in-doc nav, single linear scroll).</p>
+      <div class="anatomy-grid">
+        <div><strong>Plain header</strong> — title, status pill, hash/date/owner at the top. Not sticky.</div>
+        <div><strong>5-min brief first</strong> — TL;DR + one inline-SVG diagram. Above the fold, before anything else.</div>
+        <div><strong>Decision cards</strong> — open questions surfaced as their own section, isolated from analysis.</div>
+        <div><strong>Color-coded callouts</strong> — sky=info, amber=decision, emerald=recommendation, rose=risk. Consistent across docs.</div>
+        <div><strong>Comparison tables</strong> — pros/cons/verdict side-by-side, not buried in prose.</div>
+        <div><strong>Inline SVG diagrams</strong> — architecture, flow, sequence — rendered statically, no JS.</div>
+        <div><strong>Numbered premise/step lists</strong> — explicit P1/P2 or 1/2/3 markers via CSS counters.</div>
+        <div><strong>Hand-tuned typography</strong> — Inter for body, JetBrains Mono for code, scoped CSS in a single <code>&lt;style&gt;</code> block.</div>
+        <div><strong>Stable element IDs</strong> — every section <code>id</code> stays stable so <code>/doc-reviewer-review</code> can anchor comments.</div>
+        <div><strong>Doc-reviewer rail handles outline</strong> — never duplicate it in the artifact.</div>
+      </div>
+
+      <!-- Skill quality bar -->
+      <h3 style="margin: 22px 0 8px;">Skill quality bar — opinionated, not a sandbox</h3>
+      <p class="lead" style="margin-top: 0;">The skill exists so the agent never spends thinking tokens on visual implementation. The agent picks pedagogy; the skill provides the rendering. This is the pattern Thariq endorses in his HTML-effectiveness essay: <em>"create a single design system HTML file by pointing Claude at your codebase. You can then use that design system file as a reference for other html files."</em> Our <code>template.html</code> in the skill is exactly that file; this <code>design.html</code> follows it.</p>
+
+      <div style="display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 12px;">
+        <div class="callout callout-good">
+          <p class="kicker">Agent does</p>
+          <p>Choose which pedagogical strategy fits the content (premise stack vs comparison table vs decision cards vs flow diagram). Write the prose. Decide what belongs above the fold.</p>
+        </div>
+        <div class="callout callout-warn">
+          <p class="kicker">Agent does NOT</p>
+          <p>Pick colors, fonts, spacing, or component layouts. Re-derive callout/card/table CSS. Decide whether to use Tailwind. Re-discover the doc-reviewer compatibility rules. All of this is provided.</p>
+        </div>
+      </div>
+
+      <div class="anatomy-grid">
+        <div><strong>Theme tokens</strong> — palette, type scale, radii, spacing — drop-in CSS variables ready to copy into any new doc.</div>
+        <div><strong>Component library inline</strong> — copy-paste blocks for cards, decision cards, callouts, tables, premise lists, step lists, three-pieces grids, anatomy grids.</div>
+        <div><strong>Layout templates</strong> — top-of-doc 5-min-brief shape, decisions section shape, recommendation section shape, deferred-list shape.</div>
+        <div><strong>Strategy menu</strong> — for each cognitive task (compare options, surface premises, walk a flow, show before/after), the skill names the visual strategy and points to the component to reach for.</div>
+      </div>
+
+      <!-- Override mechanics -->
+      <div class="callout callout-info" style="margin-top: 18px;" data-review-id="df80f610-6746-4c59-abc7-daa7016d66f2">
+        <p class="kicker">How the override commands work</p>
+        <p>Each command is a thin skill that loads instructions into context for the next doc-producing skill in the same turn. No wrapping logic, no per-skill bindings.</p>
+        <pre class="code-block"><span class="com"># Force HTML on a doc that would otherwise default to MD:</span>
+/p2e-html  /superpowers:brainstorming  redesign the comments rail
+
+<span class="com"># Force MD on a doc that would otherwise default to HTML:</span>
+/p2e-md  /superpowers:brainstorming  trivial config-only ADR
+
+<span class="com"># Convert a legacy markdown spec to a rich HTML doc on demand:</span>
+/p2e-md-to-html  docs/feat-comments-rail-redesign/spec.md</pre>
+      </div>
+    </section>
+
+    <!-- ────────────── Implementation plan ────────────── -->
+    <section>
+      <h2 data-review-id="727eb546-f47f-4cc3-814c-3c71389520b3">Implementation plan</h2>
+      <p class="lead">Re-scoped after review T7 · ~0.35 token-day total · 4 steps</p>
+
+      <ol class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <div>
+            <p class="step-title">Update <code>~/.claude/CLAUDE.md</code></p>
+            <p class="step-desc">Replace the <em>Markdown Conventions</em> section with <em>Doc Output Conventions</em>: classification table, override syntax, pointer to the p2e-plugin skill. Keep the front-matter rule (now applies to both HTML <code>&lt;meta&gt;</code> tags and MD YAML).</p>
+            <p class="step-cost">~0.03 td · ~19K output tokens · ~300 LoC equivalent</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div>
+            <p class="step-title">Add the skill to <code>bchoor/p2e-plugin</code></p>
+            <p class="step-desc">SKILL.md with the opinionated template, theme tokens, component library, layout templates, pedagogical-strategy menu, and doc-reviewer compatibility rules. This <code>design.html</code> ships in the plugin as the canonical worked example. Author once for cross-tool surfaces (codex / claude / cursor / opencode).</p>
+            <p class="step-cost">~0.15 td · ~96K output tokens · ~1.5K LoC equivalent · most of the work, but this design.html does the heavy lifting as the worked example</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div>
+            <p class="step-title">Add the three slash commands to the plugin</p>
+            <p class="step-desc"><code>/p2e-html</code> and <code>/p2e-md</code> are tiny override-instruction files. <code>/p2e-md-to-html</code> is a slightly thicker command that reads a target <code>.md</code> file and rewrites it as <code>.html</code> using the skill's template.</p>
+            <p class="step-cost">~0.07 td · ~45K output tokens · ~700 LoC equivalent</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div>
+            <p class="step-title">End-to-end test on a small new feature</p>
+            <p class="step-desc">Run <code>/superpowers:brainstorming</code> on a small example and verify the output lands as a clean <code>design.html</code> with the full template applied. Smoke-test in at least one non-claude runtime (codex or cursor) to confirm cross-tool consistency. Tune the skill text based on what the model produces.</p>
+            <p class="step-cost">~0.10 td · ~64K output tokens · ~1K LoC equivalent · expect 1 iteration cycle</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="total-card">
+        <span class="total-label">Total</span>
+        <span>~<strong>0.35 token-day</strong> (~$105, ~225K output tokens, ~3.5K LoC equivalent). <em>Original 1-td estimate revised down (T7):</em> the skill body extracts directly from this design.html, and packaging into the existing p2e-plugin avoids new infrastructure.</span>
+      </div>
+    </section>
+
+    <!-- ────────────── Deferred ────────────── -->
+    <section>
+      <h2 data-review-id="40c78803-76e1-4058-b5a8-d7c591d556ae">Deferred / out of scope</h2>
+      <p class="lead">Things that came up but don't need to ship in v1. Listed so they're not lost.</p>
+
+      <ul class="deferred-list">
+        <li><span><strong>Print/PDF export.</strong> Hand-tuned print styles can be added if the user wants to share specs outside the browser.</span></li>
+        <li data-review-id="80b34bbe-ac86-483a-b0c5-1d2d02ba6c0a"><span><strong>Component library extraction.</strong> If the template's components stabilize across many docs, factor the CSS into a shared <code>spec-ui.css</code> with class names. Premature now. <em>Tracking:</em> filed as a P2E story (status = <code>backlog</code>, label = <code>html-docs</code>) so it surfaces in the next backlog grooming pass and doesn't drown in the deferred-section sea.</span></li>
+        <li><span><strong>Doc-reviewer enhancements for HTML.</strong> The existing skill already supports HTML element-anchoring (per CLAUDE.md). If anchoring proves brittle on rich HTML, revisit then.</span></li>
+      </ul>
+
+      <p class="lead" style="margin-top: 14px;"><strong>Removed during review:</strong> <em>Bulk migration</em> (T8 — superseded by <code>/p2e-md-to-html</code> on demand); <em>PR diff tooling</em> (T9 — not needed); <em>Cross-doc search</em> (T10 — no clear utility beyond what plain MD search already gives).</p>
+    </section>
+
+    <!-- ────────────── Footer ────────────── -->
+    <footer class="doc-footer">
+      doc · rich-html-docs-v1 &middot; 2026-05-10 &middot; owner: bchoor &middot; status: DRAFT — awaiting decision answers
+    </footer>
+
+  </div>
+<!-- @doc-review-state
+{
+  "version": 1,
+  "threads": [
+    {
+      "id": "1a7ced19-b133-40cc-83d0-0e079806644c",
+      "targetId": "17e8320f-9ebd-4a22-95a1-524c2f0e36ae",
+      "author": "bikramc",
+      "body": "premise: we want the AI to focus on the thinking part and no so much on how to render/build the page.\n\nwe should provide high quality instructions with clean usable examples and assortments of strategies to ensure its easy and straight forward for the ai agent when building the html. it doesn't have to guess is this component, theme, etc. \n\nwe do want to allow the agent to be creative in how to aritculate the ideas in the most efficient and effective way to the human, useing hte right pedagoticaly techniquest; but we don't want it to spin thinking tokens on how to implement.\n\nwe want an opiniated set of design straetegies that the agent can pick-and-choose how to employ on an as-needed basis to produce the most intutitive cognititon experiences.",
+      "createdAt": "2026-05-10T23:19:10.055Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Added a new 'Skill quality bar — opinionated, not a sandbox' subsection inside Recommended approach. Captures the agent-does / agent-does-NOT split (agent picks pedagogy and prose; never re-derives colors, fonts, spacing, or component CSS) and lists four concrete deliverables the skill must provide: theme tokens, component library inline (copy-paste blocks), layout templates, and a strategy menu that names the visual pattern for each cognitive task. Also rewrote the Companion-skill piece to lead with 'opinionated template + design system'.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:06:40.300Z",
+      "anchorText": "{\"tag\":\"h2\",\"text\":\"Recommended approach\"}",
+      "editedAt": "2026-05-10T23:22:34.098Z"
+    },
+    {
+      "id": "137b2fd6-0db6-4c93-a9b2-26c53bdd26b9",
+      "targetId": "313cdb76-cbeb-4037-b4e2-773a5cfdb6d4",
+      "author": "bikramc",
+      "body": "We should make it part of the bchoor/p2e-plugin family, so we have a common /p2e-* setup. We also should have a way to /p2e-md-to-html that will apply the necessary deisgn principles/theme/components/etc to convert an md-to-html.",
+      "createdAt": "2026-05-10T23:23:52.659Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Repackaged the skill into bchoor/p2e-plugin (Recommended approach > Companion skill, Implementation step 2). Decision 2 marked RESOLVED in the decisions section. Added /p2e-md-to-html as a third slash command for on-demand md→html conversion (Override commands piece, override-mechanics code example, Implementation step 3). Bulk-migration item removed from Deferred (now superseded).",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        },
+        {
+          "author": "claude",
+          "body": "Anchor note: this thread's anchorText points to the old 'Companion skill location' decision card, which has been transformed into the RESOLVED 'Companion skill packaging' card under the new 'Resolved during review' subsection. Anchor will now be stale until you re-anchor it.",
+          "createdAt": "2026-05-10T23:46:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-10T23:46:05.599Z",
+      "anchorText": "{\"tag\":\"div\",\"text\":\"2\\n          \\n            Companion skill location\\n            Where the writing-rich-html-docs skill lives.\\n            \"}"
+    },
+    {
+      "id": "9541d547-a1ce-4bfe-951c-0ca8b64f81fe",
+      "targetId": "a5a96b53-f755-4027-8cdd-45760ad3c1b1",
+      "author": "bikramc",
+      "body": "explain to me what is amotized comprehension in this context.",
+      "createdAt": "2026-05-10T23:24:33.884Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Expanded the 'amortized comprehension' line into two paragraphs in Problem & context. The first defines the term plainly: the cost of structuring the doc for cognition is paid once by the agent, and that one-time investment is paid back across every reader and every re-read — turning a 12-minute prose wall into a 2-minute scan. The second explains the failure mode without amortization (every reader pays the full cost from scratch; compounds into the bottleneck the doc was meant to remove).",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        },
+        {
+          "author": "claude",
+          "body": "Anchor note: this thread's anchorText was the original single 'amortized comprehension' paragraph, which I expanded into two paragraphs (definition + failure-mode without amortization). The first paragraph still leads with 'The win isn't prettier docs. It's amortized comprehension', so the topic is in the same location — only the trailing prose changed.",
+          "createdAt": "2026-05-10T23:46:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:05:42.100Z",
+      "anchorText": "{\"tag\":\"p\",\"text\":\"The win isn't prettier docs. It's amortized comprehension: a 2-minute scan that yields 80% of the decision-relevant sign\"}"
+    },
+    {
+      "id": "3d1d0559-74d9-4bca-a314-fe6087c374f4",
+      "targetId": "43c59e1a-f25d-49e3-bab0-cedae3fef3b9",
+      "author": "bikramc",
+      "body": "make sesne; have a clear structure with specific decision points makes sense to me.",
+      "createdAt": "2026-05-10T23:25:30.557Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Acknowledged — no spec change to Template anatomy itself. Carried the 'clear structure with specific decision points' framing forward into the new Skill quality bar subsection: the strategy menu names the visual pattern for each cognitive task so the same structure recurs across docs.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:07:30.799Z",
+      "anchorText": "{\"tag\":\"h3\",\"text\":\"Template anatomy — what makes the HTML \\\"rich\\\"\"}"
+    },
+    {
+      "id": "4750054d-2558-4c78-a002-91e43e7f55a3",
+      "targetId": "df80f610-6746-4c59-abc7-daa7016d66f2",
+      "author": "bikramc",
+      "body": "let's make it /p2e-html, /p2e-md",
+      "createdAt": "2026-05-10T23:25:58.161Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Renamed throughout: TL;DR, SVG diagram labels (now /p2e-html and /p2e-md), Override commands piece, override-mechanics code example, and Implementation step 3. Old /html and /md gone everywhere.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:29:05.961Z",
+      "anchorText": "{\"tag\":\"div\",\"text\":\"How the override commands work\\n        Each command is a thin skill that loads instructions into context for the next do\"}"
+    },
+    {
+      "id": "984414be-9dd3-4b11-86e8-9580c923cfd7",
+      "targetId": "313cdb76-cbeb-4037-b4e2-773a5cfdb6d4",
+      "author": "bikramc",
+      "body": "let's make sure they are all codex/claude/cursor/opencode compatible skills/plugins/workflows/tools/etc",
+      "createdAt": "2026-05-10T23:26:30.911Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Cross-tool compatibility called out in three places: (1) Companion-skill piece — 'Authored once for codex / claude / cursor / opencode — same SKILL.md surfaces consistently in each runtime'; (2) Decision 2 RESOLVED card recap; (3) Implementation step 4 — smoke-test in at least one non-claude runtime (codex or cursor) to confirm cross-tool consistency.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        },
+        {
+          "author": "claude",
+          "body": "Anchor note: this thread's anchorText points to the old 'Companion skill location' decision card, which is now the RESOLVED 'Companion skill packaging' card. The cross-tool compatibility commitment is captured there, plus in the Companion-skill piece in Recommended approach and in Implementation step 4 (smoke-test in a non-claude runtime).",
+          "createdAt": "2026-05-10T23:46:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-10T23:46:23.320Z",
+      "anchorText": "{\"tag\":\"div\",\"text\":\"2\\n          \\n            Companion skill location\\n            Where the writing-rich-html-docs skill lives.\\n            \"}"
+    },
+    {
+      "id": "92248901-b689-4467-8b26-6ab82b74e2eb",
+      "targetId": "727eb546-f47f-4cc3-814c-3c71389520b3",
+      "author": "bikramc",
+      "body": "2 things:\n1) review based on changes I've asked \n2) the estimate seems crazy high",
+      "createdAt": "2026-05-10T23:27:25.104Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Both addressed. (1) Plan re-scoped: step 2 is now 'Add the skill to bchoor/p2e-plugin' (not a fresh user-level skill); step 3 covers the three commands /p2e-html /p2e-md /p2e-md-to-html; step 4 adds cross-tool smoke-test. (2) Total revised from 1 td → 0.35 td (~$105). The original was inflated because it assumed building the template from scratch — but this design.html itself is now the canonical worked example, and packaging into the existing p2e-plugin avoids new infrastructure. Re-scope and revised total are both visible in the section's lead and total-card.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        },
+        {
+          "author": "claude",
+          "body": "Made the estimate auditable. Each step now shows td + output-token + LoC-equivalent breakdown so you can sanity-check it line-by-line: step 1 = 0.03 td (~19K tok / ~300 LoC), step 2 = 0.15 td (~96K tok / ~1.5K LoC), step 3 = 0.07 td (~45K tok / ~700 LoC), step 4 = 0.10 td (~64K tok / ~1K LoC). Total = 0.35 td (~225K tok / ~3.5K LoC / ~$105). The bulk is step 2 (skill authoring), and even that is mostly extracting from this design.html — if you want it lower, the realistic floor is ~0.25 td if step 4 ships without the cross-tool smoke-test.",
+          "createdAt": "2026-05-11T00:30:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T03:44:29.894Z",
+      "anchorText": "{\"tag\":\"h2\",\"text\":\"Implementation plan\"}"
+    },
+    {
+      "id": "a86cbe90-284b-465d-b112-6f2082918e55",
+      "targetId": "40c78803-76e1-4058-b5a8-d7c591d556ae",
+      "author": "bikramc",
+      "body": "not need for miration /p2e-md-to-html will enable manual migrations when needed.",
+      "createdAt": "2026-05-10T23:27:48.622Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Bulk-migration item removed from Deferred and noted in the new 'Removed during review' line beneath the list. Decision 3 marked RESOLVED with /p2e-md-to-html as the on-demand path.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        },
+        {
+          "author": "claude",
+          "body": "Anchor note: the 'Bulk migration' deferred bullet has been removed. The topic is now noted in the 'Removed during review' line beneath the deferred list, with /p2e-md-to-html as the on-demand path.",
+          "createdAt": "2026-05-10T23:46:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:28:16.644Z",
+      "anchorText": "{\"tag\":\"h2\",\"text\":\"Deferred / out of scope\"}"
+    },
+    {
+      "id": "7c5b05d4-5cc2-477d-a33c-530077317d2c",
+      "targetId": "40c78803-76e1-4058-b5a8-d7c591d556ae",
+      "author": "bikramc",
+      "body": "not needed",
+      "createdAt": "2026-05-10T23:28:10.743Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Removed PR diff tooling from Deferred. Captured in the 'Removed during review' note beneath the list.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        },
+        {
+          "author": "claude",
+          "body": "Anchor note: the 'PR diff tooling for HTML' deferred bullet has been removed. The topic is captured in the 'Removed during review' line beneath the deferred list.",
+          "createdAt": "2026-05-10T23:46:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:28:19.285Z",
+      "anchorText": "{\"tag\":\"h2\",\"text\":\"Deferred / out of scope\"}"
+    },
+    {
+      "id": "20a11b16-fac0-4956-9802-32e79a17631c",
+      "targetId": "40c78803-76e1-4058-b5a8-d7c591d556ae",
+      "author": "bikramc",
+      "body": "what would be the utility for this? is this different from md files?",
+      "createdAt": "2026-05-10T23:28:36.759Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "You're right — no clear utility beyond what plain MD search already gives. HTML actually hurts grep (more wrapping markup, less signal-per-line) so a separate index would only break even at best. Removed from Deferred; noted in 'Removed during review'.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        },
+        {
+          "author": "claude",
+          "body": "Anchor note: the 'Cross-doc search' deferred bullet has been removed. The topic is captured in the 'Removed during review' line beneath the deferred list.",
+          "createdAt": "2026-05-10T23:46:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:28:28.103Z",
+      "anchorText": "{\"tag\":\"h2\",\"text\":\"Deferred / out of scope\"}"
+    },
+    {
+      "id": "e04d579c-4ccd-4322-913d-a4ce6da4bdb5",
+      "targetId": "80b34bbe-ac86-483a-b0c5-1d2d02ba6c0a",
+      "author": "bikramc",
+      "body": "I get that this is premature - but how do we make sure this is action we can revisit and this doens't get lost in the sea of things.",
+      "createdAt": "2026-05-10T23:29:21.469Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Added an explicit tracking mechanism inline on the Component-library-extraction line: filed as a P2E story (status=backlog, label=html-docs) so it surfaces in the next backlog grooming pass. This pattern (P2E story + label) is the general answer for any future deferred-but-real item — it puts the work into a tracked queue rather than a static doc list that nobody re-reads.",
+          "createdAt": "2026-05-10T23:45:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:28:54.860Z",
+      "anchorText": "{\"tag\":\"li\",\"text\":\"Component library extraction. If the template's components stabilize, factor the CSS into a shared spec-ui.css with clas\"}"
+    },
+    {
+      "id": "46d3c603-f048-4c05-bc23-abb0a669de73",
+      "targetId": "5d0b4f28-f247-4fc4-b2ca-d1790d1fb254",
+      "author": "bikramc",
+      "body": "A",
+      "createdAt": "2026-05-10T23:46:49.082Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Decision 1 closed: Option A (flat layout). Card moved to RESOLVED state alongside decisions 2 and 3, and the section retitled 'Decisions resolved' (header now emerald, lead reads 'All 3 decisions closed during review. Implementation plan below is unblocked.'). Implementation plan is now ready to hand to writing-plans.",
+          "createdAt": "2026-05-11T00:30:00.000Z"
+        },
+        {
+          "author": "claude",
+          "body": "Anchor note: this thread anchored on the OPEN decision-1 card ('Two viable shapes; affects URL structure...'). That card was transformed in place into a RESOLVED card (emerald border, RESOLVED pill, 'Closed via review (T46d3c603 — picked A): flat layout...'). Topic stays at the top of the Decisions section — only the surrounding prose changed.",
+          "createdAt": "2026-05-11T00:31:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:34:13.035Z",
+      "anchorText": "{\"tag\":\"div\",\"text\":\"1\\n          \\n            File naming inside docs/feat-<name>/\\n            Two viable shapes; affects URL structure and h\"}"
+    },
+    {
+      "id": "aad39962-8b70-4b34-9db0-f55f43bada43",
+      "targetId": "a5a96b53-f755-4027-8cdd-45760ad3c1b1",
+      "author": "bikramc",
+      "body": "here's additional definition context: ac refers to the cognitive process of understanding complex information by breaking its \"cost\" (mental effort) down over time or through repeated exposure.The phrase combines two distinct concepts:Amortization: Borrowed from finance and computer science (amortized analysis), this refers to spreading a high initial cost over many increments so the \"average\" cost per step is low.Comprehension: The ability to understand or grasp the meaning of something.",
+      "createdAt": "2026-05-11T00:01:37.857Z",
+      "responses": [
+        {
+          "author": "claude",
+          "body": "Added an 'Etymology — why this name' callout right after the amortized-comprehension paragraph. Breaks down the two roots: (1) Amortization from finance / CS amortized analysis — spreading a high one-time cost across many small increments so per-increment cost is low; (2) Comprehension — grasping the meaning of complex information. Combined explanation: doc pays the structuring cost once, every reader after that scans cheaply. Also included a mortgage analogy ($500K cost broken into 360 monthly payments) so the financial intuition lands viscerally.",
+          "createdAt": "2026-05-11T00:30:00.000Z"
+        }
+      ],
+      "resolved": true,
+      "resolvedBy": "bikramc",
+      "resolvedAt": "2026-05-11T00:35:33.497Z",
+      "anchorText": "{\"tag\":\"p\",\"text\":\"The win isn't prettier docs. It's amortized comprehension — the cost of structuring the doc for cognition (visual hierar\"}"
+    }
+  ]
+}
+@end-doc-review-state -->
+</body>
+</html>

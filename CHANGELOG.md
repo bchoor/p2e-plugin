@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.9.0 — 2026-05-10
+
+Adds the `writing-rich-html-docs` skill — an opinionated single-file HTML template + design system + pedagogical-strategy menu for human-review docs (spec.html, design.html, adr-*.html, retro.html, postmortem.html). Plus three new override/conversion commands and a shared workflow file.
+
+### Added
+- **`skills/writing-rich-html-docs/`** — new skill carrying `SKILL.md`, `references/template.html` (canonical single-file HTML skeleton with `{{TITLE}}/{{TYPE}}/{{STATUS}}/{{DATE}}/{{OWNER}}/{{HASH}}` placeholders and the full hand-written CSS design system), `references/components.md` (copy-paste blocks for TL;DR card, decision cards open + RESOLVED, callouts, premise list, comparison table, three-pieces grid, anatomy grid, steps list, code block, deferred bullets), and `references/strategies.md` (pedagogical-strategy menu mapping cognitive tasks to visual patterns plus section-shape templates).
+- **`/p2e-html`** — force the next doc-producing skill in the same turn to write rich HTML output (overrides the audience auto-classifier).
+- **`/p2e-md`** — force MD output instead (use for trivial config-only ADRs).
+- **`/p2e-md-to-html <file.md>`** — convert an existing legacy MD spec/design/ADR to a rich HTML doc using the canonical template. Source `.md` is preserved.
+- **`workflows/p2e-rich-html-docs.md`** — shared workflow contract pointed to by the skill and all three commands. Covers audience classification, HTML production rules, MD→HTML conversion mapping, doc-reviewer compatibility constraints (no `<script>`, no `<details>`, no anchor nav, no sticky), and the skill quality bar.
+
+### Changed
+- **`.claude-plugin/plugin.json`**, **`.claude-plugin/marketplace.json`**, **`.codex-plugin/plugin.json`** versions bumped to `0.9.0`. Marketplace description updated to list the three new commands and mention the new skill.
+
+### Known limitations
+- **Codex parity incomplete in v0.9.0.** The `writing-rich-html-docs` skill itself loads in Codex (it lives under `skills/` which `.codex-plugin/plugin.json` exposes), but the three override commands (`/p2e-html`, `/p2e-md`, `/p2e-md-to-html`) are Claude Code only — no `skills/p2e-html/SKILL.md` / `skills/p2e-md/SKILL.md` / `skills/p2e-md-to-html/SKILL.md` Codex aliases ship in this release. Codex parity for the override commands will ship in a follow-up release (v0.9.1).
+- **Cursor / Opencode adapters not included.** Deferred by design — see `docs/feat-rich-html-docs/design.html` "Deferred / out of scope".
+
 ## v0.8.0 — 2026-04-20
 
 Adds a canonical recipe for writing UXO `description` and `objectives[]` fields (`workflows/p2e-uxo-recipe.md`), a new preview/confirm command `/p2e-manage-uxo (--edit | --add)` that operationalizes the recipe, and cross-references from the existing bootstrap / update-story / router surfaces. Pairs with [bchoor/p2e#250](https://github.com/bchoor/p2e/issues/250) (P2E story B-05-L21).

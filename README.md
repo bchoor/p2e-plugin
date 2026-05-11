@@ -81,6 +81,9 @@ For Codex specifically, the plugin ships with the hosted production URL as its d
 | Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [--full-team] [--dry-run]` | `p2e-work-on-next` or natural-language request | Pick up planned work, classify it, orchestrate implementation, and run the normal sync path. |
 | Sync labels | `/p2e-sync-labels` | `p2e-sync-labels` or natural-language request | Run explicit label reconciliation after external changes, partial runs, or missed automatic sync. |
 | Bind repo | `/p2e-bind` | `p2e-bind` or natural-language request | Derive `owner/name` from git remote, match against your P2E projects, and write `.p2e/project.json`. Run once per checkout; commit the file. |
+| Force HTML doc | `/p2e-html <followed by doc-producing skill>` | — | Force the next doc-producing skill to write rich HTML (overrides the audience auto-classifier in `~/.claude/CLAUDE.md`). |
+| Force MD doc | `/p2e-md <followed by doc-producing skill>` | — | Force the next doc-producing skill to write markdown (use for trivial config-only ADRs). |
+| Convert MD → HTML | `/p2e-md-to-html <file.md>` | — | Convert a legacy MD spec/design/ADR to a rich HTML doc using the `writing-rich-html-docs` canonical template. Source `.md` preserved. |
 
 ## Sync behavior
 
