@@ -70,6 +70,7 @@ def validate_expected_files():
         "p2e-archaeology.md",
         "p2e-bind.md",
         "p2e-bootstrap.md",
+        "p2e-fix.md",
         "p2e-html.md",
         "p2e-manage-uxo.md",
         "p2e-md.md",
@@ -88,6 +89,7 @@ def validate_expected_files():
         "p2e-bind.md",
         "p2e-bootstrap.md",
         "p2e-first-turn-briefing.md",
+        "p2e-fix.md",
         "p2e-manage-uxo.md",
         "p2e-policy.md",
         "p2e-rich-html-docs.md",
@@ -107,6 +109,7 @@ def validate_expected_files():
         ROOT / "skills" / "p2e-archaeology" / "SKILL.md",
         ROOT / "skills" / "p2e-bind" / "SKILL.md",
         ROOT / "skills" / "p2e-bootstrap" / "SKILL.md",
+        ROOT / "skills" / "p2e-fix" / "SKILL.md",
         ROOT / "skills" / "p2e-manage-uxo" / "SKILL.md",
         ROOT / "skills" / "p2e-sync" / "SKILL.md",
         ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
@@ -117,6 +120,52 @@ def validate_expected_files():
     actual_skill_paths = set((ROOT / "skills").glob("*/SKILL.md"))
     assert_equal(actual_skill_paths, expected_skill_paths, "Unexpected Codex skill set")
 
+    # Cross-platform compliance: every workflow must ship a .cursor/skills/<name>/SKILL.md
+    # mirror (Cursor surface), plus the p2e router and the writing-rich-html-docs skill.
+    expected_cursor_skill_paths = {
+        ROOT / ".cursor" / "skills" / name / "SKILL.md"
+        for name in (
+            "p2e",
+            "p2e-add-story",
+            "p2e-archaeology",
+            "p2e-bind",
+            "p2e-bootstrap",
+            "p2e-fix",
+            "p2e-manage-uxo",
+            "p2e-sync",
+            "p2e-sync-labels",
+            "p2e-update-story",
+            "p2e-work-on-next",
+            "writing-rich-html-docs",
+        )
+    }
+    actual_cursor_skill_paths = set((ROOT / ".cursor" / "skills").glob("*/SKILL.md"))
+    assert_equal(
+        actual_cursor_skill_paths,
+        expected_cursor_skill_paths,
+        "Unexpected Cursor skill set (cross-platform compliance: every workflow must ship a .cursor/skills/<name>/SKILL.md mirror)",
+    )
+
+    assert_true(
+        (ROOT / ".cursor" / "rules" / "p2e-policy.mdc").exists(),
+        "Missing .cursor/rules/p2e-policy.mdc — the always-applied Cursor policy rule",
+    )
+
+    for ref_file in (
+        "README.md",
+        "claude-code-plugins.md",
+        "codex-plugins.md",
+        "cursor-skills-rules.md",
+        "cross-platform-pattern.md",
+    ):
+        assert_true(
+            (ROOT / "reference" / ref_file).exists(),
+            f"Missing reference/{ref_file} — platform schema reference is mandatory",
+        )
+
+    assert_true((ROOT / "CLAUDE.md").exists(), "Missing project-level CLAUDE.md")
+    assert_true((ROOT / "AGENTS.md").exists(), "Missing AGENTS.md")
+
     assert_true((ROOT / "assets" / "p2e-icon.svg").exists(), "Missing p2e icon asset")
 
 
@@ -126,6 +175,7 @@ def validate_wrapper_references():
         "commands/p2e-archaeology.md": "workflows/p2e-archaeology.md",
         "commands/p2e-bind.md": "workflows/p2e-bind.md",
         "commands/p2e-bootstrap.md": "workflows/p2e-bootstrap.md",
+        "commands/p2e-fix.md": "workflows/p2e-fix.md",
         "commands/p2e-html.md": "workflows/p2e-rich-html-docs.md",
         "commands/p2e-manage-uxo.md": "workflows/p2e-manage-uxo.md",
         "commands/p2e-md.md": "workflows/p2e-rich-html-docs.md",
@@ -138,21 +188,34 @@ def validate_wrapper_references():
         "skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
         "skills/p2e-bind/SKILL.md": "workflows/p2e-bind.md",
         "skills/p2e-bootstrap/SKILL.md": "workflows/p2e-bootstrap.md",
+        "skills/p2e-fix/SKILL.md": "workflows/p2e-fix.md",
         "skills/p2e-manage-uxo/SKILL.md": "workflows/p2e-manage-uxo.md",
         "skills/p2e-sync/SKILL.md": "workflows/p2e-sync.md",
         "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
         "skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
         "skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
         "skills/writing-rich-html-docs/SKILL.md": "workflows/p2e-rich-html-docs.md",
+        ".cursor/skills/p2e-add-story/SKILL.md": "workflows/p2e-add-story.md",
+        ".cursor/skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
+        ".cursor/skills/p2e-bind/SKILL.md": "workflows/p2e-bind.md",
+        ".cursor/skills/p2e-bootstrap/SKILL.md": "workflows/p2e-bootstrap.md",
+        ".cursor/skills/p2e-fix/SKILL.md": "workflows/p2e-fix.md",
+        ".cursor/skills/p2e-manage-uxo/SKILL.md": "workflows/p2e-manage-uxo.md",
+        ".cursor/skills/p2e-sync/SKILL.md": "workflows/p2e-sync.md",
+        ".cursor/skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
+        ".cursor/skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
+        ".cursor/skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
+        ".cursor/skills/writing-rich-html-docs/SKILL.md": "skills/writing-rich-html-docs/SKILL.md",
     }
 
-    # Doc-output override commands + the writing-rich-html-docs skill are not
-    # bound to the P2E story-workflow policy — they sit outside that contract.
+    # Doc-output override commands + the writing-rich-html-docs skill (and its Cursor
+    # mirror) are not bound to the P2E story-workflow policy — they sit outside that contract.
     skip_policy_check = {
         "commands/p2e-html.md",
         "commands/p2e-md.md",
         "commands/p2e-md-to-html.md",
         "skills/writing-rich-html-docs/SKILL.md",
+        ".cursor/skills/writing-rich-html-docs/SKILL.md",
     }
 
     for rel_path, workflow_ref in workflow_map.items():
@@ -167,19 +230,29 @@ def validate_wrapper_references():
             f"{rel_path} must reference {workflow_ref}",
         )
 
-    router = read_text(ROOT / "skills" / "p2e" / "SKILL.md")
-    for workflow_ref in (
-        "workflows/p2e-policy.md",
-        "workflows/p2e-bootstrap.md",
-        "workflows/p2e-add-story.md",
-        "workflows/p2e-update-story.md",
-        "workflows/p2e-work-on-next.md",
-        "workflows/p2e-sync-labels.md",
-        "workflows/p2e-sync.md",
-        "workflows/p2e-manage-uxo.md",
-        "workflows/p2e-uxo-recipe.md",
-    ):
-        assert_true(workflow_ref in router, f"Router skill missing {workflow_ref}")
+    router_paths = (
+        ROOT / "skills" / "p2e" / "SKILL.md",
+        ROOT / ".cursor" / "skills" / "p2e" / "SKILL.md",
+    )
+    for router_path in router_paths:
+        router = read_text(router_path)
+        for workflow_ref in (
+            "workflows/p2e-policy.md",
+            "workflows/p2e-bootstrap.md",
+            "workflows/p2e-add-story.md",
+            "workflows/p2e-update-story.md",
+            "workflows/p2e-work-on-next.md",
+            "workflows/p2e-sync-labels.md",
+            "workflows/p2e-sync.md",
+            "workflows/p2e-manage-uxo.md",
+            "workflows/p2e-uxo-recipe.md",
+            "workflows/p2e-archaeology.md",
+            "workflows/p2e-fix.md",
+        ):
+            assert_true(
+                workflow_ref in router,
+                f"Router skill {router_path.relative_to(ROOT)} missing {workflow_ref}",
+            )
 
 
 def validate_add_story_contract():

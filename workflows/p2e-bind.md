@@ -13,7 +13,7 @@ and the Codex entrypoint (`skills/p2e-bind/SKILL.md`).
 ## Preconditions
 
 - The current directory must be inside a git repo with a remote named `origin`.
-- The user must be authenticated with the P2E MCP (`mcp__p2e__projects op=list` must return results).
+- The user must be authenticated with the P2E MCP (`mcp__p2e__products op=list` must return results; legacy: `mcp__p2e__projects op=list`).
 - `git` must be available in PATH.
 
 ## Workflow
@@ -29,12 +29,12 @@ and the Codex entrypoint (`skills/p2e-bind/SKILL.md`).
    - Any other host: use as-is but warn that matching may not work.
    If the command fails (not a git repo, no origin remote), print a clear error and stop.
 
-2. **List projects the user is a member of.**
+2. **List products the user is a member of.**
    Call:
    ```
-   mcp__p2e__projects op=list
+   mcp__p2e__products op=list
    ```
-   This returns all projects the authenticated user belongs to.
+   This returns all products (formerly "projects") the authenticated user belongs to. (Legacy fallback: if the host's MCP build predates Patton v3, `mcp__p2e__projects op=list` is the equivalent legacy tool and returns the same shape.)
 
 3. **Match on `githubRepo`.**
    Find the project(s) whose `githubRepo` field equals the normalized `owner/name` derived in step 1.

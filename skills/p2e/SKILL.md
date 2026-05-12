@@ -1,6 +1,6 @@
 ---
 name: p2e
-description: Plain-language Codex router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, or sync-labels using the shared workflow core.
+description: Plain-language Codex router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, sync-labels, manage-uxo, archaeology, or fix using the shared workflow core.
 ---
 
 # p2e router
@@ -17,6 +17,8 @@ Then choose the one best-fit workflow, load it, and execute it end-to-end:
 - requests about drift reconciliation between a story and its linked GitHub issue body (on-demand, field-level) -> read `workflows/p2e-sync.md`, then follow that workflow exactly
 - requests about writing, refining, or auditing a UXO's `description` / `objectives[]` -> read `workflows/p2e-uxo-recipe.md` and apply the recipe (objectives[] first → MECE-audit within the UXO → description as succinct articulation); this is a reference recipe, loadable standalone or mid-flow from bootstrap / update-story
 - requests about editing an existing UXO or adding a new UXO via the preview/confirm flow -> read `workflows/p2e-manage-uxo.md` (shared behavior) and `workflows/p2e-uxo-recipe.md` (the recipe it applies), then follow that workflow exactly. `--edit <uxo_id>` (default) steers an existing UXO; `--add <uxo_id> --phase=<title> --tier=<name>` creates a new UXO through the same preview/confirm UX. `--dry-run` renders preview + MCP payload without writing.
+- requests about autonomously onboarding an existing repo with no human interview (infer phases, UXOs, DONE layers from merged PRs, DRAFT stories from open gaps) -> read `workflows/p2e-archaeology.md`, then follow that workflow exactly
+- requests about fixing one or more bugs the right way (uproot + re-implement, not band-aid layering) -> read `workflows/p2e-fix.md`, then follow that workflow exactly. Inputs are a list of bug descriptors (plain descriptions, file paths, GH issue refs, P2E story ids). Enforces a per-bug fix-shape gate (Deleted / Replaced / Preserved / Band-aid rejected) and verifies both the original problem and absence of regressions before completion.
 
 ## Persona routing (work-on-next only)
 

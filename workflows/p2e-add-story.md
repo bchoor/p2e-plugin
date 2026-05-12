@@ -18,7 +18,7 @@ This workflow drafts a single story, its acceptance criteria, and its capabiliti
 
 The command supports two drafting modes, selected at invocation:
 
-- **thin (default)** — infer phase, tier, UXO, title, RRR, a conservative acceptance-criteria list, and a conservative capabilities list from the description. Do NOT populate the thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Leave `sizing` at the defaulted `M`. This is the fastest path and is the right default when the intent is to capture a placeholder for later thickening.
+- **thin (default)** — infer phase, tier, UXO, title, RRR, a conservative acceptance-criteria list, a conservative capabilities list, and `priority` from the description. Do NOT populate the thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Leave `sizing` at the defaulted `M` and `priority` at the defaulted `null` unless the user signals urgency (see `## Priority rules`). This is the fastest path and is the right default when the intent is to capture a placeholder for later thickening.
 - **thick (`--thick`)** — populate ALL fields the `/p2e-update-story` thicken path would populate, including the six thick-spec fields. Run the sizing inference heuristic per `workflows/p2e-sizing-rubric.md` and annotate the inferred tier `derived-from-source: <evidence>` instead of `defaulted`. If the source signal is insufficient, invoke the host brainstorming primitive exactly once (see `## Brainstorming escalation`) to batch 2–4 questions before drafting. Thick mode is opt-in; thin-mode behavior is unchanged.
 
 Both modes share the preview/confirm contract below. Thick mode adds more fields and richer provenance annotations; it does not change the accept/adjust/abort gate.
@@ -61,7 +61,7 @@ If the cell has only one UXO, omit the match reason (no ambiguity to explain).
 ## Workflow
 
 1. Resolve the source description or the existing story being filled. Note whether `--thick` is set; if so, enter thick mode.
-2. Determine phase, tier, UXO (using `## UXO placement matching` when multiple UXOs share the cell), release, title, RRR fields, acceptance criteria, and capabilities. In thick mode, additionally draft the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) and run sizing inference per `workflows/p2e-sizing-rubric.md`.
+2. Determine phase, tier, UXO (using `## UXO placement matching` when multiple UXOs share the cell), release, title, RRR fields, acceptance criteria, capabilities, and `priority` (see `## Priority rules`). In thick mode, additionally draft the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) and run sizing inference per `workflows/p2e-sizing-rubric.md`.
 3. Signal check (thick mode only): if after the first draft pass ≥ 2 thick-spec fields are still empty AND the source lacks evidence to fill them, invoke the brainstorming primitive once per `## Brainstorming escalation`, fold the answers back into the staged draft, and re-run the draft.
 4. The wrapper must render a preview that annotates what was matched, inferred, defaulted, or derived-from-source (see `## Required preview contents`).
 5. The wrapper must ask for a single confirm step with adjustment options for phase/tier, UXO, story fields, acceptance criteria, capabilities, sizing, thick-spec fields (thick mode), or abort.
@@ -83,6 +83,7 @@ Before any write, the preview must show at least:
 - drafted acceptance criteria
 - drafted capabilities
 - `sizing` — in thin mode, rendered with value `M` and the annotation `defaulted`; in thick mode, rendered with the inferred tier and the annotation `derived-from-source: <evidence>` citing the inputs that forced the tier (see `## Sizing rules` below and `workflows/p2e-sizing-rubric.md` for the canonical rubric). The user may override either annotation in the confirm step.
+- `priority` — the value (`P0` / `P1` / `P2` / `P3` or `null`) and its provenance: `defaulted` when no urgency signal is present in the request; `stated-by-user: <phrase>` (e.g. `stated-by-user: "urgent"`) when the user signalled urgency. The user may override in the confirm step (see `## Priority rules`).
 - in **thick mode only**: the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`), each annotated `empty`, `derived-from-source: <evidence>`, or `derived-from-brainstorming` when the answer came from the brainstorming escalation
 - a note that the GitHub issue will be created with the `ready` label on acceptance
 
@@ -99,6 +100,7 @@ The confirm step must support:
 - adjust acceptance criteria
 - adjust capabilities
 - adjust sizing (override the defaulted or derived-from-source value with any of `XS | S | M | L | XL | XXL`; preview re-renders with the chosen value before write)
+- adjust priority (override with `P0 | P1 | P2 | P3 | null`; preview re-renders with the new value and a `steered-by-user` provenance annotation before write)
 - in **thick mode only**: adjust any thick-spec field (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`); preview re-renders with the new value and a `steered-by-user` provenance annotation before write
 - abort
 
@@ -117,8 +119,19 @@ If the user does not accept, do not write.
 - In thin mode, every new story is drafted with `sizing: M` and the annotation `defaulted`. No heuristic runs at add time — in thin mode the story usually has only a title and a small AC list, which is not enough signal to credibly infer a tier.
 - In thick mode, the drafter runs the rubric's inference heuristic against the staged post-draft projection (title + capabilities + AC count + tags + `files_hint` length) and proposes a tier annotated `derived-from-source: <evidence>`. The evidence string cites the specific inputs that forced the tier. The rubric in `workflows/p2e-sizing-rubric.md` is authoritative; thick mode must not inline it.
 - The drafter never asks the LLM to pick a sizing in thin mode. The confirm step is the only place where sizing may change before the write in thin mode; in thick mode, the confirm step may either accept the inferred tier or override it.
-- The MCP write passes the final accepted `sizing` value through to `mcp__p2e__stories op=create`. If the user does not override, the annotated value (`defaulted` in thin mode, inferred in thick mode) is written.
+- The MCP write passes the final accepted `sizing` value and the final accepted `priority` value through to `mcp__p2e__stories op=create`. If the user does not override sizing, the annotated value (`defaulted` in thin mode, inferred in thick mode) is written. If the user does not override priority, the defaulted `null` (or stated-by-user value) is written.
 - The canonical rubric (XS → XXL) and the inference inputs used during thicken are documented in `workflows/p2e-sizing-rubric.md`; commands and skills must not inline that rubric — they only reference it.
+
+## Priority rules
+
+`Story.priority` is a work-queue ordering field — distinct from `sizing` (which is an effort estimate). Priority controls the order in which `/p2e-work-on-next` surfaces OPEN stories: `P0 → P1 → P2 → P3 → null`, then by `createdAt` within each band.
+
+- Default is `null` (unprioritized). Most stories should be created with `null`.
+- Set `P0` or `P1` only when the user explicitly signals urgency: the words "urgent", "blocker", "P0", "critical", "must ship now" → map to `P0`; "high priority", "P1", "important", "needs to go next" → map to `P1`.
+- Plain requests without urgency language → leave `null`. Do not infer urgency from the story topic.
+- `P2` (normal) and `P3` (lowest) are available for explicit queue-ordering but are rarely needed at add time; set them only if the user explicitly asks.
+- Priority is NOT part of the thick-spec predicate — leaving it `null` never blocks `DRAFT → OPEN`.
+- The `priority` field is included in the `mcp__p2e__stories op=create` payload; it accepts `"P0" | "P1" | "P2" | "P3" | null`.
 
 ## Brainstorming escalation
 

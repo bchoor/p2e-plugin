@@ -2,6 +2,8 @@
 
 This document defines the canonical 6-tier **agent-centric** sizing scale used by every P2E story. Sizing is read by planners, wave-gates, and the `/p2e-add-story` + `/p2e-update-story` plugin workflows, and it is stored on the Story row as the `sizing` enum field (shipped by P-07-L6).
 
+**Sizing ≠ Priority.** Sizing (`XS`…`XXL`) is the effort estimate computed by this rubric — it reflects implementation complexity and review cost. `Story.priority` (`P0`/`P1`/`P2`/`P3` or `null`) is a separate work-queue ordering field set in `/p2e-add-story` and `/p2e-update-story` and consumed by `/p2e-work-on-next` (P0 first, `null` last). They are independent: a large story (`XL`) can be low priority (`null`), and a tiny story (`XS`) can be urgent (`P0`). Do not conflate them.
+
 Sizing is NOT a human-hour estimate. It expresses two things:
 
 1. **Implementation complexity** for an agent — coupling, refactor surface, cross-layer reach, schema shape.

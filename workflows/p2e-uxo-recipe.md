@@ -21,6 +21,7 @@ Two consequences:
 Before drafting anything, gather:
 
 - The UXO's existing `title`, `tier`, `phaseId`, `description`, `objectives[]`.
+- **Flow placement**: a UXO lives in a Phase, which lives in a Flow — either the **persona Flow** (user-journey UXO) or the **Foundation Flow** (platform/infra UXO occupying one of its 8 fixed slots: Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting). The Flow is context for writing: a Foundation/Security UXO is about auth/secrets capability; a persona/Plan UXO is about the planning step of the user journey, etc. Use the Flow + phase slot to anchor the UXO's scope before drafting objectives. Note: `tier`/`tier_name` are deprecated under Patton v3 — Flow membership is the meaningful structural axis. If a UXO sits in the Foundation Flow it may link an ADR via `spec_file` (`docs/adrs/...`); in that case the `description` should reference the decision captured in that ADR rather than restating it.
 - **Every story currently under the UXO** (`mcp__p2e__stories op=list uxo_id=<cuid>`) — titles and tags are enough for the first pass; read full specs only if evidence is thin.
 - Sibling UXOs in the same phase+tier cell (for later sibling-MECE sanity, not as the primary MECE gate).
 

@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "p2e": {
+      "url": "https://p2e-mocha.vercel.app/api/mcp"
+    }
+  }
+}

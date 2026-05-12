@@ -8,6 +8,10 @@ This file defines the shared operating rules for every P2E wrapper. The wrappers
 - The MCP server handles authentication and audit logging. Wrappers must not invent their own auth or audit paths.
 - The server URL may be configured by environment, but the workflow contract stays unchanged across environments.
 
+## Product / Project naming
+
+The canonical project entity is now **Product**, exposed via `mcp__p2e__products` (parameter: `product_slug`). The legacy `mcp__p2e__projects` tool (parameter: `project_slug`) remains available for one deprecation window and continues to work; prefer `mcp__p2e__products` for new workflow code. All **other** MCP tools — `mcp__p2e__stories`, `mcp__p2e__uxos`, `mcp__p2e__phases`, `mcp__p2e__criteria`, `mcp__p2e__story_log`, etc. — are **unchanged** and still accept `project_slug`; do not rename or alias those parameters.
+
 ## Adaptive router
 
 When a workflow needs to classify a story or choose an execution track, use this order:
@@ -16,8 +20,9 @@ When a workflow needs to classify a story or choose an execution track, use this
 2. Any capability with action `DEPRECATES` or `REMOVES` => Architectural track.
 3. Any tag in `{ data-model, migration, infra }` => Architectural track.
 4. Acceptance criteria count >= 8 => Architectural track.
-5. Any tag in `{ ui, docs, copy }` and acceptance criteria count <= 3 => Fast track.
-6. Otherwise => Standard track.
+5. Story's UXO sits in the **Foundation Flow** AND the slot is one of `{ Security, Data, Compute, Build-Deploy }` => at least Standard track (escalate to Architectural if rules 1–4 also fire). Foundation/platform work is never Fast-tracked unless it is a trivial copy or doc-only change (no code, no schema, no config).
+6. Any tag in `{ ui, docs, copy }` and acceptance criteria count <= 3 => Fast track.
+7. Otherwise => Standard track.
 
 Track mapping:
 

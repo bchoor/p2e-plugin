@@ -22,6 +22,26 @@ The orchestrator materializes this block per story and hands it to the implement
 - <name> (<action><, breaking if isBreaking=true>): <description>
   ...
 
+## Flow context
+Flow: <flow name> — <"persona Flow" | "Foundation Flow: <slot>">
+<one-line implication, e.g.:>
+- persona Flow ⇒ user-facing behavior work in a journey phase.
+- Foundation Flow / Security ⇒ touches auth, secrets, keys, IAM.
+- Foundation Flow / Build-Deploy ⇒ touches CI, release pipeline, migrations.
+- Foundation Flow / Observability ⇒ touches logging, metrics, tracing.
+- Foundation Flow / Data ⇒ touches schema, storage, query patterns.
+- Foundation Flow / Compute ⇒ touches runtime, scaling, execution environment.
+- Foundation Flow / Distribution ⇒ touches packaging, CDN, delivery.
+- Foundation Flow / Surfaces ⇒ touches shared UI primitives, design tokens.
+- Foundation Flow / Cross-cutting ⇒ affects multiple slots (e.g., auth + infra).
+
+## ADR context
+<If the UXO's spec_file or any entry in contextDocs[] points at a docs/adrs/... path, follow it and summarize:>
+- **Decision:** <one sentence>
+- **Context:** <one sentence>
+- **Consequences:** <one sentence>
+<If no ADR is linked, render: "(no ADR linked — not applicable)">
+
 ## Files hint
 - <each path from filesHint[]>
 
@@ -43,6 +63,8 @@ Run: `<verificationCmd>`
 | Constraints | `constraints[]` |
 | Acceptance Criteria | `acceptanceCriteria[]` (text + checked) |
 | Capabilities | `capabilities[]` (name, action, isBreaking, description) |
+| Flow context | `story.uxo.phase.flow` (name + isFoundation boolean + foundationSlot) |
+| ADR context | `story.uxo.specFile` and `story.contextDocs[]` — any `docs/adrs/...` path |
 | Files hint | `filesHint[]` |
 | Context docs | `contextDocs[]` |
 | Non-goals | `nonGoals[]` |
@@ -54,6 +76,8 @@ Run: `<verificationCmd>`
 - Missing `verificationCmd`: render `Run: (no verification command specified — ask the user)` so the implementer surfaces the gap.
 - On two-strike re-brief the orchestrator appends a `## Previous failure` section below `Verification` with the failure output; keep the template above unchanged.
 - This template is loaded by every wrapper that routes a story into implementation. Do not inline it elsewhere.
+- **Flow context:** Derive the Flow by following `story.uxo.phase.flow`. If the flow is the Foundation Flow, also include the slot name (one of: Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting). If the data is unavailable, render `Flow: (unable to resolve — check story.uxo.phase.flow)`.
+- **ADR context:** Scan `story.uxo.specFile` and every entry in `story.contextDocs[]` for a path matching `docs/adrs/...`. If found, read the ADR file and emit the three-line summary (Decision / Context / Consequences). If multiple ADRs are linked, emit one summary block per ADR. If none are linked, render `(no ADR linked — not applicable)`.
 
 ## Constraints sourcing
 

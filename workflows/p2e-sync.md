@@ -49,7 +49,7 @@ Usage: /p2e-sync <story_id>
 
 1. **Fetch both sources in parallel:**
    - Story: `mcp__p2e__stories op=get story_id=<id> project_slug=<slug>`. Capture `storyId`, `title`, `storyAs`, `storyWant`, `storySoThat`, `background`, `release`, `tags`, `acceptanceCriteria[]`, `capabilities[]`, and `githubIssueNumber`.
-   - GH issue body: `gh api repos/<repo>/issues/<githubIssueNumber>` (use `project.githubRepo` from `mcp__p2e__projects op=get`). Extract `title` and `body`.
+   - GH issue body: `gh api repos/<repo>/issues/<githubIssueNumber>` (use `product.githubRepo` from `mcp__p2e__products op=get product_slug=<slug>`; legacy fallback: `mcp__p2e__projects op=get` still works for one release). Extract `title` and `body`.
 
 2. **Parse the GH issue body** using the inverse of the `formatIssueBody` write-through template (src/lib/github.ts `parseIssueBody`). The issue body is expected to contain the fence `<!-- p2e-sync:start v1 -->` / `<!-- p2e-sync:end v1 -->`. If either fence is absent, abort:
 

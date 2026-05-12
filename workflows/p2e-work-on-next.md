@@ -13,7 +13,7 @@ This is the canonical orchestrator workflow. Adapter-specific entrypoints should
 ## Workflow
 
 1. Query the planned queue (`mcp__p2e__stories op=list status=OPEN`) with the optional release, phase, tag, or story filter.
-2. Sort or narrow the queue deterministically when multiple candidates are available.
+2. Sort the resulting thick OPEN stories by the canonical priority order: **`priority` ascending (P0 → P1 → P2 → P3 → null)**, then by **`createdAt` ascending** (oldest first) as the tiebreak. This is **one global queue across all Flows** — do NOT pre-filter or group by Flow before picking; the agent picks the single top story regardless of which Flow (persona vs Foundation) its UXO sits in. The `release`, `phase`, `tag`, and `story_id` filters passed by the user narrow the candidate set on top of this sort, but do not change the ordering rule. (`Story.priority` values: `"P0"` = urgent … `"P3"` = lowest; `null` = unprioritized, always last.)
 3. For each candidate, fetch full detail (`op=get`) and apply the thin-draft check (`## Thin drafts` in policy) before classification.
 4. Apply the **thick-gate** (`## Thick-gate` in policy): refuse any story where `isThick=false` or `status != "OPEN"`; direct the user to `/p2e-update-story` and stop.
 5. Apply the adaptive router (`## Adaptive router` in policy) to choose the track and, using the shape-aware rule, decide whether the architect + `superpowers:writing-plans` run or are skipped.
@@ -22,7 +22,7 @@ This is the canonical orchestrator workflow. Adapter-specific entrypoints should
 8. If batch size >= 2, ask the staff engineer for a wave plan and use it to organize the run.
 9. For each wave:
    - **9a. Move selected stories to IN_PROGRESS** — run `/p2e-update-story <story_id> status=IN_PROGRESS` for each story in the wave. This triggers the lifecycle label reconciliation phase in `workflows/p2e-update-story.md`: the MCP status write, the GitHub label flip (`ready` → `in-progress`), and the local cache refresh all happen as part of this step. Do not skip this step or inline the `op=update` call directly — the label and cache writes are required side effects.
-   - **9b. Materialize first-turn briefing** — per `workflows/p2e-first-turn-briefing.md` for each story in the wave.
+   - **9b. Materialize first-turn briefing** — per `workflows/p2e-first-turn-briefing.md` for each story in the wave. This includes surfacing the story's **Flow membership** (persona Flow vs Foundation Flow, and if Foundation which of the 8 slots: Surfaces / Security / Data / Compute / Build-Deploy / Distribution / Observability / Cross-cutting) so the implementer understands the nature of the work before starting.
    - **9c. Spawn implementers** — with the briefing as turn 1, and gate the wave with verification.
 
    > Note: the `hooks/pre-agent-spawn-story-status.sh` PreToolUse hook enforces step 9a independently — an implementer spawn (Agent tool call) against a story still at `OPEN` will be blocked with a remediation message pointing at step 9a. The hook short-circuits automatically for `subagent_type` values in `{p2e-architect, p2e-staff-engineer, rescue}` and when `P2E_SKIP_STATUS_GATE=1` is set.
