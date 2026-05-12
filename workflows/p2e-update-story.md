@@ -25,7 +25,7 @@ This workflow updates any field of an existing P2E story — thickening empty fi
 
 ## Workflow
 
-1. Resolve the target story via `mcp__p2e__stories op=get` with the provided `story_id` + `project_slug`. Capture the current state including `isThick`, `failingClauses`, `status`, all RRR fields, acceptance criteria, capabilities, relations, and thick-spec fields.
+1. Resolve the target story via `mcp__p2e__stories op=get` with the provided `story_id` + `project_slug`. Capture the current state including `isThick`, `failingClauses`, `status`, all RRR fields, acceptance criteria, capabilities, relations, thick-spec fields, and `priority`.
 2. If a source argument was provided (a PRD path, issue URL, or spec YAML), read it. Resolve sibling stories under the same UXO via `op=list uxo_id=<cuid>` so the wrapper can cite them as derivation evidence.
 3. Render an annotated preview of every Story field tagged with its provenance:
    - `empty` — the field was null/empty and stays null/empty.
@@ -57,6 +57,7 @@ Before any write, the preview must show at least:
 - capabilities with per-item diff (add / edit / remove / keep), including `action` and `isBreaking`
 - thick-spec fields: `filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`
 - `sizing` row — current value and proposed value, annotated with its provenance: `populated` when the story already has a sizing and the thicken path leaves it alone, `derived-from-source: <evidence>` when the thicken path infers a new tier (see `## Thicken rules` and `workflows/p2e-sizing-rubric.md`), or `steered-by-user` when the user manually overrode it via Adjust sizing
+- `priority` row — current value (`P0` / `P1` / `P2` / `P3` or `null`) and proposed value, annotated with provenance: `unchanged` when no priority change is staged, `set-by-user: <value>` when the user explicitly set it, or `cleared` when the user reset it to `null`. Note: `priority` controls `/p2e-work-on-next` queue order (P0 first, null last); a user can re-prioritize a story without otherwise editing it.
 - current `isThick` and proposed `isThick` (with `failingClauses` if the proposal still fails)
 - linked GitHub issue state: create-new / patch-existing / leave-alone
 - provenance annotation on every field: `empty`, `populated`, or `derived-from-source` with the concrete source cited
@@ -74,6 +75,7 @@ The confirm step must support:
 - Retag
 - Adjust release
 - Adjust sizing (override the inferred or populated value with any of `XS | S | M | L | XL | XXL`; preview re-renders with the chosen value before write — see `## Steer rules` for the sizing-specific override path)
+- Adjust priority (set `P0 | P1 | P2 | P3` or clear to `null`; preview re-renders with the new value annotated `set-by-user` or `cleared` before write — see `## Steer rules`)
 - Accept and write
 - Abort
 
@@ -131,6 +133,8 @@ When the user picks **Steer a specific field**, the wrapper prompts for which fi
 
 When the user picks **Adjust sizing** (equivalent to steering the `sizing` field), the wrapper prompts for one of `XS | S | M | L | XL | XXL`. The user's choice overrides both the previously populated value and any thicken-inferred proposal unconditionally — the rubric in `workflows/p2e-sizing-rubric.md` is advisory, not gating. The preview re-renders with the chosen value annotated `steered-by-user` (with the before/after pair shown inline) and returns to the confirm prompt; the write only happens on Accept.
 
+When the user picks **Adjust priority** (equivalent to steering the `priority` field), the wrapper prompts for one of `P0 | P1 | P2 | P3 | null`. The user's choice overrides the current value unconditionally. Adjusting priority alone does not require a thick-gate re-check — it is purely advisory queue ordering and never blocks any status transition. The preview re-renders with the new value annotated `set-by-user: <value>` (or `cleared` when set to `null`), showing the before/after pair inline, and returns to the confirm prompt. `priority` controls `/p2e-work-on-next` queue order: P0 surfaces first, null sorts last after all explicitly prioritized stories.
+
 ## Brainstorming escalation
 
 When the thicken path runs and the staged draft still leaves ≥ 2 of the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) empty AND the provided source does not support filling them, the wrapper invokes a shared brainstorming primitive **exactly once per flow** to batch clarifying questions in a single turn. The Claude wrapper resolves the reference against the `superpowers:brainstorming` skill; the Codex wrapper resolves it against its native brainstorming primitive (the same pattern used by `workflows/p2e-bootstrap.md --mode=onboarding` and `workflows/p2e-add-story.md` thick mode).
@@ -165,7 +169,7 @@ The wrapper batches 2–4 concrete questions in a single turn. Prefer multiple-c
 
 On Accept, issue MCP writes in this exact order and stop at the first failure:
 
-1. `mcp__p2e__stories op=update` — RRR fields, background, release, tags, `status` (if a transition is staged), `specFile`, `new_story_id` (if a rename is staged), `uxo_id` (if a move is staged), `sizing` (always included if the staged value differs from the current value — whether derived-from-source or steered-by-user), and the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`).
+1. `mcp__p2e__stories op=update` — RRR fields, background, release, tags, `status` (if a transition is staged), `specFile`, `new_story_id` (if a rename is staged), `uxo_id` (if a move is staged), `sizing` (always included if the staged value differs from the current value — whether derived-from-source or steered-by-user), `priority` (included if the staged value differs from the current value — whether set-by-user or cleared to null), and the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`).
 2. `mcp__p2e__criteria op=create/update/delete` — the add/edit/remove diff from the criteria preview.
 3. `mcp__p2e__capabilities op=create/update/delete` — the add/edit/remove diff from the capabilities preview.
 4. GitHub issue reconciliation (see below).

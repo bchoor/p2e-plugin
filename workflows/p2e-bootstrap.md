@@ -1,6 +1,6 @@
 # P2E Bootstrap Workflow
 
-This workflow turns a free-form product description OR an existing repo into a draft journey map: phases, tiers, UXOs, and optional per-UXO DRAFT stories. It is a shared behavior spec, not a wrapper-specific command description.
+This workflow turns a free-form product description OR an existing repo into a draft journey map: phases, tiers, UXOs, and optional per-UXO DRAFT stories. It is a shared behavior spec, not a wrapper-specific command description. Under Patton v3, the map also has a **Flow axis**: every Product is pre-seeded with a persona Flow (user-journey phases) and an immutable Foundation Flow (8 fixed infrastructure phase slots). The bootstrap workflow discovers these Flows via `mcp__p2e__flows op=list` and assigns phases/UXOs accordingly.
 
 ## Purpose
 
@@ -80,8 +80,28 @@ Optional sub-step after the phases + UXOs are accepted in `--mode=onboarding`:
 - ADVANCED and STRETCH rows should only appear when the source text (or the onboarding-mode repo evidence) supports them.
 - Story drafts are written as `DRAFT` status regardless of mode; no GH issue creation at draft time.
 
+## Flow axis (Patton v3)
+
+Every Product is pre-seeded with exactly two Flows that the bootstrap workflow discovers but does not create:
+
+- **Persona Flow** (`type=persona`; name "Default" for new products, "User" for the p2e self-project): holds all user-journey phases and UXOs.
+- **Foundation Flow** (`type=foundation`; name "Foundation"): holds platform/infra UXOs across **8 fixed, immutable phase slots** — Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting. These slots are seeded; **never create new phases under the Foundation Flow via MCP**.
+
+In `--mode=new`, after the Product exists and before creating any phases, call:
+
+```
+mcp__p2e__flows op=list product_slug=<slug>
+```
+
+Use the returned Flow IDs to route entities correctly: user-journey phases/UXOs go under the persona Flow; platform/infra UXOs go under the appropriate Foundation phase slot. Most projects use only the two seeded Flows — **never create a Flow you don't need**.
+
+Tiers are deprecated under Patton v3; Flow membership (persona vs. Foundation) is now the meaningful structural axis. However, `tier_name` is still accepted on `mcp__p2e__uxos op=create` for back-compat and should continue to work.
+
+In `--mode=onboarding` and `--backfill-built`, infra/platform capabilities (auth, hosting, build, observability, data) map to Foundation phase slots (e.g., "auth" → Security slot, "hosting" → Distribution slot, "CI/CD" → Build-Deploy slot). Tech-stack decisions should be recorded as ADRs in `docs/adrs/` (MADR format) and linked from the relevant Foundation UXO via the `spec_file` field.
+
 ## Write behavior
 
+- Call `mcp__p2e__flows op=list product_slug=<slug>` first to discover the seeded Flows (persona + Foundation) before creating any phases.
 - Create phases first, then UXOs, then (if requested) DRAFT stories.
 - Reuse existing phases or UXOs when the project already has partial structure and the user chose append behavior.
 - Surface the final matrix and the write payloads when running in dry-run mode.

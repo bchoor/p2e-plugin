@@ -1,0 +1,44 @@
+---
+description: P2E plugin conventions — every workflow lives in workflows/, wrappers are thin, MCP is authoritative for domain state. Loads on every chat in this repo so Cursor matches the Claude/Codex behavior.
+alwaysApply: true
+---
+
+# P2E plugin — Cursor policy
+
+This repo ships the same workflows to three platforms (Claude Code, Codex, Cursor). Cursor must follow the cross-platform pattern documented in `reference/cross-platform-pattern.md`.
+
+## Hard rules
+
+- **Workflows live in `workflows/`.** Never put domain logic inside `commands/`, `skills/`, or `.cursor/skills/` — those are thin wrappers only. The full behavior for a workflow `<name>` is `workflows/<name>.md`.
+- **Every new workflow ships to all three platforms.** When adding `<name>`, you MUST create `commands/<name>.md` (Claude), `skills/<name>/SKILL.md` (Codex), `.cursor/skills/<name>/SKILL.md` (Cursor), plus the shared `workflows/<name>.md`. Missing any of the four is non-compliant.
+- **MCP is authoritative.** P2E reads and writes go through `mcp__p2e__*` tools. Do not invent a parallel REST or local-file path.
+- **Bind once via `.p2e/project.json`.** If the file is present, honor the bound `project_slug` for every MCP call. If absent, ask the user to run `/p2e-bind` before any project-scoped operation.
+
+## Where to read first
+
+- `reference/cross-platform-pattern.md` — the four-file pattern every workflow must satisfy
+- `workflows/p2e-policy.md` — shared operating rules (MCP access, status lifecycle, escalation, etc.)
+- `README.md` — installation surface and command table
+
+## Invoking workflows
+
+Cursor users invoke workflows via `/p2e-<name>` (skills). Examples:
+
+- `/p2e-fix` — uproot-and-replace bug fixing
+- `/p2e-work-on-next` — pick up planned P2E work
+- `/p2e-bootstrap` — start a new project map or onboard an existing repo
+- `/p2e-add-story`, `/p2e-update-story`, `/p2e-bind`, `/p2e-sync`, `/p2e-sync-labels`, `/p2e-manage-uxo`, `/p2e-archaeology`
+- `/p2e` — plain-language router that picks the best-fit workflow
+- `/writing-rich-html-docs` — opinionated rich-HTML doc rendering
+
+Each skill in `.cursor/skills/p2e-<name>/SKILL.md` is a thin wrapper. Read the linked `workflows/<name>.md` and execute it exactly.
+
+## P2E Flow/Foundation model (Patton v3)
+
+A project is a **Product** (`mcp__p2e__products`, `product_slug`; legacy `mcp__p2e__projects`/`project_slug` still works for one window — every other MCP tool is unchanged and still uses `project_slug`). Every Product has two seeded **Flows** — a **persona Flow** (user-journey lane) and an immutable **Foundation Flow** (8 fixed slots: Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting). Story → UXO → Phase → Flow → Product. Never create new Foundation phases; the tier axis is deprecated; `Story.priority` (`P0`…`P3`/`null`) orders the `/p2e-work-on-next` queue. Full detail: README "Flow / Foundation model" + `workflows/p2e-policy.md`.
+
+## Platform asymmetries to know
+
+- Cursor does NOT support Claude-style hooks (`PreToolUse`, `SessionStart`). Workflows that mention those hooks are documenting Claude-only behavior — degrade gracefully.
+- Cursor does NOT auto-load `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json`. The `.cursor/` directory IS the Cursor surface.
+- The `/p2e-html`, `/p2e-md`, `/p2e-md-to-html` doc-output override commands are Claude-Code-specific (they override `~/.claude/CLAUDE.md`'s audience classifier) and have no Cursor equivalent — `/writing-rich-html-docs` is the cross-platform doc-rendering surface.

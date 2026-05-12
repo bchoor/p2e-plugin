@@ -70,16 +70,26 @@ After all inference passes, the workflow assembles a proposed graph in memory:
 
 ```
 project (scoped by projectSlug)
-  └── phases[]
-        └── uxos[]
-              ├── DONE layers[]       ← one per feature-scoped merged PR
-              │     └── capabilities[] (INTRODUCES / MODIFIES / FIXED)
-              └── DRAFT layers[]      ← one per open gap (issue / TODO / test.todo / roadmap item)
+  └── flows[]                         ← discovered via mcp__p2e__flows op=list (never created here)
+        ├── persona Flow              ← user-journey phases land here
+        │     └── phases[]
+        │           └── uxos[]
+        │                 ├── DONE layers[]   ← one per feature-scoped merged PR
+        │                 │     └── capabilities[] (INTRODUCES / MODIFIES / FIXED)
+        │                 └── DRAFT layers[]  ← one per open gap (issue / TODO / test.todo / roadmap item)
+        └── Foundation Flow (immutable) ← infra/platform UXOs land here
+              └── phases[] (fixed slots: Surfaces, Security, Data, Compute,
+                            Build-Deploy, Distribution, Observability, Cross-cutting)
+                    └── uxos[]
+                          ├── DONE layers[]
+                          └── DRAFT layers[]
 ```
 
-- **Phase inference**: cluster feature-scoped PRs by file-path prefix and commit-message keywords. Propose one phase per cluster. Action-oriented names preferred (e.g., "User Authentication", "Data Ingestion").
-- **UXO inference**: within each phase cluster, group by sub-feature. One UXO per sub-feature. Concrete objectives, not abstract benefits.
-- **DONE layer**: one story per feature-scoped merged PR. Title = PR title (cleaned). Status = `DONE`. Collision key = `storyId` derived from PR number (`pr-<number>`); idempotent re-run skips if `storyId` already exists in `projectSlug`.
+Both Flows are seeded by the platform when the Product is created. The workflow **discovers** them via `mcp__p2e__flows op=list product_slug=<slug>` and **never calls `op=create`** on a Flow or on a Foundation phase — the Foundation slots are fixed and immutable (MCP returns `FLOW_IMMUTABLE` if you attempt to modify or add to them).
+
+- **Phase inference**: cluster feature-scoped PRs by file-path prefix and commit-message keywords. Propose one phase per cluster. Action-oriented names preferred (e.g., "User Authentication", "Data Ingestion"). User-journey phases belong under the persona Flow. Infra/platform clusters (auth, hosting, build pipeline, observability, data storage) map to the matching Foundation phase slot instead of becoming new phases.
+- **UXO inference**: within each phase cluster, group by sub-feature. One UXO per sub-feature. Concrete objectives, not abstract benefits. Infra/platform UXOs that correspond to tech-decision PRs (choosing a framework, DB, hosting provider) should be flagged as candidates for an ADR draft under `docs/adrs/` (MADR format); the ADR path should be proposed for the UXO's `spec_file` field.
+- **DONE layer**: one story per feature-scoped merged PR. Title = PR title (cleaned). Status = `DONE`. Collision key = `storyId` derived from PR number (`pr-<number>`); idempotent re-run skips if `storyId` already exists in `projectSlug`. Infra PRs attribute to the matching Foundation phase slot.
 - **DRAFT layer**: one story per open gap. Title = issue title / TODO text / test.todo description / roadmap item. Status = `DRAFT`. Collision key = `githubIssueNumber` for issue-sourced drafts; a content-hash slug for TODO/test.todo/roadmap-sourced drafts.
 
 Empty phase or UXO cells are preferred over inventing filler.
@@ -128,8 +138,9 @@ The operator must choose one action. The workflow does NOT write until the opera
 
 On acceptance, the workflow writes in the following order (bootstrap order):
 
-1. **Phases** — `mcp__p2e__phases op=create` for each proposed phase not already present.
-2. **UXOs** — `mcp__p2e__uxos op=create` for each proposed UXO, linked to its phase.
+0. **Flow discovery** — `mcp__p2e__flows op=list product_slug=<slug>` to retrieve the seeded persona Flow and Foundation Flow. Record both Flow IDs for routing. **Do not call `op=create`** on any Flow, and **never create a new phase under the Foundation Flow** — its 8 slots (Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting) are fixed and immutable.
+1. **Phases** — `mcp__p2e__phases op=create` for each proposed user-journey phase not already present (persona Flow only). Foundation phases are not created; infra UXOs are placed inside an existing Foundation slot.
+2. **UXOs** — `mcp__p2e__uxos op=create` for each proposed UXO, linked to its phase. For infra/platform UXOs, link to the relevant Foundation phase slot. If the UXO corresponds to a tech-decision PR, set `spec_file` to the proposed ADR path (e.g., `docs/adrs/001-database-choice.md`, MADR format).
 3. **Stories (DONE layers)** — `mcp__p2e__stories op=create` with `status=DONE` for each merged-PR layer, linked to its UXO. Skip if collision key already exists.
 4. **Stories (DRAFT layers)** — `mcp__p2e__stories op=create` with `status=DRAFT` for each open-gap story, linked to its UXO. Set `githubIssueNumber` for issue-sourced drafts to enable future idempotency.
 5. **Criteria** — `mcp__p2e__criteria op=create` for any inferred acceptance criteria (typically empty at archaeology time; leave for `/p2e-update-story` to thicken).

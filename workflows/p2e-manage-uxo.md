@@ -22,12 +22,14 @@ This workflow creates a new UXO (`--add` mode) or edits an existing UXO's `title
 ### `--edit <uxo_id>` (default)
 
 - Resolve the target UXO via `mcp__p2e__uxos` (or via `mcp__p2e__projects op=get` and the phase+tier+uxoId lookup). Capture `title`, `tier`, `description` (stored as `objective`), `objectives[]`, current story stack titles + tags + status.
+- Fetch the Flow context: call `mcp__p2e__flows op=list product_slug=<slug>` to identify which Flow (persona or Foundation) the UXO's phase belongs to. Include this in the preview so the user can see which Flow + phase slot the UXO occupies.
 - Render the annotated preview; open the confirm loop.
 - On Accept, write via `mcp__p2e__uxos op=update`.
 
 ### `--add <uxo_id> --phase=<title> --tier=<name>`
 
 - Require `uxo_id` (human-readable, e.g. `AU-06`), `phase` (phase title), and `tier` (tier name resolving against the project's tier registry).
+- New UXOs go under an existing phase; the `phase_id` or `phase_title` you supply determines which Flow the UXO belongs to. If the target phase is one of the Foundation Flow's 8 fixed slots (Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting), the UXO is a Foundation UXO — you cannot create new Foundation phases. Persona UXOs go under a phase in any persona Flow. Note: `tier_name` is still accepted on `uxos op=create` for back-compat, but it is deprecated — prefer choosing the correct Flow/phase over specifying a tier.
 - Scaffold a blank UXO (no prior objectives, no prior stories).
 - Render the annotated preview with every field marked `empty` initially; open the confirm loop.
 - On Accept, write via `mcp__p2e__uxos op=create`.
@@ -64,6 +66,7 @@ Both modes share the same preview layout, confirm actions, and recipe-driven dra
 Before any write, the preview must show at least:
 
 - mode (`--edit` or `--add`) and the target `uxo_id`
+- **Flow** — which Flow the UXO belongs to (`persona` / `Foundation`) and the specific phase slot within that Flow; annotate if a phase move would change the Flow membership
 - `phase` and `tier` (both modes), with proposed change annotated if a move is staged in `--edit`
 - `title` — current and proposed, annotated
 - `description` — current and proposed, rendered in full (not truncated), annotated
@@ -163,7 +166,7 @@ The wrapper batches 2–4 concrete questions in a single turn. Prefer multiple-c
 
 ### `--add` Accept path
 
-1. `mcp__p2e__uxos op=create` — single item: `{ uxo_id, title, tier_name, phase_title OR phase_id, description?, objectives? }`. The server auto-normalizes the flat form to `items:[{...}]`.
+1. `mcp__p2e__uxos op=create` — single item: `{ uxo_id, title, tier_name, phase_title OR phase_id, description?, objectives? }`. The server auto-normalizes the flat form to `items:[{...}]`. Note: `phase_id` / `phase_title` is how Flow placement is determined — the phase you provide determines whether this UXO lands in the Foundation Flow or a persona Flow. `tier_name` is still accepted for back-compat but is deprecated; Flow/phase is the preferred placement axis.
 2. If any Flag-gap actions created thin-DRAFT stories during drafting, those already landed (same as `--edit`).
 
 ### Write form
