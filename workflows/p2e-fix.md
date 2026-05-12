@@ -104,7 +104,7 @@ For each bug:
 
 If `.p2e/project.json` is present:
 
-1. For each bug whose descriptor was a P2E story id, append a discipline-log entry to that story via `mcp__p2e__story_log_append`.
+1. For each bug whose descriptor was a P2E story id, append a discipline-log entry to that story via `mcp__p2e__story_log op=append`.
 2. The entry contains: bug index, root cause (4 fields from Phase 2), fix shape (4 answers from Phase 3), verification result.
 3. If the descriptor was a GitHub issue, post the same summary as a comment on the issue (signed `— bchoor-claude`, matching project convention).
 4. If the descriptor was a plain description with no P2E or GH anchor, skip — there's nothing to attach to.

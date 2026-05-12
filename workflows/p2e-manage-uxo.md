@@ -21,7 +21,7 @@ This workflow creates a new UXO (`--add` mode) or edits an existing UXO's `title
 
 ### `--edit <uxo_id>` (default)
 
-- Resolve the target UXO via `mcp__p2e__uxos` (or via `mcp__p2e__projects op=get` and the phase+tier+uxoId lookup). Capture `title`, `tier`, `description` (stored as `objective`), `objectives[]`, current story stack titles + tags + status.
+- Resolve the target UXO via `mcp__p2e__uxos` (or via `mcp__p2e__products op=get` and the phase+tier+uxoId lookup; legacy fallback: `mcp__p2e__projects op=get` still works for one release). Capture `title`, `tier`, `description` (stored as `objective`), `objectives[]`, current story stack titles + tags + status.
 - Fetch the Flow context: call `mcp__p2e__flows op=list product_slug=<slug>` to identify which Flow (persona or Foundation) the UXO's phase belongs to. Include this in the preview so the user can see which Flow + phase slot the UXO occupies.
 - Render the annotated preview; open the confirm loop.
 - On Accept, write via `mcp__p2e__uxos op=update`.

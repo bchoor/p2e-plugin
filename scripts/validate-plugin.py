@@ -246,6 +246,7 @@ def validate_wrapper_references():
             "workflows/p2e-sync.md",
             "workflows/p2e-manage-uxo.md",
             "workflows/p2e-uxo-recipe.md",
+            "workflows/p2e-archaeology.md",
             "workflows/p2e-fix.md",
         ):
             assert_true(
