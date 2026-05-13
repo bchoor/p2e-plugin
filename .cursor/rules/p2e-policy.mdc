@@ -29,7 +29,7 @@ Cursor users invoke workflows via `/p2e-<name>` (skills). Examples:
 - `/p2e-bootstrap` — start a new project map or onboard an existing repo
 - `/p2e-add-story`, `/p2e-update-story`, `/p2e-bind`, `/p2e-sync`, `/p2e-sync-labels`, `/p2e-manage-uxo`, `/p2e-archaeology`
 - `/p2e` — plain-language router that picks the best-fit workflow
-- `/writing-rich-html-docs` — opinionated rich-HTML doc rendering
+- `/writing-rich-docs` — rich doc rendering: Markdown with embedded HTML blocks for high-fidelity content
 
 Each skill in `.cursor/skills/p2e-<name>/SKILL.md` is a thin wrapper. Read the linked `workflows/<name>.md` and execute it exactly.
 
@@ -41,4 +41,4 @@ A project is a **Product** (`mcp__p2e__products`, `product_slug`; legacy `mcp__p
 
 - Cursor does NOT support Claude-style hooks (`PreToolUse`, `SessionStart`). Workflows that mention those hooks are documenting Claude-only behavior — degrade gracefully.
 - Cursor does NOT auto-load `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json`. The `.cursor/` directory IS the Cursor surface.
-- The `/p2e-html`, `/p2e-md`, `/p2e-md-to-html` doc-output override commands are Claude-Code-specific (they override `~/.claude/CLAUDE.md`'s audience classifier) and have no Cursor equivalent — `/writing-rich-html-docs` is the cross-platform doc-rendering surface.
+- The `/p2e-html`, `/p2e-md`, `/p2e-md-to-html` doc-output override commands are Claude-Code-specific (they override `~/.claude/CLAUDE.md`'s default rich-Markdown output) and have no Cursor equivalent — `/writing-rich-docs` is the cross-platform doc-rendering surface (default output: Markdown with embedded HTML blocks).

@@ -61,7 +61,7 @@ Codex uses:
 
 - the top-level `p2e` skill for plain-language routing
 - direct alias skills for `p2e-bootstrap`, `p2e-add-story`, `p2e-update-story`, `p2e-work-on-next`, `p2e-sync-labels`, `p2e-sync`, `p2e-bind`, `p2e-manage-uxo`, `p2e-archaeology`, and `p2e-fix`
-- the `writing-rich-html-docs` skill (auto-discovered under `skills/`)
+- the `writing-rich-docs` skill (auto-discovered under `skills/`)
 - the same shared `workflows/` definitions used by the Claude wrappers
 
 ## Install in Cursor
@@ -72,7 +72,7 @@ Cursor reads the `.cursor/` directory directly — it does not load `.claude-plu
 - the always-applied rule `.cursor/rules/p2e-policy.mdc` keeps Cursor aligned with the same `workflows/p2e-policy.md` contract Claude and Codex follow
 - point Cursor at the P2E MCP server via `.cursor/mcp.json` (or your global Cursor MCP config) using the same URL as [`.mcp.json`](./.mcp.json) — `https://p2e-mocha.vercel.app/api/mcp` by default, override with your own instance
 
-The `/p2e-html`, `/p2e-md`, and `/p2e-md-to-html` doc-output override commands are Claude-Code-specific (they override the audience auto-classifier in `~/.claude/CLAUDE.md`) and have no Codex or Cursor equivalent — the `writing-rich-html-docs` skill is the cross-platform doc-rendering surface. See [`reference/cross-platform-pattern.md`](./reference/cross-platform-pattern.md) for the full asymmetry table.
+The `/p2e-html`, `/p2e-md`, and `/p2e-md-to-html` doc-output override commands are Claude-Code-specific (they override the default rich-Markdown output set in `~/.claude/CLAUDE.md`) and have no Codex or Cursor equivalent — the `writing-rich-docs` skill is the cross-platform doc-rendering surface (default output: Markdown with embedded HTML blocks). See [`reference/cross-platform-pattern.md`](./reference/cross-platform-pattern.md) for the full asymmetry table.
 
 ## Configure
 
@@ -102,10 +102,10 @@ Every workflow below is one shared `workflows/<name>.md`. Claude invokes it via 
 | Manage UXO | `/p2e-manage-uxo <uxo_id> [--edit \| --add] [--phase=<title>] [--tier=<name>] [--dry-run]` | `p2e-manage-uxo` / NL | `/p2e-manage-uxo` / NL | Edit (`--edit`, default) or add (`--add`) a UXO via the canonical writing recipe with an annotated preview/confirm gate. The preview shows which Flow + phase the UXO sits in. |
 | Archaeology | `/p2e-archaeology [repo-path] project=<slug> [--dry-run] [--max-pr-age=<days>] [--todo-age=<days>]` | `p2e-archaeology` / NL | `/p2e-archaeology` / NL | Autonomously onboard an existing repo — infer Flows/phases/UXOs, DONE layers from merged PRs, DRAFT stories from open gaps — no human interview. |
 | Bind repo | `/p2e-bind` | `p2e-bind` / NL | `/p2e-bind` / NL | Derive `owner/name` from git remote, match against your P2E products, and write `.p2e/project.json`. Run once per checkout; commit the file. |
-| Force HTML doc | `/p2e-html <followed by doc-producing skill>` | — | — | Force the next doc-producing skill to write rich HTML (overrides the audience auto-classifier in `~/.claude/CLAUDE.md`). Claude-Code-specific. |
-| Force MD doc | `/p2e-md <followed by doc-producing skill>` | — | — | Force the next doc-producing skill to write markdown (use for trivial config-only ADRs). Claude-Code-specific. |
-| Convert MD → HTML | `/p2e-md-to-html <file.md>` | — | — | Convert a legacy MD spec/design/ADR to a rich HTML doc using the `writing-rich-html-docs` canonical template. Source `.md` preserved. Claude-Code-specific. |
-| Rich HTML docs | (via `writing-rich-html-docs` skill) | `writing-rich-html-docs` skill | `/writing-rich-html-docs` | The opinionated rich-HTML doc template + design system + pedagogy menu. The cross-platform doc-rendering surface (the three commands above are Claude-only entry points to it). |
+| Force pure HTML doc | `/p2e-html <followed by doc-producing skill>` | — | — | Force the next doc-producing skill to write a pure single-file HTML doc instead of the default rich Markdown. Claude-Code-specific. |
+| Force plain MD doc | `/p2e-md <followed by doc-producing skill>` | — | — | Force the next doc-producing skill to write plain Markdown — no `<style>` preamble, no embedded HTML blocks (use for trivial config-only ADRs). Claude-Code-specific. |
+| Convert MD → HTML | `/p2e-md-to-html <file.md>` | — | — | Convert a Markdown spec/design/ADR (plain or rich) to a pure single-file HTML doc using the `writing-rich-docs` HTML template. Source `.md` preserved. Claude-Code-specific. |
+| Rich docs | (via `writing-rich-docs` skill) | `writing-rich-docs` skill | `/writing-rich-docs` | Rich human-review docs: Markdown carries structure/prose, embedded HTML blocks carry high-fidelity content (decision cards, comparison matrices, grids, callouts, inline-SVG diagrams). Bundled template + component snippets + a promote-or-not menu. The cross-platform doc-rendering surface (the three commands above are Claude-only overrides on top of it). |
 
 ## Sync behavior
 

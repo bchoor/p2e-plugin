@@ -92,7 +92,7 @@ def validate_expected_files():
         "p2e-fix.md",
         "p2e-manage-uxo.md",
         "p2e-policy.md",
-        "p2e-rich-html-docs.md",
+        "p2e-rich-docs.md",
         "p2e-sizing-rubric.md",
         "p2e-sync.md",
         "p2e-sync-labels.md",
@@ -115,13 +115,13 @@ def validate_expected_files():
         ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
         ROOT / "skills" / "p2e-update-story" / "SKILL.md",
         ROOT / "skills" / "p2e-work-on-next" / "SKILL.md",
-        ROOT / "skills" / "writing-rich-html-docs" / "SKILL.md",
+        ROOT / "skills" / "writing-rich-docs" / "SKILL.md",
     }
     actual_skill_paths = set((ROOT / "skills").glob("*/SKILL.md"))
     assert_equal(actual_skill_paths, expected_skill_paths, "Unexpected Codex skill set")
 
     # Cross-platform compliance: every workflow must ship a .cursor/skills/<name>/SKILL.md
-    # mirror (Cursor surface), plus the p2e router and the writing-rich-html-docs skill.
+    # mirror (Cursor surface), plus the p2e router and the writing-rich-docs skill.
     expected_cursor_skill_paths = {
         ROOT / ".cursor" / "skills" / name / "SKILL.md"
         for name in (
@@ -136,7 +136,7 @@ def validate_expected_files():
             "p2e-sync-labels",
             "p2e-update-story",
             "p2e-work-on-next",
-            "writing-rich-html-docs",
+            "writing-rich-docs",
         )
     }
     actual_cursor_skill_paths = set((ROOT / ".cursor" / "skills").glob("*/SKILL.md"))
@@ -176,10 +176,10 @@ def validate_wrapper_references():
         "commands/p2e-bind.md": "workflows/p2e-bind.md",
         "commands/p2e-bootstrap.md": "workflows/p2e-bootstrap.md",
         "commands/p2e-fix.md": "workflows/p2e-fix.md",
-        "commands/p2e-html.md": "workflows/p2e-rich-html-docs.md",
+        "commands/p2e-html.md": "workflows/p2e-rich-docs.md",
         "commands/p2e-manage-uxo.md": "workflows/p2e-manage-uxo.md",
-        "commands/p2e-md.md": "workflows/p2e-rich-html-docs.md",
-        "commands/p2e-md-to-html.md": "workflows/p2e-rich-html-docs.md",
+        "commands/p2e-md.md": "workflows/p2e-rich-docs.md",
+        "commands/p2e-md-to-html.md": "workflows/p2e-rich-docs.md",
         "commands/p2e-sync.md": "workflows/p2e-sync.md",
         "commands/p2e-sync-labels.md": "workflows/p2e-sync-labels.md",
         "commands/p2e-update-story.md": "workflows/p2e-update-story.md",
@@ -194,7 +194,7 @@ def validate_wrapper_references():
         "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
         "skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
         "skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
-        "skills/writing-rich-html-docs/SKILL.md": "workflows/p2e-rich-html-docs.md",
+        "skills/writing-rich-docs/SKILL.md": "workflows/p2e-rich-docs.md",
         ".cursor/skills/p2e-add-story/SKILL.md": "workflows/p2e-add-story.md",
         ".cursor/skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
         ".cursor/skills/p2e-bind/SKILL.md": "workflows/p2e-bind.md",
@@ -205,17 +205,17 @@ def validate_wrapper_references():
         ".cursor/skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
         ".cursor/skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
         ".cursor/skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
-        ".cursor/skills/writing-rich-html-docs/SKILL.md": "skills/writing-rich-html-docs/SKILL.md",
+        ".cursor/skills/writing-rich-docs/SKILL.md": "skills/writing-rich-docs/SKILL.md",
     }
 
-    # Doc-output override commands + the writing-rich-html-docs skill (and its Cursor
+    # Doc-output override commands + the writing-rich-docs skill (and its Cursor
     # mirror) are not bound to the P2E story-workflow policy — they sit outside that contract.
     skip_policy_check = {
         "commands/p2e-html.md",
         "commands/p2e-md.md",
         "commands/p2e-md-to-html.md",
-        "skills/writing-rich-html-docs/SKILL.md",
-        ".cursor/skills/writing-rich-html-docs/SKILL.md",
+        "skills/writing-rich-docs/SKILL.md",
+        ".cursor/skills/writing-rich-docs/SKILL.md",
     }
 
     for rel_path, workflow_ref in workflow_map.items():

@@ -82,7 +82,9 @@ These are real and documented — don't try to paper over them.
 
 Workflows that depend on a hook (e.g. the P2E status gate) must degrade gracefully on platforms that lack it.
 
-One more documented asymmetry: the `/p2e-html`, `/p2e-md`, and `/p2e-md-to-html` commands are **Claude-Code-specific** — they override the audience auto-classifier in `~/.claude/CLAUDE.md`, which only Claude Code reads. They are NOT mirrored to Codex or Cursor. The cross-platform doc-rendering surface is the `writing-rich-html-docs` skill (`skills/writing-rich-html-docs/`, mirrored at `.cursor/skills/writing-rich-html-docs/`), which any host can invoke.
+Doc-rendering surface: the cross-platform skill is `writing-rich-docs` (`skills/writing-rich-docs/`, mirrored at `.cursor/skills/writing-rich-docs/`), which any host can invoke. Its **default output is rich Markdown** — a `.md` file with embedded HTML blocks: Markdown carries the structure/prose (the cheap ~50%), HTML blocks carry the high-fidelity rest (decision cards, comparison matrices, grids, callouts, inline-SVG diagrams). The skill ships a bundled template (`references/template.md` — front-matter + a scoped `<style>` preamble + a section scaffold), component snippets (`references/components.md` — each with its MD-native alternative and a "promote when" trigger), and a promote-or-not menu (`references/strategies.md`). The behavior contract is `workflows/p2e-rich-docs.md`.
+
+One more documented asymmetry: the `/p2e-html`, `/p2e-md`, and `/p2e-md-to-html` commands are **Claude-Code-specific** — they override that default rich-Markdown output (`/p2e-html` → pure single-file HTML from `references/template.html`; `/p2e-md` → plain Markdown, no `<style>` preamble or HTML blocks; `/p2e-md-to-html` → convert a Markdown doc to pure HTML). They rely on `~/.claude/CLAUDE.md`, which only Claude Code reads, and are NOT mirrored to Codex or Cursor.
 
 ## P2E Flow/Foundation model (Patton v3)
 
