@@ -1,1 +1,5 @@
 .worktrees/
+
+# local tooling / OS cruft
+.DS_Store
+.claude/
