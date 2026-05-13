@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.10.1 — 2026-05-12
+
+Rebalances the doc-rendering surface: **rich human-review docs default to Markdown with embedded HTML blocks**, not pure single-file HTML. Markdown carries the structural ~50% (front-matter, headings, prose, simple lists/tables, code fences — fast and token-cheap); HTML blocks carry the high-fidelity rest (decision cards, color-coded comparison matrices, anatomy/three-pieces grids, callouts, premise ladders, step+cost lists, and all diagrams via inline SVG). Pure HTML moves to being the `/p2e-html` escape hatch; `/p2e-md` forces plain Markdown with no blocks. doc-reviewer now renders mixed Markdown + HTML and anchors comments to both — the blend carries no review penalty.
+
+### Changed
+- **`skills/writing-rich-html-docs/` → `skills/writing-rich-docs/`** (renamed; Cursor mirror `.cursor/skills/writing-rich-docs/` too). New default behavior: produce `.md` with embedded HTML blocks. `SKILL.md` rewritten around the MD+HTML-block model.
+- **`workflows/p2e-rich-html-docs.md` → `workflows/p2e-rich-docs.md`** — rewritten: the MD-carries-structure / HTML-blocks-carry-fidelity model, output format by trigger (`/p2e-html` → pure HTML, `/p2e-md` → plain MD, default → rich MD), the rich-Markdown production steps (front-matter → `<style>` preamble → Markdown body → promote regions to `<div class="rich-doc">` HTML blocks), the unchanged MD→HTML conversion mapping, and the doc-reviewer compatibility table (now noting mixed-content support).
+- **`skills/writing-rich-docs/references/template.md`** (new) — the canonical rich-Markdown skeleton: YAML front-matter, the `<style>` preamble (theme tokens + every component's CSS, scoped under `.rich-doc` so it doesn't fight doc-reviewer's Markdown styling), and a section scaffold with `<!-- promote-if … -->` hints. `references/template.html` is kept as-is for the `/p2e-html` pure-HTML path (same component classes).
+- **`skills/writing-rich-docs/references/components.md`** — each component now paired with its **MD-native alternative** and a **"promote when"** trigger, so the agent defaults to Markdown and only promotes when a visual structure carries the content better.
+- **`skills/writing-rich-docs/references/strategies.md`** — replaced the pure-pedagogy menu with a **promote-or-not** decision table (which content stays Markdown vs. gets an HTML block) plus the section-shape templates and cognitive-amortization rules.
+- **`/p2e-html`, `/p2e-md`, `/p2e-md-to-html`** — descriptions + bodies updated: they now override the *default rich-Markdown output* (rather than an "audience auto-classifier"); `/p2e-html` = pure single-file HTML, `/p2e-md` = plain Markdown with no `<style>` preamble or HTML blocks, `/p2e-md-to-html` = convert a Markdown doc (plain or rich) to pure HTML.
+- **`scripts/validate-plugin.py`** — `writing-rich-html-docs` → `writing-rich-docs`, `p2e-rich-html-docs.md` → `p2e-rich-docs.md` across the workflow set, Codex/Cursor skill sets, and `workflow_map`.
+- **`.cursor/rules/p2e-policy.mdc`, `README.md`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `CLAUDE.md`** — references to the renamed skill + the new default behavior. The Claude-Code-only asymmetry of the three override commands is unchanged.
+- **`~/.claude/CLAUDE.md`** (personal, not in this repo) — the "Doc Output Conventions" section reworked: human-review docs default to **rich Markdown** (`.md` with embedded HTML blocks via the `writing-rich-docs` skill); `/p2e-html` is the pure-HTML override; aggressively promote regions to HTML blocks for high-fidelity content rather than writing whole docs in HTML.
+
 ## v0.10.0 — 2026-05-11
 
 Two workstreams: (1) aligns the plugin with the P2E **Patton v3 Flow/Foundation model** (the backend's new ontology — Products, persona/Foundation Flows, `Story.priority`, ADRs); (2) makes the plugin **cross-platform compliant** across Claude Code, Codex, **and Cursor**, on a shared-workflow + thin-wrapper pattern, and adds a new `/p2e-fix` workflow.
