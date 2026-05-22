@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.10.2 — 2026-05-22
 
 ### Added — `/p2e-verify-story` (cross-platform UAT report)
 - **`workflows/p2e-verify-story.md`** (new) — shared workflow for verifying a P2E story's acceptance criteria end-to-end. Six phases: gather story (P2E MCP as Source 1 default, with spec / GH-issue / free-form fallbacks), bring the dev server up reliably (detached `nohup` launch + `lsof` port verification to prevent the `feedback_uat_verify_running_code` port-clash failure), reproduce each AC via a browser-driver MCP, assemble a self-contained rich-HTML report (single `.html` + per-AC PNG / curl evidence, scoped under `.rich-doc` theme tokens — same vocabulary as the `writing-rich-docs` skill), open for human review, teardown. Visible pixels over JSON probes for every UI AC. Output is information only — does not move the story's lifecycle.
