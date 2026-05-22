@@ -42,7 +42,7 @@ Reach for this when shipping a release. For single-story or fast-track spot work
    - `activeForm`: `Shipping <story_id>` (used by the spinner when the task is `in_progress`).
    - Initial status: `pending`.
    
-   The task list becomes the orchestrator's heartbeat for the batch — phase transitions (steps 9, 11, 14, 20, 22 below) update task status via `TaskUpdate`. Status semantics:
+   The task list becomes the orchestrator's heartbeat for the batch. Steps 9 and 22 below issue `TaskUpdate` calls **unconditionally**. Steps 11, 14, and 20 issue `TaskUpdate` calls **conditionally** — only when an audit / verification / review failure path fires. Status semantics:
    - `pending` → before Phase B implementation starts.
    - `in_progress` → from Phase B start through Phase E roll-up.
    - `completed` → on Phase E successful row emission for this story.
@@ -53,13 +53,13 @@ Reach for this when shipping a release. For single-story or fast-track spot work
 
 ### Phase B — Implement (delegated to work-on-next)
 
-9. `TaskUpdate` each story's task to `in_progress` as its wave starts. Delegate per-wave implementation to `workflows/p2e-work-on-next.md` steps 7–12 **exactly as written**. Do not fork the briefing, status-gate, two-strike, AC-toggle, or label-sync logic. Pass `--full-team` through if the user supplied it.
+9. `TaskUpdate` each story's task to `in_progress` as its wave starts. Delegate per-wave implementation to `workflows/p2e-work-on-next.md` **steps 9–12 exactly as written** (steps 7–8 — worktree setup and staff-engineer wave plan — were already handled in Phase A steps 5–7 above; do not re-run them). Do not fork the briefing, status-gate, two-strike, AC-toggle, or label-sync logic. Pass `--full-team` through if the user supplied it. The only ship-batch-specific interception inside this range is the scope-change audit (step 11 below), which fires after work-on-next step 9c (implementer verification passes) and before work-on-next step 11 (the IN_REVIEW flip + AC toggle).
 
 10. **Implementer deviation reporting** (enforced via `workflows/p2e-first-turn-briefing.md` — see its `## Deviation reporting` section). The implementer is contracted to emit a story-log entry **before** any mid-flight spec deviation:
     - `kind: SCOPE_CHANGE` for changes to the spec itself (AC dropped/modified, capability adjusted, non-goal added, scope reduced/expanded).
     - `kind: DECISION` for non-obvious judgment calls that don't change the spec (chose library A over B, picked a wrapper over a fork, deferred X to a follow-up story).
 
-11. **Scope-change audit** — after the implementer reports completion for a story (step 11 of work-on-next, before the `IN_REVIEW` flip and AC toggle), the orchestrator runs the audit:
+11. **Scope-change audit** — after the implementer reports completion (work-on-next step 9c finishes with verification pass) and **before** work-on-next step 11 executes the `IN_REVIEW` flip and AC toggle, the orchestrator runs the audit:
     - Diff the as-implemented state against the briefed spec: ACs toggled vs. checked, capabilities matched vs. specced, non-goals respected vs. crossed.
     - **Non-trivial delta + zero `SCOPE_CHANGE`/`DECISION` entries in the post-briefing window = a missed report.** Surface it to the user with the diff and one of three resolutions:
       a. Author a retroactive `SCOPE_CHANGE` / `DECISION` entry now (user dictates the message).
@@ -70,7 +70,7 @@ Reach for this when shipping a release. For single-story or fast-track spot work
 
 ### Phase C — 360° verify per story
 
-13. For each story now at `IN_REVIEW`, call `/p2e-verify-story <story_id>` (the v0.10.2-shipped UAT-report workflow). The command bind-checks `.p2e/project.json`, fetches the story via `mcp__p2e__stories op=get`, brings the dev server up reliably (detached `nohup` launch with `lsof` port verification), reproduces every AC via a browser-driver MCP (`mcp__chrome-devtools__*` preferred, `mcp__claude-in-chrome__*` fallback) or curl for backend-only ACs, and emits a self-contained rich-HTML report at `docs/feat-<topic>/uat-results/<story_id>.html` (preferred) or `.claude/uat-results/<story-id>/report.html` (fallback when no feature folder is bound). Pass `--artifacts-dir=<path>` per-batch to redirect output if needed.
+13. For each story now at `IN_REVIEW`, call `/p2e-verify-story <story_id>` (the v0.10.2-shipped UAT-report workflow). The command bind-checks `.p2e/project.json`, fetches the story via `mcp__p2e__stories op=get`, brings the dev server up reliably (detached `nohup` launch with `lsof` port verification), reproduces every AC via a browser-driver MCP (`mcp__chrome-devtools__*` preferred, `mcp__claude-in-chrome__*` fallback) or curl for backend-only ACs, and emits a self-contained rich-HTML report at `docs/feat-<topic>/uat-results/results.html` (preferred) or `.claude/uat-results/<story-id>/results.html` (fallback when no feature folder is bound). Pass `--artifacts-dir=<path>` per-batch to redirect output if needed.
 
 14. **On verify failure** (any AC verdict `FAIL`): the story is moved back to `IN_PROGRESS`, its task drops to `pending` with a "verify failed: AC<n>" status-line note. The two-strike rule from `## Two-strike escalation` in policy applies (counter shared with Phase B failures). Append a `kind: VERIFICATION` story-log entry with the failure reason, the failing AC list, and a link to the UAT report. The story is **excluded from Phase D** for this batch run.
 
@@ -140,7 +140,7 @@ This workflow uses every checkpoint defined in `workflows/p2e-work-on-next.md#st
 ### Checkpoint 4 — 360° verify pass (Phase C, step 15)
 
 ```json
-{ "kind": "VERIFICATION", "author": "orchestrator", "message": "360° verify pass via /p2e-verify-story: all <n> ACs satisfied. UAT report: <uat-report-path>" }
+{ "kind": "VERIFICATION", "author": "orchestrator", "message": "360° verify pass via /p2e-verify-story: all <n> ACs satisfied. UAT report: <uat-report-path>/results.html" }
 ```
 
 One entry per story that passed Phase C. Replace `<n>` with the satisfied AC count and `<uat-report-path>` with the rich-HTML report path emitted by `/p2e-verify-story` (typically `docs/feat-<topic>/uat-results/<story_id>.html`).
@@ -165,7 +165,7 @@ Phase C / Phase D failures append `kind: BLOCKER` per the existing pattern — m
 
 `--dry-run` is read-only:
 - Resolve the queue + classification + wave plan + security trigger evaluation exactly as a real run.
-- Show the verify-story / fallback decision per story.
+- Show which browser-driver MCP path (`mcp__chrome-devtools__*` preferred vs. `mcp__claude-in-chrome__*` fallback) `/p2e-verify-story` would use per story, based on host MCP availability.
 - Show the per-story PR branch + title that WOULD be created.
 - Print the planned roll-up doc path.
 - Skip every state-changing call: no `op=update`, no story-log writes, no PR creation, no `review-pr` / `security-review` invocations, no roll-up doc emitted, no `cut-release` handoff.
@@ -176,7 +176,7 @@ Phase C / Phase D failures append `kind: BLOCKER` per the existing pattern — m
 - `/security-review` is a user-installed command; when missing on the host, the Phase D security gate hard-skips with a logged `kind: DECISION` entry recording the skip reason and the matched trigger paths.
 - `TaskCreate` / `TaskUpdate` are Claude Code natives. On Codex and Cursor, the per-story tracking degrades to a chat-prose progress block printed at each phase boundary; the workstream visibility contract stays the same, just without the spinner UI.
 - Phase F `--cut-release` auto-handoff is **Claude Code only**. On Codex and Cursor, the workflow prints the next step for the user to run manually.
-- The `PreToolUse` status-gate hook is Claude Code only — Phase B inherits work-on-next's self-enforced fallback (`workflows/p2e-work-on-next.md` step 9a).
+- The `PreToolUse` status-gate hook is Claude Code only — Phase B inherits work-on-next's self-enforced MCP status discipline (`workflows/p2e-work-on-next.md` step 9a — the `OPEN → IN_PROGRESS` transition that must complete before implementers are spawned).
 - The `p2e-architect` and `p2e-staff-engineer` subagents are Claude Code natives. On Codex and Cursor, the workflow inlines the equivalent prompts as sub-steps in the same chat (per `skills/p2e/SKILL.md` persona routing matrix).
 
 ## Cost ceiling
