@@ -1,7 +1,7 @@
 {
   "name": "p2e",
   "version": "0.10.1",
-  "description": "P2E authoring and execution workflows for Codex, backed by the P2E MCP. Includes bootstrap (new + onboarding modes), add-story, update-story, work-on-next, sync-labels, sync, bind, manage-uxo, archaeology, and fix. Aligned with the P2E Patton v3 Flow/Foundation model.",
+  "description": "P2E authoring and execution workflows for Codex, backed by the P2E MCP. Includes bootstrap (new + onboarding modes), add-story, update-story, work-on-next, sync-labels, sync, bind, manage-uxo, archaeology, fix, and verify-story. Aligned with the P2E Patton v3 Flow/Foundation model.",
   "author": {
     "name": "bchoor",
     "email": "noreply@users.noreply.github.com",
@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "P2E",
     "shortDescription": "Route P2E story-map work from Codex",
-    "longDescription": "Use P2E in Codex through a plain-language router and explicit workflow aliases for bootstrap (new + onboarding modes), add-story, update-story, work-on-next, label reconciliation, drift sync, repo binding, UXO management, repo archaeology, and uproot-and-replace bug fixing.",
+    "longDescription": "Use P2E in Codex through a plain-language router and explicit workflow aliases for bootstrap (new + onboarding modes), add-story, update-story, work-on-next, label reconciliation, drift sync, repo binding, UXO management, repo archaeology, uproot-and-replace bug fixing, and end-to-end story verification with a rich-HTML UAT report.",
     "developerName": "bchoor",
     "category": "Coding",
     "capabilities": [
@@ -40,7 +40,8 @@
       "Create a new P2E story from this feature idea",
       "Draft a thick P2E story from this feature idea",
       "Thicken this draft story",
-      "Fix these bugs the right way (uproot and re-implement)"
+      "Fix these bugs the right way (uproot and re-implement)",
+      "Verify this story end-to-end and produce a UAT report"
     ],
     "brandColor": "#0f766e",
     "composerIcon": "./assets/p2e-icon.svg",

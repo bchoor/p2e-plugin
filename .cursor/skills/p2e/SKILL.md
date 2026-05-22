@@ -17,6 +17,7 @@ Mirrors the Codex `p2e` router. Read `workflows/p2e-policy.md` first, then choos
 - editing or adding a UXO via preview/confirm → `workflows/p2e-manage-uxo.md` + `workflows/p2e-uxo-recipe.md`
 - onboarding an existing repo autonomously (no human interview) → `workflows/p2e-archaeology.md`
 - fixing one or more bugs the right way (uproot + re-implement) → `workflows/p2e-fix.md`
+- verifying a story end-to-end with a UAT report (`verify <story_id>`, `run UAT`, `do a visual UAT`) → `workflows/p2e-verify-story.md`
 
 If the request is ambiguous, prefer the primary user intent and select the workflow that best matches the main goal. If it spans multiple workflows, execute the first one fully and note any follow-up needed.
 
