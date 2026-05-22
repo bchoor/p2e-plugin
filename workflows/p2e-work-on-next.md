@@ -92,13 +92,15 @@ Strike 2 (second failure, story set to BLOCKED):
 
 The state flip to `BLOCKED` on strike 2 is NOT a separate log entry — it's implied by the strike-2 BLOCKER message and recorded in `story.status`.
 
-### Human-authored kinds (not orchestrator checkpoints)
+### Self-reporting kinds (implementer or human)
 
-These kinds are written by humans via the UI or MCP; the orchestrator never emits them:
+These kinds are NOT orchestrator checkpoints — the orchestrator never emits them automatically. They are emitted by the implementer (per `workflows/p2e-first-turn-briefing.md#deviation-reporting`) or written by humans via the UI or MCP:
 
-- `DECISION` — a human judgment call (e.g., "picked Approach A because...", "overrode architect's recommendation")
-- `SCOPE_CHANGE` — mid-flight change to the story spec (e.g., "dropped retroactive backfill, covered in Non-goals")
-- `NOTE` — free-form observation worth preserving
+- `DECISION` — judgment call that does NOT change the spec (e.g., "picked Approach A because...", "overrode architect's recommendation", "deferred caching layer to follow-up story"). Authored by `"implementer"`, `"user"`, or `"orchestrator"` (the last only when the orchestrator itself made the call, e.g., `--no-security` override under `/p2e-ship-batch`).
+- `SCOPE_CHANGE` — mid-flight change to the story spec itself (e.g., "dropped retroactive backfill, covered in Non-goals", "added AC for empty-state copy after design review"). Authored by `"implementer"` or `"user"`.
+- `NOTE` — free-form observation worth preserving (e.g., orchestrator-authored audit notes from `/p2e-ship-batch`'s scope-change audit, or human-authored context).
+
+The implementer must emit `SCOPE_CHANGE` / `DECISION` entries **before** making the deviating change, not after — see `workflows/p2e-first-turn-briefing.md#deviation-reporting` for the contract and MCP call shape.
 
 ### MCP call shape
 

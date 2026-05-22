@@ -1,6 +1,6 @@
 ---
 name: p2e
-description: Plain-language Cursor router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, sync-labels, sync, manage-uxo, archaeology, or fix using the shared workflow core.
+description: Plain-language Cursor router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, ship-batch, sync-labels, sync, manage-uxo, archaeology, or fix using the shared workflow core.
 ---
 
 # p2e router (Cursor)
@@ -11,6 +11,7 @@ Mirrors the Codex `p2e` router. Read `workflows/p2e-policy.md` first, then choos
 - creating a new story → `workflows/p2e-add-story.md`
 - updating, thickening, steering, renaming, re-parenting, or retagging an existing story → `workflows/p2e-update-story.md`
 - implementing planned work → `workflows/p2e-work-on-next.md` AND `workflows/p2e-first-turn-briefing.md`
+- shipping or batching MULTIPLE planned stories through implementation + 360° verify + per-story PR + review + roll-up doc (e.g., "ship all v0.13 stories", "work through the release backlog with full gates") → `workflows/p2e-ship-batch.md` (which delegates Phase B to `workflows/p2e-work-on-next.md`); the heavyweight cousin of work-on-next — reach for it when shipping a release
 - label / lifecycle reconciliation → `workflows/p2e-sync-labels.md`
 - on-demand drift between a story and its linked GH issue body → `workflows/p2e-sync.md`
 - writing/refining/auditing a UXO's `description` / `objectives[]` → `workflows/p2e-uxo-recipe.md`
