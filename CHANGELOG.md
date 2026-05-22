@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added — `/p2e-verify-story` (cross-platform UAT report)
+- **`workflows/p2e-verify-story.md`** (new) — shared workflow for verifying a P2E story's acceptance criteria end-to-end. Six phases: gather story (P2E MCP as Source 1 default, with spec / GH-issue / free-form fallbacks), bring the dev server up reliably (detached `nohup` launch + `lsof` port verification to prevent the `feedback_uat_verify_running_code` port-clash failure), reproduce each AC via a browser-driver MCP, assemble a self-contained rich-HTML report (single `.html` + per-AC PNG / curl evidence, scoped under `.rich-doc` theme tokens — same vocabulary as the `writing-rich-docs` skill), open for human review, teardown. Visible pixels over JSON probes for every UI AC. Output is information only — does not move the story's lifecycle.
+- **Cross-platform compliance** — `commands/p2e-verify-story.md` (Claude), `skills/p2e-verify-story/SKILL.md` (Codex), `.cursor/skills/p2e-verify-story/SKILL.md` (Cursor). Plus router entries in `skills/p2e/SKILL.md` and `.cursor/skills/p2e/SKILL.md`. Plus README row.
+- **Bundled resources** under `skills/p2e-verify-story/`:
+  - `references/gathering-acs.md` — Phase 1 sourcing with P2E MCP as the canonical default
+  - `references/dev-server-setup.md` — Phase 2 detached launch + port-clash mitigation + pre-staging
+  - `references/browser-driver-recipes.md` — Phase 3 MCP-driving patterns (hover, React inputs, toast pinning, snapshots, screenshots, scrolling, reload, native-dialog avoidance) covering both `mcp__chrome-devtools__*` (preferred) and `mcp__claude-in-chrome__*` (fallback)
+  - `references/report-template.md` — Phase 4 component patterns + theme tokens + validation checklist
+  - `scripts/start-dev-detached.sh`, `scripts/stop-dev.sh` — detached dev-server lifecycle (PID files in `.claude/verify-story-pids/`)
+  - `assets/template.html` — single-file rich-doc skeleton (summary grid, per-AC sections, overall assessment, embedded `.rich-doc` styles, light / dark theme)
+- **Validator** — `scripts/validate-plugin.py` updated: `p2e-verify-story` added to `expected_commands`, `expected_workflows`, `expected_skill_paths`, `expected_cursor_skill_paths`, `workflow_map`, and the router required-workflows list.
+
 ## v0.10.1 — 2026-05-12
 
 Rebalances the doc-rendering surface: **rich human-review docs default to Markdown with embedded HTML blocks**, not pure single-file HTML. Markdown carries the structural ~50% (front-matter, headings, prose, simple lists/tables, code fences — fast and token-cheap); HTML blocks carry the high-fidelity rest (decision cards, color-coded comparison matrices, anatomy/three-pieces grids, callouts, premise ladders, step+cost lists, and all diagrams via inline SVG). Pure HTML moves to being the `/p2e-html` escape hatch; `/p2e-md` forces plain Markdown with no blocks. doc-reviewer now renders mixed Markdown + HTML and anchors comments to both — the blend carries no review penalty.

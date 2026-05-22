@@ -78,6 +78,7 @@ def validate_expected_files():
         "p2e-sync.md",
         "p2e-sync-labels.md",
         "p2e-update-story.md",
+        "p2e-verify-story.md",
         "p2e-work-on-next.md",
     }
     actual_commands = {p.name for p in (ROOT / "commands").glob("*.md")}
@@ -98,6 +99,7 @@ def validate_expected_files():
         "p2e-sync-labels.md",
         "p2e-update-story.md",
         "p2e-uxo-recipe.md",
+        "p2e-verify-story.md",
         "p2e-work-on-next.md",
     }
     actual_workflows = {p.name for p in (ROOT / "workflows").glob("*.md")}
@@ -114,6 +116,7 @@ def validate_expected_files():
         ROOT / "skills" / "p2e-sync" / "SKILL.md",
         ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
         ROOT / "skills" / "p2e-update-story" / "SKILL.md",
+        ROOT / "skills" / "p2e-verify-story" / "SKILL.md",
         ROOT / "skills" / "p2e-work-on-next" / "SKILL.md",
         ROOT / "skills" / "writing-rich-docs" / "SKILL.md",
     }
@@ -135,6 +138,7 @@ def validate_expected_files():
             "p2e-sync",
             "p2e-sync-labels",
             "p2e-update-story",
+            "p2e-verify-story",
             "p2e-work-on-next",
             "writing-rich-docs",
         )
@@ -183,6 +187,7 @@ def validate_wrapper_references():
         "commands/p2e-sync.md": "workflows/p2e-sync.md",
         "commands/p2e-sync-labels.md": "workflows/p2e-sync-labels.md",
         "commands/p2e-update-story.md": "workflows/p2e-update-story.md",
+        "commands/p2e-verify-story.md": "workflows/p2e-verify-story.md",
         "commands/p2e-work-on-next.md": "workflows/p2e-work-on-next.md",
         "skills/p2e-add-story/SKILL.md": "workflows/p2e-add-story.md",
         "skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
@@ -193,6 +198,7 @@ def validate_wrapper_references():
         "skills/p2e-sync/SKILL.md": "workflows/p2e-sync.md",
         "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
         "skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
+        "skills/p2e-verify-story/SKILL.md": "workflows/p2e-verify-story.md",
         "skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
         "skills/writing-rich-docs/SKILL.md": "workflows/p2e-rich-docs.md",
         ".cursor/skills/p2e-add-story/SKILL.md": "workflows/p2e-add-story.md",
@@ -204,6 +210,7 @@ def validate_wrapper_references():
         ".cursor/skills/p2e-sync/SKILL.md": "workflows/p2e-sync.md",
         ".cursor/skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
         ".cursor/skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
+        ".cursor/skills/p2e-verify-story/SKILL.md": "workflows/p2e-verify-story.md",
         ".cursor/skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
         ".cursor/skills/writing-rich-docs/SKILL.md": "skills/writing-rich-docs/SKILL.md",
     }
@@ -248,6 +255,7 @@ def validate_wrapper_references():
             "workflows/p2e-uxo-recipe.md",
             "workflows/p2e-archaeology.md",
             "workflows/p2e-fix.md",
+            "workflows/p2e-verify-story.md",
         ):
             assert_true(
                 workflow_ref in router,
