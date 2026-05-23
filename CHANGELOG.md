@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.10.3 — 2026-05-22
 
 Adds `/p2e-ship-batch` — the heavyweight cousin of `/p2e-work-on-next`. Designed for release-cut scenarios where multiple OPEN stories need to ship with a full quality-gate layer: per-story 360° verification via `/p2e-verify-story` (now a shipped dependency as of v0.10.2), per-story PR + review, conditional security review (auto-detected from diff paths), and a rich-Markdown roll-up doc. Phase B delegates to `/p2e-work-on-next` without forking its logic — the same briefing, status discipline, two-strike rule, AC toggle, and label sync. Phases C–F add what work-on-next doesn't cover for hands-off batch operation.
 
