@@ -53,6 +53,16 @@ Flow: <flow name> — <"persona Flow" | "Foundation Flow: <slot>">
 
 ## Verification
 Run: `<verificationCmd>`
+
+## Deviation reporting
+When implementation reveals that the spec is wrong, incomplete, or conflicts with reality and you decide to deviate, emit a story-log entry **before** making the change:
+- `kind: SCOPE_CHANGE` — change to the spec itself (AC dropped/modified, capability adjusted, non-goal added, scope reduced or expanded).
+- `kind: DECISION` — non-obvious judgment call that does NOT change the spec (chose library A over B, picked a wrapper over a fork, deferred X to a follow-up story, overrode the architect's recommendation).
+
+MCP call shape (always `items:[{...}]` form per the policy):
+`mcp__p2e__story_log op=append project_slug=<slug> items=[{ "story_id": "<id>", "kind": "SCOPE_CHANGE", "author": "implementer", "message": "<what changed and why>" }]`
+
+The reviewing human reads these entries to understand what was negotiated mid-flight. Skipping them silently absorbs the change and breaks the batch audit trail.
 ```
 
 ## Field mapping
@@ -69,6 +79,7 @@ Run: `<verificationCmd>`
 | Context docs | `contextDocs[]` |
 | Non-goals | `nonGoals[]` |
 | Verification | `verificationCmd` |
+| Deviation reporting | (static contract — same text every briefing) |
 
 ## Rules
 
@@ -76,6 +87,7 @@ Run: `<verificationCmd>`
 - Missing `verificationCmd`: render `Run: (no verification command specified — ask the user)` so the implementer surfaces the gap.
 - On two-strike re-brief the orchestrator appends a `## Previous failure` section below `Verification` with the failure output; keep the template above unchanged.
 - This template is loaded by every wrapper that routes a story into implementation. Do not inline it elsewhere.
+- **Deviation reporting:** the Deviation reporting section is static (same text every briefing) and is required — the implementer is contracted to follow it on every story. `/p2e-ship-batch` enforces this via a scope-change audit after implementation; `/p2e-work-on-next` relies on the implementer honoring the contract.
 - **Flow context:** Derive the Flow by following `story.uxo.phase.flow`. If the flow is the Foundation Flow, also include the slot name (one of: Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting). If the data is unavailable, render `Flow: (unable to resolve — check story.uxo.phase.flow)`.
 - **ADR context:** Scan `story.uxo.specFile` and every entry in `story.contextDocs[]` for a path matching `docs/adrs/...`. If found, read the ADR file and emit the three-line summary (Decision / Context / Consequences). If multiple ADRs are linked, emit one summary block per ADR. If none are linked, render `(no ADR linked — not applicable)`.
 

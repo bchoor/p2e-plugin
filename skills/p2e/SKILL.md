@@ -1,6 +1,6 @@
 ---
 name: p2e
-description: Plain-language Codex router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, sync-labels, manage-uxo, archaeology, or fix using the shared workflow core.
+description: Plain-language Codex router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, ship-batch, sync-labels, manage-uxo, archaeology, or fix using the shared workflow core.
 ---
 
 # p2e router
@@ -13,6 +13,7 @@ Then choose the one best-fit workflow, load it, and execute it end-to-end:
 - requests about creating a new story -> read `workflows/p2e-add-story.md`, then follow that workflow exactly
 - requests about updating, thickening, steering, renaming, re-parenting, or retagging an existing story -> read `workflows/p2e-update-story.md`, then follow that workflow exactly (this is the canonical path for what used to be `/p2e-add-story --fill`)
 - requests about implementing planned work -> read `workflows/p2e-work-on-next.md` AND `workflows/p2e-first-turn-briefing.md`, then follow the work-on-next workflow exactly
+- requests about shipping or batching MULTIPLE planned stories through implementation + 360° verify + per-story PR + review + roll-up doc (e.g., "ship all v0.13 stories", "work through the release backlog with full gates", multi-story `release=`/`phase=`/`tag=` filters) -> read `workflows/p2e-policy.md` AND `workflows/p2e-ship-batch.md` AND `workflows/p2e-work-on-next.md` AND `workflows/p2e-first-turn-briefing.md`, then follow the ship-batch workflow exactly. Phase B delegates to work-on-next without modification — do not fork its logic. This is the heavyweight cousin of `/p2e-work-on-next`; route to work-on-next directly for single-story or fast-track spot work.
 - requests about label or lifecycle reconciliation -> read `workflows/p2e-sync-labels.md`, then follow that workflow exactly
 - requests about drift reconciliation between a story and its linked GitHub issue body (on-demand, field-level) -> read `workflows/p2e-sync.md`, then follow that workflow exactly
 - requests about writing, refining, or auditing a UXO's `description` / `objectives[]` -> read `workflows/p2e-uxo-recipe.md` and apply the recipe (objectives[] first → MECE-audit within the UXO → description as succinct articulation); this is a reference recipe, loadable standalone or mid-flow from bootstrap / update-story

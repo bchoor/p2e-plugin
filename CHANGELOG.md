@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+Adds `/p2e-ship-batch` — the heavyweight cousin of `/p2e-work-on-next`. Designed for release-cut scenarios where multiple OPEN stories need to ship with a full quality-gate layer: per-story 360° verification via `/p2e-verify-story` (now a shipped dependency as of v0.10.2), per-story PR + review, conditional security review (auto-detected from diff paths), and a rich-Markdown roll-up doc. Phase B delegates to `/p2e-work-on-next` without forking its logic — the same briefing, status discipline, two-strike rule, AC toggle, and label sync. Phases C–F add what work-on-next doesn't cover for hands-off batch operation.
+
+Also tightens the shared first-turn briefing with an explicit **implementer deviation-reporting contract**: when implementation reveals the spec is wrong, incomplete, or conflicts with reality, the implementer must emit a `SCOPE_CHANGE` or `DECISION` story-log entry **before** making the deviating change. The two kinds are no longer human-authored only: `SCOPE_CHANGE` may now be authored by `"implementer"` or `"user"`, and `DECISION` may now be authored by `"implementer"`, `"orchestrator"`, or `"user"` (the orchestrator path covers cases like a `--no-security` override emitted by `/p2e-ship-batch` itself). `/p2e-ship-batch` enforces the contract via a scope-change audit at the end of Phase B (diff the as-implemented story against the briefed spec; surface unreported deltas before continuing to verify). `/p2e-work-on-next` relies on the implementer honoring the contract.
+
+Adds per-story task tracking: ship-batch creates one TaskCreate task per story at Phase A, then updates its status as the story moves through Phases B–E. Gives the user a live view of every workstream in the batch without scraping logs or polling MCP.
+
+### Added
+- **`/p2e-ship-batch`** (`commands/p2e-ship-batch.md` + `skills/p2e-ship-batch/SKILL.md` + `.cursor/skills/p2e-ship-batch/SKILL.md` + shared `workflows/p2e-ship-batch.md`) — heavyweight batch-ship orchestrator. Reuses `/p2e-work-on-next` for Phase B (implementation + verification + label sync) without forking, then layers Phase C (360° verify via `/p2e-verify-story`, the v0.10.2-shipped UAT-report workflow), Phase D (one PR per story + `/pr-review-toolkit:review-pr` + conditional `/security-review` auto-triggered on auth/secrets/oauth/permission/PII/migration diff paths or Foundation `Security` slot membership), Phase E (rich-Markdown roll-up at `docs/feat-ship-batch-<date>/index.md`), and Phase F (optional `--cut-release` handoff, Claude Code only). Failure isolation defaults to skip-and-continue with per-phase BLOCKED / needs-attention markers; `--stop-on-fail` halts the whole batch.
+- Per-story TaskCreate / TaskUpdate tracking — Phase A creates one task per selected story; phases B–E update task status (`in_progress` on Phase B start, `completed` on Phase E roll-up, `pending` again if a phase failure sends the story back). Provides a live ops view of the batch on hosts that support task tooling (Claude Code natively; Codex / Cursor degrade to chat-prose progress updates).
+- New story-log VERIFICATION checkpoints (4 + 5) capturing the 360° verify pass and the PR-review pass per story; failures fall through to the existing BLOCKER pattern.
+- Diff-driven security gate — globset matches `**/auth*`, `**/session*`, `**/crypto*`, `**/secret*`, `**/token*`, `**/oauth*`, `**/permission*`, `**/password*`, `**/identity*`, `**/login*`, `**/jwt*`, `**/saml*`, `**/iam*`, paths with `pii`/`gdpr`/`hipaa`/`pci`/`phi`, migrations adding sensitive columns, capabilities with `DEPRECATES`/`REMOVES` against auth identifiers, or Foundation `Security` slot membership. `--security` forces on; `--no-security` forces off and logs a `kind: DECISION` override.
+- `defaultPrompt` adds a "Ship the v0.X release batch with full gates" example to surface the new command in Codex's install UI.
+
+### Changed
+- **`workflows/p2e-first-turn-briefing.md`** — new `## Deviation reporting` section in the briefing template + matching field-mapping row + rule. The implementer is contracted to emit `SCOPE_CHANGE` / `DECISION` entries before making mid-flight spec deviations. Inherited by both `/p2e-work-on-next` and `/p2e-ship-batch`.
+- **`workflows/p2e-work-on-next.md`** — the `### Human-authored kinds` section in the story-log policy is renamed `### Self-reporting kinds (implementer or human)`. `SCOPE_CHANGE` may now be authored by `"implementer"` or `"user"`; `DECISION` may now be authored by `"implementer"`, `"orchestrator"`, or `"user"`. The three orchestrator checkpoints (AC toggle, verification pass, verification failure) in the existing policy are unchanged.
+- **`skills/p2e/SKILL.md` + `.cursor/skills/p2e/SKILL.md`** — both routers gain a routing line for `workflows/p2e-ship-batch.md` (the heavyweight cousin of work-on-next). Descriptions updated to list `ship-batch` in the workflow set.
+- **`README.md`** — new "Ship batch" row in the commands-and-skills table, after the "Work next" row.
+
 ## v0.10.2 — 2026-05-22
 
 ### Added — `/p2e-verify-story` (cross-platform UAT report)
