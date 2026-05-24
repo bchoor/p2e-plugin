@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.10.5 — 2026-05-24
+
+Adds a shared 6-step task ladder (TaskCreate-backed) to `workflows/p2e-work-on-next.md`, providing live per-story progress tracking across multi-story implementation waves. Codifies two previously-implicit gaps in the workflow (step 4: `git commit` + `gh pr create`; step 5: `pr-review-toolkit /review-pr` invocation) and wires step 6 to the already-shipped `/p2e-cut-release` (v0.10.4). Also documents the same ladder structure for the global `/implement-spec` command (not shipped via this plugin) as a documented asymmetry.
+
+### Added
+- **6-step TaskCreate ladder in `workflows/p2e-work-on-next.md`** — steps: (1) Brief (story + first-turn briefing), (2) Implement (feature dev), (3) Verify (AC + `/p2e-verify-story`), (4) Commit + PR (`git commit` + `gh pr create` on `feat/<STORY-ID>-<topic>`), (5) Review (`pr-review-toolkit /review-pr`), (6) Release (`/p2e-cut-release` — branch name auto-infers `--story-id` via the `[A-Z]+-[0-9]+-L[0-9]+` regex, same as v0.10.4's story-closeout logic). Each step maps to a TaskCreate task; statuses move `pending → in_progress → completed` (or `blocked`) in real time (refs: bchoor/p2e#294).
+- **Codification of steps 4–5** — `git commit` + PR creation and `pr-review-toolkit /review-pr` invocation were previously implicit (done but untracked); they now have explicit TaskCreate entries and success criteria, closing the gap where multi-story waves lost visibility between Verify and Release.
+- **Cross-platform fallback** — Cursor (no task primitive) uses per-step `kind: NOTE` story-log entries as the progress surface; documented as an asymmetry alongside the existing hook asymmetries table in `CLAUDE.md`.
+- **`/implement-spec` ladder** (documented asymmetry, not plugin-shipped) — the global `~/.claude/commands/implement-spec.md` gains the same 6-step ladder structure locally; behavior is identical but the command is outside the plugin's install surface and therefore not cross-platform compliant.
+
+### Changed
+- **`workflows/p2e-work-on-next.md`** — ladder section added after the existing Phase B implementation block; no existing behavior removed.
+
 ## v0.10.4 — 2026-05-23
 
 Adds `/p2e-cut-release` — replaces the previous global `~/.claude/commands/cut-release.md`. Two distinct things are different from the old command, neither cosmetic.
