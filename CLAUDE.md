@@ -79,6 +79,7 @@ These are real and documented — don't try to paper over them.
 | `PreToolUse` hooks | yes | no | no |
 | `SessionStart` hooks | yes | partial | no |
 | MCP servers | yes (`.mcp.json`) | yes (`.mcp.json`) | yes (`.cursor/mcp.json` or shared) |
+| Task primitive (orchestrator progress board) | yes (`TaskCreate`/`TaskUpdate`) | yes (`update_plan` or equivalent) | no — fall back to per-step `kind: NOTE` `story_log` entries |
 
 Workflows that depend on a hook (e.g. the P2E status gate) must degrade gracefully on platforms that lack it.
 

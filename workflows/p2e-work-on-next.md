@@ -53,7 +53,7 @@ No log entry is written for a clean brief — the thick-gate pass is recorded in
 ### Step 3 — Verify & fix
 
 **TaskCreate:** `[#<story-id>] 3/6 Verify & fix`
-**TaskUpdate:** `pending → in_progress` when the verification command fires; `→ completed` when verification passes — at which point step 9b / step 11 logic runs (`IN_REVIEW` flip + AC toggles).
+**TaskUpdate:** `pending → in_progress` when the verification command fires; `→ completed` when verification passes — at which point step 11 logic runs (`IN_REVIEW` flip + AC toggles).
 **story_log:** Two entries on a passing run (existing checkpoint contract from `## Story log checkpoint policy`): one `AC_CHANGE` per criterion toggled, and one `VERIFICATION` entry immediately before the `IN_REVIEW` flip. On a failing run, the two-strike `BLOCKER` entries apply as documented above. No new kinds.
 
 ### Step 4 — Commit + PR (new — codify)
@@ -81,7 +81,7 @@ No log entry is written for a clean brief — the thick-gate pass is recorded in
 
 **TaskCreate:** `[#<story-id>] 6/6 /p2e-cut-release`
 **TaskUpdate:** `pending → in_progress` when `/p2e-cut-release` is invoked; `→ completed` when `/p2e-cut-release`'s Phase E confirms `IN_REVIEW → DONE` (or the equivalent terminal state for the release).
-**Invocation:** invoke the shipped `/p2e-cut-release` command (no flags needed when the branch follows the naming convention). It absorbs push + PR + CI + squash-merge + bump + tag + `gh release create` + story closeout in one atomic call. See `workflows/p2e-cut-release.md` for the full Phase A–E contract.
+**Invocation:** invoke the shipped `/p2e-cut-release` command (no flags needed when the branch follows the naming convention). It absorbs push + PR + CI + squash-merge + bump + tag + `gh release create` + screenshots + story closeout + teardown in one atomic call. See `workflows/p2e-cut-release.md` for the full Phase 0 + A–F contract.
 **Human authorization:** `/p2e-cut-release` has its own `AskUserQuestion` release-plan gate (its workflow step 8). That gate IS the human authorization for the release. The orchestrator trusts it and does NOT add an additional turn boundary before invoking. Invoke step 6 directly after step 5 completes.
 **story_log:** `/p2e-cut-release` Phase E writes the closeout `VERIFICATION` entry and flips GH labels automatically. The orchestrator does NOT write a duplicate entry for the DONE transition — that would be noise against a state already in `story.status` + `AuditLog`.
 **Multi-story batch:** when you genuinely need one release to cover several stories, use `workflows/p2e-ship-batch.md` (`/p2e-ship-batch`) instead. The ladder is per-story by design; batch releases are a separate concern.

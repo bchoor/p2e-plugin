@@ -244,7 +244,7 @@ owner: "bchoor"
     <div class="steps-strip">
       <div class="step-chip"><span class="chip-num">STEP 1</span>Brief</div>
       <div class="step-chip"><span class="chip-num">STEP 2</span>Implement</div>
-      <div class="step-chip"><span class="chip-num">STEP 3</span>Verify</div>
+      <div class="step-chip"><span class="chip-num">STEP 3</span>Verify &amp; fix</div>
       <div class="step-chip"><span class="chip-num">STEP 4</span>Commit + PR</div>
       <div class="step-chip"><span class="chip-num">STEP 5</span>/review-pr</div>
       <div class="step-chip"><span class="chip-num">STEP 6</span>/p2e-cut-release</div>
@@ -425,7 +425,7 @@ Two adjacent commands today have **different visibility models** and **incomplet
       <div class="badge">1</div>
       <h3>TaskCreate ladder</h3>
       <p class="path">workflows/p2e-work-on-next.md · ~/.claude/commands/implement-spec.md</p>
-      <p>One <code>TaskCreate</code> per step per story, title prefixed <code>[#41] 3/6 Verify &amp; fix</code>. <code>TaskUpdate</code> advances each step. One additional <code>TaskCreate</code> for the batch-level release.</p>
+      <p>One <code>TaskCreate</code> per step per story, title prefixed <code>[#41] 3/6 Verify &amp; fix</code>. <code>TaskUpdate</code> advances each step (<code>pending → in_progress → completed</code>). Step 6 invokes the shipped <code>/p2e-cut-release</code>; no extra batch-level task.</p>
     </div>
     <div class="piece">
       <div class="badge">2</div>
