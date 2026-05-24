@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.11.0 — 2026-05-23
+## v0.10.4 — 2026-05-23
 
 Adds `/p2e-cut-release` — replaces the previous global `~/.claude/commands/cut-release.md`. Two distinct things are different from the old command, neither cosmetic.
 
@@ -18,7 +18,7 @@ The global `/cut-release` is removed; `~/.claude/CLAUDE.md`'s "Cut a release" ru
 
 ### Changed
 - **`README.md`** — new "Cut release" row in the commands-and-skills table, between "Verify story" and "Sync labels".
-- **`.claude-plugin/plugin.json` + `.codex-plugin/plugin.json`** — bumped to `0.11.0` (minor — new workflow). Both descriptions updated to list cut-release.
+- **`.claude-plugin/plugin.json` + `.codex-plugin/plugin.json` + `.claude-plugin/marketplace.json`** — bumped to `0.10.4` (patch — load-bearing bug fix in the previous release flow's version-detection; the new command is treated as a patch-class delivery because the headline change is the bug fix, not the surface addition). Both manifest descriptions updated to list cut-release.
 
 ### Removed
 - **`~/.claude/commands/cut-release.md`** (out-of-repo, in the user's global Claude config) — replaced by `/p2e-cut-release`. Personal `~/.claude/CLAUDE.md` updated accordingly. Non-P2E repos that relied on the global command should install the plugin (the new command works on any repo; story closeout is a no-op without `.p2e/project.json`).
