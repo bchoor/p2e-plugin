@@ -1,6 +1,6 @@
 ---
 name: p2e
-description: Plain-language Codex router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, ship-batch, sync-labels, manage-uxo, archaeology, or fix using the shared workflow core.
+description: Plain-language Codex router for P2E workflows. Route requests into bootstrap, add-story, update-story, work-on-next, ship-batch, cut-release, sync-labels, manage-uxo, archaeology, or fix using the shared workflow core.
 ---
 
 # p2e router
@@ -21,6 +21,7 @@ Then choose the one best-fit workflow, load it, and execute it end-to-end:
 - requests about autonomously onboarding an existing repo with no human interview (infer phases, UXOs, DONE layers from merged PRs, DRAFT stories from open gaps) -> read `workflows/p2e-archaeology.md`, then follow that workflow exactly
 - requests about fixing one or more bugs the right way (uproot + re-implement, not band-aid layering) -> read `workflows/p2e-fix.md`, then follow that workflow exactly. Inputs are a list of bug descriptors (plain descriptions, file paths, GH issue refs, P2E story ids). Enforces a per-bug fix-shape gate (Deleted / Replaced / Preserved / Band-aid rejected) and verifies both the original problem and absence of regressions before completion.
 - requests about verifying a story (`verify <story_id>`, `run UAT on issue #N`, `produce a UAT report`, `do a visual UAT`) -> read `workflows/p2e-verify-story.md`, then follow that workflow exactly. Sources ACs from P2E MCP (preferred) / spec / GH issue / free-form, reproduces each AC against the running app via a browser-driver MCP, captures visible-pixel evidence, and assembles a self-contained rich-HTML report. Output is information only — does not move the story's lifecycle.
+- requests about cutting a release (`cut a release`, `ship a release`, `tag and release`, `publish v0.X.Y`) -> read `workflows/p2e-policy.md` AND `workflows/p2e-cut-release.md`, then follow the cut-release workflow exactly. The Phase 0 version-detection rewrite (fetch first → version-sort the tag namespace → manifest cross-check) is load-bearing — never regress to reading `package.json` from the worktree. Closes out a linked P2E story (status DONE + VERIFICATION log + GH label flip + landed comment) when `--story-id=<id>` is passed or inferred from the branch name; the carve-out lives in `workflows/p2e-policy.md → ## Status lifecycle → Cut-release carve-out`.
 
 ## Persona routing (work-on-next only)
 
