@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.11.0 — 2026-05-23
+
+Adds `/p2e-cut-release` — replaces the previous global `~/.claude/commands/cut-release.md`. Two distinct things are different from the old command, neither cosmetic.
+
+**1. Authoritative version detection.** The old command read the current version from `package.json` in the worktree and computed "last tag" via `git describe --tags --abbrev=0`. Both sources are local-worktree-relative: a branch made off an older tag produces a stale read of both, and the proposed bump clashes with an already-released tag. Reproduced against this repo: `git describe --tags --abbrev=0 v0.10.1` returns `v0.10.1` even though `v0.10.3` is the actual head of the tag chain — patch-bump from that returns `v0.10.2`, which would fail at `git tag` or silently overwrite history. The new Phase 0 replaces both reads: `git fetch --tags --prune --prune-tags origin` first, then `git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1` (tag-namespace authoritative, not HEAD-bounded), then a manifest cross-check against a source-of-truth list (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `marketplace.json`, `package.json`, `Cargo.toml`, `pyproject.toml`, `__version__.py`, `VERSION`) — the manifest *informs* but does not *drive* the bump. A `git rev-parse --verify "refs/tags/v<next>"` sanity check after computing `<next>` aborts on tag-existence conflicts before any push.
+
+**2. Optional story closeout.** When `--story-id=<id>` is passed or unambiguously inferred from the current branch (regex `[A-Z]+-[0-9]+-L[0-9]+`, e.g. `feat/DR-08-L8-folder-walk-progress` → `DR-08-L8`), the workflow closes the story out on successful release: status `IN_REVIEW → DONE`, a `kind: VERIFICATION` story-log entry, a landed-on-main comment on the linked GitHub issue, and a `review → done` label flip. The status flip is a deliberate policy carve-out — see the new `## Status lifecycle → Cut-release carve-out` section in `workflows/p2e-policy.md`. The pre-flight `AskUserQuestion` plan-approval gate IS the human-authorization equivalent, so the spirit of the "IN_REVIEW → DONE is a human action" rule is preserved. Gating is strict: if the story isn't at `IN_REVIEW` at closeout time, no status write happens; the workflow surfaces the skip via a `kind: NOTE` story-log entry and the release still ships. Branch-name inference falls back to `AskUserQuestion` (a picker over the project's `IN_REVIEW` stories) rather than silently guessing.
+
+The global `/cut-release` is removed; `~/.claude/CLAUDE.md`'s "Cut a release" rule now points at `/p2e-cut-release`. The new command is installed via the marketplace alongside the rest of the plugin.
+
+### Added
+- **`/p2e-cut-release`** (`commands/p2e-cut-release.md` + `skills/p2e-cut-release/SKILL.md` + `.cursor/skills/p2e-cut-release/SKILL.md` + shared `workflows/p2e-cut-release.md`) — six-phase release flow: Phase 0 pre-flight with the authoritative version detection above + `AskUserQuestion` plan approval; Phase A push + PR + CI + squash-merge; Phase B sync main + bump every matching manifest + commit + tag + push + `gh release create --generate-notes`; Phase C FE-touching AC screenshots via the browser-driver MCP (chrome-devtools preferred, claude-in-chrome fallback) — skipped with `--no-screenshots`; Phase D release URL + summary report; Phase E story closeout when a story-id resolved; Phase F worktree + branch teardown. `--no-pr` (emergency hotfix), `--no-screenshots`, `--draft` flags.
+- **Policy carve-out** in `workflows/p2e-policy.md → ## Status lifecycle → Cut-release carve-out` — names the three conditions under which `/p2e-cut-release` may transition `IN_REVIEW → DONE`. No other workflow is permitted to flip `DONE`.
+- Router entries in `skills/p2e/SKILL.md` and `.cursor/skills/p2e/SKILL.md` for plain-language "cut a release" / "ship a release" / "tag and release" / "publish v0.X.Y" requests.
+- New defaultPrompt entry in `.codex-plugin/plugin.json` so Codex's install UI surfaces the workflow.
+
+### Changed
+- **`README.md`** — new "Cut release" row in the commands-and-skills table, between "Verify story" and "Sync labels".
+- **`.claude-plugin/plugin.json` + `.codex-plugin/plugin.json`** — bumped to `0.11.0` (minor — new workflow). Both descriptions updated to list cut-release.
+
+### Removed
+- **`~/.claude/commands/cut-release.md`** (out-of-repo, in the user's global Claude config) — replaced by `/p2e-cut-release`. Personal `~/.claude/CLAUDE.md` updated accordingly. Non-P2E repos that relied on the global command should install the plugin (the new command works on any repo; story closeout is a no-op without `.p2e/project.json`).
+
 ## v0.10.3 — 2026-05-22
 
 Adds `/p2e-ship-batch` — the heavyweight cousin of `/p2e-work-on-next`. Designed for release-cut scenarios where multiple OPEN stories need to ship with a full quality-gate layer: per-story 360° verification via `/p2e-verify-story` (now a shipped dependency as of v0.10.2), per-story PR + review, conditional security review (auto-detected from diff paths), and a rich-Markdown roll-up doc. Phase B delegates to `/p2e-work-on-next` without forking its logic — the same briefing, status discipline, two-strike rule, AC toggle, and label sync. Phases C–F add what work-on-next doesn't cover for hands-off batch operation.

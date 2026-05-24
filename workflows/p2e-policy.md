@@ -57,7 +57,17 @@ Wrappers should reserve higher-capacity specialist roles for architect and staff
 - On wave-start the orchestrator moves selected stories to `IN_PROGRESS`.
 - On successful verification + PR merge the orchestrator moves the story to `IN_REVIEW` and toggles its acceptance criteria.
 - On two consecutive verification failures the orchestrator moves the story to `BLOCKED` and stops retrying (see `## Two-strike escalation`).
-- Final acceptance (IN_REVIEW → DONE) is a human action outside the orchestrator's scope.
+- Final acceptance (IN_REVIEW → DONE) is a human action outside the orchestrator's scope, with one explicit carve-out for `/p2e-cut-release` (see below).
+
+### Cut-release carve-out
+
+`/p2e-cut-release` (`workflows/p2e-cut-release.md`) may transition `IN_REVIEW → DONE` when **all three** of the following hold during the same run:
+
+1. The user explicitly answered "Proceed" to the workflow's pre-flight `AskUserQuestion` plan-approval gate (step 8). That gate is the human-authorization equivalent — it pre-authorizes every irreversible action in the run, including the status flip.
+2. The story resolves via `--story-id=<id>` (explicit) or unambiguous branch-name regex inference (one match for `[A-Z]+-[0-9]+-L[0-9]+` in the current branch).
+3. The story is at `IN_REVIEW` at the moment of the closeout. Any other status (`OPEN`, `IN_PROGRESS`, `BLOCKED`, already `DONE`) → no status write; surface the skip via a `kind: NOTE` story-log entry and let the user advance the story manually.
+
+When the carve-out applies, the workflow also appends a `kind: VERIFICATION` story-log entry, posts a landed-on-main comment on the linked GitHub issue, and flips the issue's `review → done` label. No other workflow in this plugin is permitted to flip `DONE`.
 
 ## Thick-gate
 
