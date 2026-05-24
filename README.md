@@ -109,6 +109,7 @@ Every workflow below is one shared `workflows/<name>.md`. Claude invokes it via 
 | Force plain MD doc | `/p2e-md <followed by doc-producing skill>` | — | — | Force the next doc-producing skill to write plain Markdown — no `<style>` preamble, no embedded HTML blocks (use for trivial config-only ADRs). Claude-Code-specific. |
 | Convert MD → HTML | `/p2e-md-to-html <file.md>` | — | — | Convert a Markdown spec/design/ADR (plain or rich) to a pure single-file HTML doc using the `writing-rich-docs` HTML template. Source `.md` preserved. Claude-Code-specific. |
 | Rich docs | (via `writing-rich-docs` skill) | `writing-rich-docs` skill | `/writing-rich-docs` | Rich human-review docs: Markdown carries structure/prose, embedded HTML blocks carry high-fidelity content (decision cards, comparison matrices, grids, callouts, inline-SVG diagrams). Bundled template + component snippets + a promote-or-not menu. The cross-platform doc-rendering surface (the three commands above are Claude-only overrides on top of it). |
+| Doc-review reply | `/p2e-doc-reviewer-review [file-path]` | `p2e-doc-reviewer-review` / NL | `/p2e-doc-reviewer-review` / NL | Three-step doc-review reply pass on any `.md` or `.html` file containing a `doc-review-state` block: read+group unresolved threads → per-thread reply + spec edit → unanchored sweep → JSON-safe write → git commit. Never auto-resolves — the human resolves. |
 
 ## Sync behavior
 

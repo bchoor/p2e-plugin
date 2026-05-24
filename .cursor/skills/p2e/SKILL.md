@@ -19,6 +19,7 @@ Mirrors the Codex `p2e` router. Read `workflows/p2e-policy.md` first, then choos
 - onboarding an existing repo autonomously (no human interview) → `workflows/p2e-archaeology.md`
 - fixing one or more bugs the right way (uproot + re-implement) → `workflows/p2e-fix.md`
 - verifying a story end-to-end with a UAT report (`verify <story_id>`, `run UAT`, `do a visual UAT`) → `workflows/p2e-verify-story.md`
+- performing a doc-review reply pass (`review comments`, `address review threads`, `reply to doc review`, `doc-review reply pass`) → `workflows/p2e-doc-reviewer-review.md`. Never auto-resolves threads — the human resolves.
 - cutting a release (`cut a release`, `ship a release`, `tag and release`, `publish v0.X.Y`) → `workflows/p2e-policy.md` + `workflows/p2e-cut-release.md`. Closes out a linked P2E story (status DONE + VERIFICATION log + GH label flip + landed comment) when `--story-id=<id>` is passed or inferred from the branch name (carve-out: `workflows/p2e-policy.md → ## Status lifecycle → Cut-release carve-out`).
 
 If the request is ambiguous, prefer the primary user intent and select the workflow that best matches the main goal. If it spans multiple workflows, execute the first one fully and note any follow-up needed.

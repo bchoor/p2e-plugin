@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **`/p2e-doc-reviewer-review`** (`commands/p2e-doc-reviewer-review.md` + `skills/p2e-doc-reviewer-review/SKILL.md` + `.cursor/skills/p2e-doc-reviewer-review/SKILL.md` + shared `workflows/p2e-doc-reviewer-review.md`) — cross-platform wrapper of `~/.claude/commands/doc-reviewer-review.md`. Three-step doc-review reply pass on any `.md` or `.html` file containing a `<!-- @doc-review-state … @end-doc-review-state -->` block: read+group unresolved threads → per-thread reply + spec edit (5-sentence / 600-char cap, named-edit required) → unanchored sweep → JSON-safe write → git commit with canonical `docs(<filename>): doc-review reply pass — N threads addressed, M unanchored flagged` message. Algorithm lives once in the shared workflow; all three platform wrappers delegate to it. Never auto-resolves — the human resolves.
+- Router entries in `skills/p2e/SKILL.md` and `.cursor/skills/p2e/SKILL.md` for plain-language doc-review reply requests.
+
 ## v0.10.4 — 2026-05-23
 
 Adds `/p2e-cut-release` — replaces the previous global `~/.claude/commands/cut-release.md`. Two distinct things are different from the old command, neither cosmetic.
