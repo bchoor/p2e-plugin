@@ -1,6 +1,6 @@
 ---
 name: p2e-verify-story
-description: Cursor entrypoint for the P2E verify-story workflow. Reproduces a P2E story's acceptance criteria against the running app, captures visible-pixel evidence, and outputs a self-contained rich-HTML UAT report.
+description: Cursor entrypoint for the P2E verify-story workflow. Reproduces a story's ACs against the running app, records per-AC verdicts and screenshot evidence in the tracker, and optionally produces a rich-HTML UAT report.
 ---
 
 # p2e-verify-story
@@ -10,10 +10,12 @@ Read:
 - `workflows/p2e-verify-story.md`
 
 Hard rules:
-- Your job is to verify ACs and produce a UAT report, not to fix failures. A failing AC is a deliverable, not a trigger to start debugging or patching.
-- ALWAYS present the parsed story (title + RRR + ordered ACs + out-of-scope) back to the user and require an explicit go-ahead before driving any browser.
+- Your job is to verify ACs and record verdicts with evidence — not to fix failures. A failing AC is a deliverable, not a trigger to start debugging or patching.
+- In standalone mode: ALWAYS present the parsed story (title + RRR + ordered ACs + out-of-scope) back to the user and require an explicit go-ahead before driving any browser. In gate-engine mode (`--gate-engine`): skip the confirm step.
 - Visible pixels over JSON probes for any UI AC. Every UI verdict must rest on a screenshot or visually-confirmable artifact.
-- The report must be a single self-contained `.html` file — no external CDN, no external script/stylesheet refs, all images by relative path.
+- Record each verdict in the tracker via `mcp__p2e__criteria op=verdict items=[{"id":"<ac-cuid>","verdict":"PASS|FAIL|BLOCKED","note":"<evidence ref>"}]` — this IS a story mutation and is required.
+- Upload each screenshot via `mcp__p2e__story_assets op=upload` with `criterion_id=<ac-cuid>` to scope evidence to the criterion.
+- The HTML report is optional in gate-engine mode; in standalone mode it is produced unless `--no-report` is passed.
 - Bind first. If `.p2e/project.json` is missing in the target repo, stop and direct the user to `/p2e-bind` before any project-scoped MCP operation.
 - Never trust "the server started" output alone. Verify the actually-bound port via `lsof` before driving the browser — a port-clash with another project's dev server routes requests to stale code.
 - If MCP auth, story lookup, or a required browser-driver MCP is unavailable, stop and report the concrete blocker briefly. Do not switch into general debugging unless the user asks for debugging.
@@ -22,4 +24,4 @@ Execute the shared workflow exactly.
 
 ## Cursor-specific notes
 
-Cursor has no `AskUserQuestion` primitive. For the Phase 1 preview-and-confirm gate, batch the four options (`Proceed with verification`, `Adjust ACs`, `Change artifacts dir`, `Abort`) into a single chat message and parse the user's reply inline. Bundled resources (references, scripts, assets) live in `skills/p2e-verify-story/` — same paths the workflow body cites. Cross-platform mirrors: `commands/p2e-verify-story.md` (Claude), `skills/p2e-verify-story/SKILL.md` (Codex).
+Cursor has no `AskUserQuestion` primitive. For the Phase 1 preview-and-confirm gate (standalone mode only), batch the four options (`Proceed with verification`, `Adjust ACs`, `Change artifacts dir`, `Abort`) into a single chat message and parse the user's reply inline. Bundled resources (references, scripts, assets) live in `skills/p2e-verify-story/` — same paths the workflow body cites. Cross-platform mirrors: `commands/p2e-verify-story.md` (Claude), `skills/p2e-verify-story/SKILL.md` (Codex).

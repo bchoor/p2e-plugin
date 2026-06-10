@@ -54,6 +54,12 @@ Flow: <flow name> — <"persona Flow" | "Foundation Flow: <slot>">
 ## Verification
 Run: `<verificationCmd>`
 
+## Gate notice
+Before reporting completion, self-run the following checks:
+1. Run `<verificationCmd>` (or the track-default if unset) and confirm it passes.
+2. If you changed a Prisma model/enum, exported action signature, or API route shape: enumerate unchanged consumers (`grep -r` across `src/app/api/`, `src/components/`, `src/mcp/tools/`, `src/lib/`) and confirm each is updated or explicitly N/A. Document your sweep results in a `kind: DECISION` story-log entry.
+3. Report completion only after both checks pass. The orchestrator's verify gate will rerun (1) and (2) — a self-check that fails the gate wastes a round-trip and consumes the adaptive fix loop budget.
+
 ## Deviation reporting
 When implementation reveals that the spec is wrong, incomplete, or conflicts with reality and you decide to deviate, emit a story-log entry **before** making the change:
 - `kind: SCOPE_CHANGE` — change to the spec itself (AC dropped/modified, capability adjusted, non-goal added, scope reduced or expanded).
@@ -79,11 +85,13 @@ The reviewing human reads these entries to understand what was negotiated mid-fl
 | Context docs | `contextDocs[]` |
 | Non-goals | `nonGoals[]` |
 | Verification | `verificationCmd` |
+| Gate notice | (static contract — same text every briefing) |
 | Deviation reporting | (static contract — same text every briefing) |
 
 ## Rules
 
 - Empty arrays: render the section with a single line `- (none)` rather than omitting — the implementer needs to see the intent was checked.
+- **Model routing:** use `sonnet` for the implementer spawn. Use `haiku` for mechanical steps (status flips, MCP plumbing, label sync, verdict recording). Use `opus` only when `approach-review` is in `story.constraints[]` or `--full-team` was passed. See `## Model routing` in `workflows/p2e-policy.md`.
 - Missing `verificationCmd`: render `Run: (no verification command specified — ask the user)` so the implementer surfaces the gap.
 - On two-strike re-brief the orchestrator appends a `## Previous failure` section below `Verification` with the failure output; keep the template above unchanged.
 - This template is loaded by every wrapper that routes a story into implementation. Do not inline it elsewhere.

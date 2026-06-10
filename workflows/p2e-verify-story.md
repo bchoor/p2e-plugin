@@ -1,12 +1,17 @@
 # P2E Verify Story Workflow
 
-This workflow verifies a P2E story's acceptance criteria by reproducing each one end-to-end against the running app, capturing visible-pixel evidence (or backend-only evidence for non-UI ACs), then assembling a self-contained rich HTML report optimized for human review. The verdict for any UI-touching AC rests on a screenshot or visually-confirmable artifact — never on a synthetic `localStorage.getItem(...)` read or an `aria-checked` attribute alone.
+This workflow verifies a P2E story's acceptance criteria by reproducing each one end-to-end against the running app, capturing visible-pixel evidence (or backend-only evidence for non-UI ACs), recording per-AC verdicts and evidence directly in the tracker, then optionally assembling a self-contained rich HTML report. The verdict for any UI-touching AC rests on a screenshot or visually-confirmable artifact — never on a synthetic `localStorage.getItem(...)` read or an `aria-checked` attribute alone.
 
-The workflow combines the P2E plugin's MCP-first story sourcing with the cross-platform UAT pipeline (reproduce → capture → assemble → review → teardown). Output is a single `.html` file plus per-AC evidence files, deposited under `docs/feat-<topic>/uat-results/` (preferred) or `.claude/uat-results/<story-id>/` (fallback) so it can be reviewed offline, attached to a PR/issue, or archived alongside the release.
+The workflow serves two modes:
+
+- **Standalone UAT** — invoked directly by the user or by `/p2e-ship-batch` Phase C. Presents a preview, requires explicit go-ahead, and produces a full HTML report.
+- **Gate evidence engine** — invoked by the verify gate in `workflows/p2e-work-on-next.md` step 11a for UI-tagged stories. Skips the preview confirm (the gate has already committed to running), uploads screenshots via `mcp__p2e__story_assets op=upload criterion_id=<ac-cuid>`, records verdicts via `mcp__p2e__criteria op=verdict`, and produces an HTML report only when `--report` is passed.
+
+The workflow combines the P2E plugin's MCP-first story sourcing with the cross-platform UAT pipeline (reproduce → capture → assemble → review → teardown). Primary output in gate-engine mode: tracker verdicts and scoped screenshot assets. Optional output: a single `.html` file plus per-AC evidence files, deposited under `docs/feat-<topic>/uat-results/` (preferred) or `.claude/uat-results/<story-id>/` (fallback).
 
 ## Hard rules
 
-- Stay in verify-story mode. Do not silently switch into debugging or implementation just because an AC fails — failure is the deliverable, not a trigger to start patching.
+- Stay in verify-story mode. Do not silently switch into debugging or implementation just because an AC fails — failure is the deliverable, not a trigger to start patching. Recording a FAIL verdict in the tracker is the correct response.
 - ALWAYS present the parsed story (title + RRR + ordered ACs + out-of-scope) back to the user and require an explicit go-ahead before driving any browser. Wrong-story-wrong-evidence is worse than no evidence.
 - Visible pixels over JSON probes for any UI AC. State probes are useful to *reach* the visual state; the verdict comes from the picture.
 - The report is **self-contained**: a single `.html` file with embedded CSS, relative-path image refs, no external CDN, no external `<script src=>`, no external `<link rel="stylesheet">`. A reviewer must be able to open it offline.
@@ -16,7 +21,9 @@ The workflow combines the P2E plugin's MCP-first story sourcing with the cross-p
 
 ## Purpose
 
-- Turn a P2E story id (or spec / issue / free-form story) into a human-digestible UAT report with one PASS / FAIL / CAVEAT verdict per AC plus an overall recommendation.
+- Reproduce each AC end-to-end and record a `PASS` / `FAIL` / `BLOCKED` verdict with concrete evidence (screenshot path or curl-output ref) directly in the tracker via `mcp__p2e__criteria op=verdict`.
+- Upload per-AC screenshot evidence via `mcp__p2e__story_assets op=upload criterion_id=<ac-cuid>` so the detail panel and map badge reflect UAT state.
+- Optionally assemble a human-digestible HTML report (`--report` flag or standalone mode).
 - Use the same shape regardless of host platform — Claude Code, Codex, and Cursor all invoke the same workflow with the same outputs.
 - Make the failure mode of "reading PASS from a synthetic probe alone" structurally impossible by requiring a screenshot or curl-output artifact for every verdict.
 
@@ -67,7 +74,9 @@ For each acceptance criterion in `order`:
 2. **Perform the action** — click, type, hover, reload — via the browser-driver MCP.
 3. **Capture visible evidence** — `take_screenshot` for any UI-visible AC. For backend-only ACs, capture curl output into a `.txt` file.
 4. **Probe state for completeness** — `evaluate_script` to read store / localStorage / network logs as *supporting* evidence (not the verdict).
-5. **Record verdict** — `PASS` / `FAIL` / `CAVEAT`, with a one-line rationale.
+5. **Record verdict in the tracker** — call `mcp__p2e__criteria op=verdict` with `id=<ac-cuid>`, `verdict=PASS|FAIL|BLOCKED`, and `note=<screenshot path or curl output ref>`. In gate-engine mode this is mandatory per AC; in standalone mode it is performed unless `--no-tracker` is passed. `CAVEAT` is not a tracker verdict — map it to `PASS` with a note (caveat is informational, shipping acceptable) or `BLOCKED` (caveat gates shipping).
+
+After recording the verdict, if a screenshot was saved: call `mcp__p2e__story_assets op=upload` with `story_id=<story-id>`, `filename=<NN-ac-slug.png>`, `content_type=image/png`, `data_base64=<base64>`, `caption=<one-line description>`, and `criterion_id=<ac-cuid>` to scope the asset to the criterion. Use `items:[{...}]` form per policy.
 
 Store screenshots at `<artifacts-dir>/<NN>-<ac-slug>.png`. The two-digit prefix preserves order; the slug helps a reviewer scan filenames.
 
@@ -80,7 +89,7 @@ Common gotchas — full recipes in `skills/p2e-verify-story/references/browser-d
 
 ### Phase 4 — Assemble the report
 
-Use the bundled template at `skills/p2e-verify-story/assets/template.html` as the skeleton. It is a single-file rich doc scoped under `.rich-doc` with theme tokens (green = pass, red = fail, yellow = caveat), a summary grid at the top (one card per AC, PASS / FAIL / CAVEAT pill), per-AC sections (header with verdict pill, **Expected** vs **Observed** two-column block, evidence figure with optional 2-up before / after grid, optional caveat callout), and an overall assessment section.
+Use the bundled template at `skills/p2e-verify-story/assets/template.html` as the skeleton. It is a single-file rich doc scoped under `.rich-doc` with theme tokens (green = PASS, red = FAIL, amber = BLOCKED, gray = NOT_TESTED), a summary grid at the top (one card per AC with a PASS / FAIL / BLOCKED / NOT_TESTED pill), per-AC sections (header with verdict pill, **Expected** vs **Observed** two-column block, evidence figure with optional 2-up before / after grid), and an overall assessment section. **Note:** the bundled `template.html` still uses legacy `CAVEAT` styling — when regenerating the template, replace `yellow = caveat` with `amber = BLOCKED` and remove the `caveat callout` component; the live verdict enum is `PASS | FAIL | BLOCKED | NOT_TESTED` (no CAVEAT).
 
 Permitted interactivity (per `feedback_html_doc_interactivity_scope`): `<details>` / `<summary>` for collapsible sections (pre-flight notes, raw curl), `<a href="#section-id">` anchor nav, CSS-only tabs via `<input type="radio">` + sibling selector, inline `<script>` (no external `src`) for richer interactivity. Default to single linear scroll; reach for tabs only when comparing 2–4 variants that share shape (before / after, alternative implementations).
 
@@ -94,7 +103,7 @@ Open `results.html` in a new browser tab via the browser-driver MCP (`new_page` 
 
 If any AC failed, the verdict pill in the summary card AND in the per-AC section both show `FAIL`. The overall assessment block must explicitly call out the failure(s) and recommend next steps (file the regression, revert the implementation, etc.).
 
-This workflow does **not** update the story status, post to the linked GitHub issue, or move the story along the lifecycle. That happens via the normal `work-on-next` sync path after the human reviews the report and decides. The verify-story output is information — not a state mutation.
+In **gate-engine mode** the workflow writes verdicts and uploads assets before the HTML report is assembled — the tracker is the primary output. In **standalone mode** the workflow writes verdicts and assets too (unless `--no-tracker` was passed) — the HTML report is the secondary output for human review. The workflow does NOT update `story.status` or move the story along the lifecycle; that is the gate's responsibility (step 11d in `workflows/p2e-work-on-next.md`).
 
 ### Phase 6 — Teardown
 
@@ -145,6 +154,31 @@ The confirm step must support, via the host's native prompt primitive:
 - **Abort** — exit with no changes
 
 Only `Proceed` advances into the browser flow. `Abort` exits without bringing the app up.
+
+## Flags
+
+| Flag | Applies to | Effect |
+| --- | --- | --- |
+| `--gate-engine` | Gate orchestrator | Skip preview confirm; verdicts + assets mandatory; HTML report skipped unless `--report` also passed |
+| `--report` | Both modes | Force HTML report assembly (Phases 4–5). Always-on in standalone mode; opt-in in gate-engine mode |
+| `--no-tracker` | Standalone mode only | Skip `criteria op=verdict` and `story_assets op=upload` writes. For dry-run / read-only UAT audits that must not mutate the tracker |
+| `--artifacts-dir <path>` | Both modes | Override the auto-detected artifacts directory |
+| `--workspace-dir <path>` | Both modes | Pin the monorepo workspace dir for the dev-server launcher |
+
+## Gate-engine invocation
+
+When invoked by the verify gate (`workflows/p2e-work-on-next.md` step 11a), the workflow is called programmatically with `--gate-engine` flag (or equivalent signal from the gate orchestrator). In this mode:
+
+- Skip the Phase 1 preview-and-confirm step (the gate orchestrator has already committed).
+- Run Phases 2–3 as normal.
+- Upload screenshots per Phase 3 step 5 above.
+- Record verdicts per Phase 3 step 5 above.
+- Skip Phase 4 (report assembly) unless `--report` is also passed.
+- Skip Phase 5 (open for human review) unless `--report` is also passed.
+- Run Phase 6 (teardown) as normal.
+- Return verdict summary to the gate orchestrator so it can decide pass/fail.
+
+The `CAVEAT` result code is retired in gate-engine mode. Map old CAVEAT results: acceptable-to-ship → `PASS` with note; blocking → `BLOCKED`.
 
 ## Triggering examples (concrete)
 

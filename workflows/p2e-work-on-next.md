@@ -23,12 +23,16 @@ This is the canonical orchestrator workflow. Adapter-specific entrypoints should
 9. For each wave:
    - **9a. Move selected stories to IN_PROGRESS** — run `/p2e-update-story <story_id> status=IN_PROGRESS` for each story in the wave. This triggers the lifecycle label reconciliation phase in `workflows/p2e-update-story.md`: the MCP status write, the GitHub label flip (`ready` → `in-progress`), and the local cache refresh all happen as part of this step. Do not skip this step or inline the `op=update` call directly — the label and cache writes are required side effects.
    - **9b. Materialize first-turn briefing** — per `workflows/p2e-first-turn-briefing.md` for each story in the wave. This includes surfacing the story's **Flow membership** (persona Flow vs Foundation Flow, and if Foundation which of the 8 slots: Surfaces / Security / Data / Compute / Build-Deploy / Distribution / Observability / Cross-cutting) so the implementer understands the nature of the work before starting.
-   - **9c. Spawn implementers** — with the briefing as turn 1, and gate the wave with verification.
+   - **9c. Spawn implementers** — with the briefing as turn 1, and gate the wave with verification. Use the model routing table (`## Model routing` in `workflows/p2e-policy.md`) to select the model for each agent: `sonnet` for implementers and reviewers, `haiku` for mechanical steps, `opus` only when `approach-review` is in the story's constraints or `--full-team` was passed.
 
    > Note: the `hooks/pre-agent-spawn-story-status.sh` PreToolUse hook enforces step 9a independently — an implementer spawn (Agent tool call) against a story still at `OPEN` will be blocked with a remediation message pointing at step 9a. The hook short-circuits automatically for `subagent_type` values in `{p2e-architect, p2e-staff-engineer, rescue}` and when `P2E_SKIP_STATUS_GATE=1` is set.
 10. If the architect was skipped for a single-story thick run, the implementer self-plans inline from the briefing (no external `writing-plans` call).
-11. On a passing story, move it to `IN_REVIEW` (`op=update status=IN_REVIEW`), toggle its acceptance criteria (`mcp__p2e__criteria op=toggle`), and post the summary back to the linked issue.
-12. On a failing verification, apply the two-strike rule (`## Two-strike escalation` in policy): one re-brief, then on the second failure set `status=BLOCKED` and route to `p2e-architect` (Claude Code caller) or `codex:rescue` (Codex caller).
+11. On a passing story, run the verify gate (`## Verify gate` in policy) first:
+    - **11a.** Run the gate steps in order: `verificationCmd`, consumer-impact sweep (if a Prisma model/enum, exported action signature, or API route shape changed), risk-tiered review. Dispatch any fix batch to the same implementer agent; iterate adaptively per the gate's loop rules.
+    - **11b.** When the gate passes: record per-AC verdicts via `mcp__p2e__criteria op=verdict` with concrete evidence (test name, file:line, commit) in the `note` field — one call per AC. Use `items:[{...}]` form.
+    - **11c.** Write the mandatory DEVIATIONS story-log entry (`## Orchestrator DEVIATIONS checkpoint` in policy).
+    - **11d.** Move the story to `IN_REVIEW` (`op=update status=IN_REVIEW`) and post the summary back to the linked issue.
+12. The adaptive fix loop operates inside the verify gate (step 11a). When the gate itself cannot pass — stall, oscillation, or runaway cap — apply the two-strike rule (`## Two-strike escalation` in policy): one re-brief, then on the second failure set `status=BLOCKED` and route to `p2e-architect` (Claude Code caller) or `codex:rescue` (Codex caller).
 
 ## Per-story task ladder
 
@@ -53,8 +57,8 @@ No log entry is written for a clean brief — the thick-gate pass is recorded in
 ### Step 3 — Verify & fix
 
 **TaskCreate:** `[#<story-id>] 3/6 Verify & fix`
-**TaskUpdate:** `pending → in_progress` when the verification command fires; `→ completed` when verification passes — at which point step 11 logic runs (`IN_REVIEW` flip + AC toggles).
-**story_log:** Two entries on a passing run (existing checkpoint contract from `## Story log checkpoint policy`): one `AC_CHANGE` per criterion toggled, and one `VERIFICATION` entry immediately before the `IN_REVIEW` flip. On a failing run, the two-strike `BLOCKER` entries apply as documented above. No new kinds.
+**TaskUpdate:** `pending → in_progress` when the verify gate fires (step 11a); `→ completed` when the gate passes — at which point step 11b records verdicts, 11c writes DEVIATIONS, and 11d flips to `IN_REVIEW`.
+**story_log:** Two orchestrator-authored entries on a passing run (updated checkpoint contract from `## Story log checkpoint policy`): one `DECISION/DEVIATIONS` entry (step 11c) and one `VERIFICATION` entry immediately before the `IN_REVIEW` flip. Additionally, `criteria op=verdict` in step 11b causes the MCP server to auto-append one `UAT_RESULT` StoryLogEntry per AC server-side — these are MCP-generated, not orchestrator-authored, and do not count toward the orchestrator checkpoint total. On a failing run, BLOCKER entries apply per the adaptive gate loop. No new kinds.
 
 ### Step 4 — Commit + PR (new — codify)
 
@@ -142,13 +146,17 @@ The `kind` chip is a taxonomy so a skimmer can filter ("show me blockers", "show
 
 The orchestrator writes to `mcp__p2e__story_log` (op=append) at these 3 checkpoints per story. No per-tool-call logging; no entries for status transitions alone.
 
-#### Checkpoint 1 — AC toggle (step 11, after verification passes, one entry per AC toggled)
+#### Checkpoint 1 — AC verdict (step 11b, after gate passes, one call per AC)
 
-```json
-{ "kind": "AC_CHANGE", "author": "orchestrator", "message": "Toggled AC<n>: <criterion text>" }
+Use `mcp__p2e__criteria op=verdict` — **not** `op=toggle`. Pass concrete evidence in the `note` field.
+
+```
+mcp__p2e__criteria op=verdict items=[{"id":"<criterion-db-cuid>","verdict":"PASS","note":"<test name or file:line or commit — cite the concrete evidence>"}]
 ```
 
-Replace `<n>` with the criterion ordinal (1-based) and `<criterion text>` with the exact criterion text.
+Verdict values: `PASS` | `FAIL` | `BLOCKED` | `NOT_TESTED`. The `note` field (max 2000 chars) is required at Checkpoint 1; a bare verdict with no evidence is insufficient. When `note` is provided, the MCP server appends a `UAT_RESULT` StoryLogEntry automatically — the orchestrator does NOT write a separate log entry for this checkpoint.
+
+For UI-tagged stories where `/p2e-verify-story` ran as the evidence engine (see `## Gate integration` below), the verdict and note are written by the verify-story phase; the orchestrator confirms they were recorded rather than writing them directly.
 
 #### Checkpoint 2 — Verification pass (step 11, right before IN_REVIEW flip)
 
@@ -158,7 +166,7 @@ Replace `<n>` with the criterion ordinal (1-based) and `<criterion text>` with t
 
 One entry per verification run that passed. The state flip to `IN_REVIEW` itself is NOT logged — it lives in `story.status` + `AuditLog`.
 
-#### Checkpoint 3 — Verification failure (step 12)
+#### Checkpoint 3 — Gate failure / fix-loop BLOCKED (step 12)
 
 Strike 1 (first failure, re-brief issued):
 ```json
@@ -189,6 +197,16 @@ All checkpoint writes use `items:[{...}]` form (never flat form — arrays/bools
 ```
 mcp__p2e__story_log op=append project_slug=<slug> items=[{ "story_id": "<id>", "kind": "...", "author": "orchestrator", "message": "..." }]
 ```
+
+### Gate integration with /p2e-verify-story
+
+For UI-tagged stories, the verify gate invokes `/p2e-verify-story` as the evidence engine for the browser phases:
+- Phases 2–3 reproduce each AC and capture screenshots.
+- Screenshots are uploaded via `mcp__p2e__story_assets op=upload` with `criterion_id=<ac-cuid>` to link evidence directly to the criterion.
+- Verdicts are recorded via `mcp__p2e__criteria op=verdict items=[{"id":"<ac-cuid>","verdict":"PASS|FAIL|BLOCKED","note":"<screenshot path or test ref>"}]`.
+- The HTML report is an optional `--report` artifact; the tracker (detail panel + map badge) is the primary output.
+
+The `CAVEAT` verdict from older verify-story runs maps to `PASS` with a note (if the caveat is acceptable) or `BLOCKED` (if it gates shipping). The verify-story workflow no longer refuses to update the story — it IS the story-update mechanism for UI evidence.
 
 ### Notes
 
