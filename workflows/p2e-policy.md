@@ -55,7 +55,7 @@ Wrappers should reserve higher-capacity specialist roles for architect and staff
 - The canonical lifecycle is `DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE`. A `BLOCKED` status sits outside this linear path and marks stories waiting on unfinished `DEPENDS_ON` relations OR escalated per the two-strike rule.
 - DRAFT → OPEN is gated server-side by the `isThick` predicate (enforced by the P2E MCP); the plugin does not perform this transition itself.
 - On wave-start the orchestrator moves selected stories to `IN_PROGRESS`.
-- On successful verification + PR merge the orchestrator moves the story to `IN_REVIEW` and toggles its acceptance criteria.
+- On successful verification the orchestrator runs the verify gate (`## Verify gate`), records per-AC verdicts via `mcp__p2e__criteria op=verdict` with concrete evidence, writes the DEVIATIONS story-log entry, then moves the story to `IN_REVIEW`.
 - On two consecutive verification failures the orchestrator moves the story to `BLOCKED` and stops retrying (see `## Two-strike escalation`).
 - Final acceptance (IN_REVIEW → DONE) is a human action outside the orchestrator's scope, with one explicit carve-out for `/p2e-cut-release` (see below).
 
@@ -179,7 +179,7 @@ Each round logs the open-problem count so the trend is auditable. On BLOCKED, es
 2. If `verificationCmd` passes: run the consumer-impact sweep.
 3. If sweep is clean: run the risk-tiered review.
 4. If review finds problems: dispatch fix batch to the same implementer agent; re-run from step 1.
-5. If gate passes: record per-AC verdicts via `mcp__p2e__criteria op=verdict` (see `## Story log checkpoint policy` Checkpoint 1) and write the DEVIATIONS story-log entry (see `## Orchestrator DEVIATIONS checkpoint`).
+5. If gate passes: record per-AC verdicts via `mcp__p2e__criteria op=verdict` (see `## Story log checkpoint policy` Checkpoint 1 in `workflows/p2e-work-on-next.md`) and write the DEVIATIONS story-log entry (see `## Orchestrator DEVIATIONS checkpoint`).
 
 ## Orchestrator DEVIATIONS checkpoint
 

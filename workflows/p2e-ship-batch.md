@@ -74,7 +74,7 @@ Reach for this when shipping a release. For single-story or fast-track spot work
 
 14. **On verify failure** (any AC verdict `FAIL`): the story is moved back to `IN_PROGRESS`, its task drops to `pending` with a "verify failed: AC<n>" status-line note. The two-strike rule from `## Two-strike escalation` in policy applies (counter shared with Phase B failures). Append a `kind: VERIFICATION` story-log entry with the failure reason, the failing AC list, and a link to the UAT report. The story is **excluded from Phase D** for this batch run.
 
-15. **On verify pass** (all AC verdicts `PASS` or `CAVEAT`-accepted-by-user): append a `kind: VERIFICATION` story-log entry — see `## Story log checkpoints` below for the message shape. Proceed to Phase D.
+15. **On verify pass** (all AC verdicts `PASS` — `CAVEAT` is retired; former CAVEAT results map to `PASS`-with-note or `BLOCKED` per `## Gate-engine invocation` in `workflows/p2e-verify-story.md`): append a `kind: VERIFICATION` story-log entry — see `## Story log checkpoints` below for the message shape. Proceed to Phase D.
 
 ### Phase D — PR per story + review
 

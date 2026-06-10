@@ -89,7 +89,7 @@ Common gotchas — full recipes in `skills/p2e-verify-story/references/browser-d
 
 ### Phase 4 — Assemble the report
 
-Use the bundled template at `skills/p2e-verify-story/assets/template.html` as the skeleton. It is a single-file rich doc scoped under `.rich-doc` with theme tokens (green = pass, red = fail, yellow = caveat), a summary grid at the top (one card per AC, PASS / FAIL / CAVEAT pill), per-AC sections (header with verdict pill, **Expected** vs **Observed** two-column block, evidence figure with optional 2-up before / after grid, optional caveat callout), and an overall assessment section.
+Use the bundled template at `skills/p2e-verify-story/assets/template.html` as the skeleton. It is a single-file rich doc scoped under `.rich-doc` with theme tokens (green = PASS, red = FAIL, amber = BLOCKED, gray = NOT_TESTED), a summary grid at the top (one card per AC with a PASS / FAIL / BLOCKED / NOT_TESTED pill), per-AC sections (header with verdict pill, **Expected** vs **Observed** two-column block, evidence figure with optional 2-up before / after grid), and an overall assessment section. **Note:** the bundled `template.html` still uses legacy `CAVEAT` styling — when regenerating the template, replace `yellow = caveat` with `amber = BLOCKED` and remove the `caveat callout` component; the live verdict enum is `PASS | FAIL | BLOCKED | NOT_TESTED` (no CAVEAT).
 
 Permitted interactivity (per `feedback_html_doc_interactivity_scope`): `<details>` / `<summary>` for collapsible sections (pre-flight notes, raw curl), `<a href="#section-id">` anchor nav, CSS-only tabs via `<input type="radio">` + sibling selector, inline `<script>` (no external `src`) for richer interactivity. Default to single linear scroll; reach for tabs only when comparing 2–4 variants that share shape (before / after, alternative implementations).
 
@@ -154,6 +154,16 @@ The confirm step must support, via the host's native prompt primitive:
 - **Abort** — exit with no changes
 
 Only `Proceed` advances into the browser flow. `Abort` exits without bringing the app up.
+
+## Flags
+
+| Flag | Applies to | Effect |
+| --- | --- | --- |
+| `--gate-engine` | Gate orchestrator | Skip preview confirm; verdicts + assets mandatory; HTML report skipped unless `--report` also passed |
+| `--report` | Both modes | Force HTML report assembly (Phases 4–5). Always-on in standalone mode; opt-in in gate-engine mode |
+| `--no-tracker` | Standalone mode only | Skip `criteria op=verdict` and `story_assets op=upload` writes. For dry-run / read-only UAT audits that must not mutate the tracker |
+| `--artifacts-dir <path>` | Both modes | Override the auto-detected artifacts directory |
+| `--workspace-dir <path>` | Both modes | Pin the monorepo workspace dir for the dev-server launcher |
 
 ## Gate-engine invocation
 

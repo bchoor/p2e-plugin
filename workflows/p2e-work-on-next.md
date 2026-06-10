@@ -23,7 +23,7 @@ This is the canonical orchestrator workflow. Adapter-specific entrypoints should
 9. For each wave:
    - **9a. Move selected stories to IN_PROGRESS** — run `/p2e-update-story <story_id> status=IN_PROGRESS` for each story in the wave. This triggers the lifecycle label reconciliation phase in `workflows/p2e-update-story.md`: the MCP status write, the GitHub label flip (`ready` → `in-progress`), and the local cache refresh all happen as part of this step. Do not skip this step or inline the `op=update` call directly — the label and cache writes are required side effects.
    - **9b. Materialize first-turn briefing** — per `workflows/p2e-first-turn-briefing.md` for each story in the wave. This includes surfacing the story's **Flow membership** (persona Flow vs Foundation Flow, and if Foundation which of the 8 slots: Surfaces / Security / Data / Compute / Build-Deploy / Distribution / Observability / Cross-cutting) so the implementer understands the nature of the work before starting.
-   - **9c. Spawn implementers** — with the briefing as turn 1, and gate the wave with verification.
+   - **9c. Spawn implementers** — with the briefing as turn 1, and gate the wave with verification. Use the model routing table (`## Model routing` in `workflows/p2e-policy.md`) to select the model for each agent: `sonnet` for implementers and reviewers, `haiku` for mechanical steps, `opus` only when `approach-review` is in the story's constraints or `--full-team` was passed.
 
    > Note: the `hooks/pre-agent-spawn-story-status.sh` PreToolUse hook enforces step 9a independently — an implementer spawn (Agent tool call) against a story still at `OPEN` will be blocked with a remediation message pointing at step 9a. The hook short-circuits automatically for `subagent_type` values in `{p2e-architect, p2e-staff-engineer, rescue}` and when `P2E_SKIP_STATUS_GATE=1` is set.
 10. If the architect was skipped for a single-story thick run, the implementer self-plans inline from the briefing (no external `writing-plans` call).
@@ -58,7 +58,7 @@ No log entry is written for a clean brief — the thick-gate pass is recorded in
 
 **TaskCreate:** `[#<story-id>] 3/6 Verify & fix`
 **TaskUpdate:** `pending → in_progress` when the verify gate fires (step 11a); `→ completed` when the gate passes — at which point step 11b records verdicts, 11c writes DEVIATIONS, and 11d flips to `IN_REVIEW`.
-**story_log:** Three entries on a passing run (updated checkpoint contract from `## Story log checkpoint policy`): one `UAT_RESULT` per AC (written by `criteria op=verdict` in step 11b), one `DECISION/DEVIATIONS` entry (step 11c), and one `VERIFICATION` entry immediately before the `IN_REVIEW` flip. On a failing run, BLOCKER entries apply per the adaptive gate loop. No new kinds.
+**story_log:** Two orchestrator-authored entries on a passing run (updated checkpoint contract from `## Story log checkpoint policy`): one `DECISION/DEVIATIONS` entry (step 11c) and one `VERIFICATION` entry immediately before the `IN_REVIEW` flip. Additionally, `criteria op=verdict` in step 11b causes the MCP server to auto-append one `UAT_RESULT` StoryLogEntry per AC server-side — these are MCP-generated, not orchestrator-authored, and do not count toward the orchestrator checkpoint total. On a failing run, BLOCKER entries apply per the adaptive gate loop. No new kinds.
 
 ### Step 4 — Commit + PR (new — codify)
 
