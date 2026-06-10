@@ -133,3 +133,78 @@ Per-story override: when `story.verificationCmd` is non-null, that command runs 
 - The orchestrator should reconcile issue labels at the end of a batch when it has enough issue and merge context to do so safely.
 - If that context is missing or incomplete, the workflow must fall back to the explicit label-sync workflow instead of guessing.
 - Stories completing the run successfully land at `IN_REVIEW`; the sync should reflect that lifecycle state in the corresponding GitHub issue labels.
+
+## Verify gate
+
+The verify gate runs once per story, between implementer completion and PR creation. It is NOT the two-strike loop — the adaptive fix loop operates inside the gate; two-strike applies only to gate-level failures that escape the loop.
+
+### Risk classes and review tiers
+
+Classify the story using the same inputs as the adaptive router (tags, sizing, `isBreaking`):
+
+| Risk class | Trigger conditions | Review tier |
+| --- | --- | --- |
+| **Schema** | Tag `schema` or `migration`, or any `isBreaking: true` capability, or capability action `DEPRECATES`/`REMOVES` | Multi-dimension: correctness reviewer + security pass |
+| **Auth** | Foundation Flow `Security` slot, or any changed file matching `**/auth*`, `**/session*`, `**/jwt*`, `**/oauth*`, `**/permission*`, `**/secret*`, `**/token*` | Multi-dimension: correctness reviewer + security pass |
+| **Standard backend / MCP** | Tag `server`, `mcp`, `data`, `infra`, or `api`; no schema/auth trigger | One consolidated reviewer: correctness + parity + input-validation in a single pass |
+| **UI** | Tag `ui`; no schema/auth trigger | One consolidated reviewer + Turbopack dev-compile check + frontend-design pass |
+| **S/XS** | Sizing `S` or `XS`; no schema/auth trigger | Orchestrator inline diff review only |
+
+A story may fall into multiple tiers; apply the highest matching tier (Schema > Auth > Standard > UI > S/XS).
+
+### Consumer-impact sweep
+
+The consumer-impact sweep is **mandatory** when any of the following change:
+
+- A Prisma model or enum (any field add/remove/rename, any enum value change)
+- An exported server action signature in `src/lib/actions.ts` or `src/lib/actions/`
+- An API route shape (request body, response shape, path params, query params)
+
+**Procedure:** for each changed item, `grep -r` across `src/app/api/`, `src/components/`, `src/mcp/tools/`, and `src/lib/` for import statements and call sites. Every hit is either (a) confirmed updated in the current diff, or (b) explicitly marked N/A with a one-line reason. A hit that is neither is a blocker.
+
+**Worked example (P-13-L1 LINK-asset 502 miss):** The `linkStoryAsset` action signature changed in the implementation but the `story_assets` MCP tool at `src/mcp/tools/story-assets.ts` (an unchanged consumer) was not swept. The route returned 502 in production because the tool still passed the old parameter shape. The sweep would have caught this — the grep for `linkStoryAsset` would have surfaced the MCP tool as a hit, and the reviewer would have confirmed the tool was updated or marked it as still-compatible. Any PR that touches an exported action must enumerate and clear every consumer before the gate passes.
+
+### Adaptive fix loop (inside the gate)
+
+After verification fails, the orchestrator dispatches a fix batch to the **same implementer agent** (resume with context — not a fresh spawn). The loop iterates while each round strictly reduces the open-problem count (failing tests + confirmed findings). The loop exits:
+
+- **Pass:** open-problem count reaches zero.
+- **BLOCKED:** stall (no reduction across 2 consecutive rounds), oscillation (a previously-fixed failure reappears), or runaway cap (6 rounds reached without passing).
+
+Each round logs the open-problem count so the trend is auditable. On BLOCKED, escalate per the two-strike path in `## Two-strike escalation`.
+
+### Gate steps (ordered)
+
+1. Run `verificationCmd` (or the track-default fallback from `## Verification matrix`).
+2. If `verificationCmd` passes: run the consumer-impact sweep.
+3. If sweep is clean: run the risk-tiered review.
+4. If review finds problems: dispatch fix batch to the same implementer agent; re-run from step 1.
+5. If gate passes: record per-AC verdicts via `mcp__p2e__criteria op=verdict` (see `## Story log checkpoint policy` Checkpoint 1) and write the DEVIATIONS story-log entry (see `## Orchestrator DEVIATIONS checkpoint`).
+
+## Orchestrator DEVIATIONS checkpoint
+
+After the gate passes and before the `IN_REVIEW` flip, the orchestrator **must** write a `DEVIATIONS` story-log entry. This is not optional — it is a required gate step, not a convention.
+
+If the implementer wrote `SCOPE_CHANGE` or `DECISION` entries during implementation, the DEVIATIONS entry summarizes them in one paragraph:
+
+```
+mcp__p2e__story_log op=append project_slug=<slug> items=[{"story_id":"<id>","kind":"DECISION","author":"orchestrator","message":"DEVIATIONS: <one-paragraph summary of all scope changes and decisions made during this run, or 'none' if the implementer reported no deviations>"}]
+```
+
+If no deviations were reported by the implementer, the entry still fires with `"message":"DEVIATIONS: none"`. This makes the absence of deviations explicit and auditable.
+
+## Model routing
+
+Every agent-dispatching workflow uses this routing table. Default to the cheapest adequate model; escalate only when the work genuinely requires it.
+
+| Role | Default model | Override conditions |
+| --- | --- | --- |
+| **Implementer** | `sonnet` | `opus` only when `approach-review` constraint present or `--full-team` passed |
+| **Reviewer** (any risk tier) | `sonnet` | No override — reviewers do not need opus |
+| **Mechanical steps** | `haiku` | Mechanical = label sync, status flips, MCP plumbing, AC/verdict recording, story-log writes, PR URL capture |
+| **Architect** | `sonnet` | `opus` only when `--full-team` |
+| **Staff engineer** | `sonnet` | `opus` only when `--full-team` |
+
+**Mechanical steps** are any steps where the agent is filling in known values with no reasoning required: toggling a status, writing a known story-log entry, syncing labels, recording a pre-computed verdict. Use `haiku` for these — they are high-frequency and token cost adds up.
+
+**First-turn briefing and work-on-next** reference this table instead of leaving model choice to the session. The model router operates independently of the adaptive router (track selection) — they share inputs but produce orthogonal outputs.
