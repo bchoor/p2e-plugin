@@ -208,3 +208,48 @@ Every agent-dispatching workflow uses this routing table. Default to the cheapes
 **Mechanical steps** are any steps where the agent is filling in known values with no reasoning required: toggling a status, writing a known story-log entry, syncing labels, recording a pre-computed verdict. Use `haiku` for these — they are high-frequency and token cost adds up.
 
 **First-turn briefing and work-on-next** reference this table instead of leaving model choice to the session. The model router operates independently of the adaptive router (track selection) — they share inputs but produce orthogonal outputs.
+
+## Priority rules
+
+`Story.priority` is a work-queue ordering field — distinct from `sizing` (which is an effort estimate). Priority controls the order in which `/p2e-work-on-next` surfaces OPEN stories: `P0 → P1 → P2 → P3 → null`, then by `createdAt` within each band.
+
+- Default is `null` (unprioritized). Most stories should be created with `null`.
+- Set `P0` or `P1` only when the user explicitly signals urgency: the words "urgent", "blocker", "P0", "critical", "must ship now" → map to `P0`; "high priority", "P1", "important", "needs to go next" → map to `P1`.
+- Plain requests without urgency language → leave `null`. Do not infer urgency from the story topic.
+- `P2` (normal) and `P3` (lowest) are available for explicit queue-ordering but are rarely needed at add time; set them only if the user explicitly asks.
+- Priority is NOT part of the thick-spec predicate — leaving it `null` never blocks `DRAFT → OPEN`.
+- The `priority` field is included in the `mcp__p2e__stories op=create` and `op=update` payloads; it accepts `"P0" | "P1" | "P2" | "P3" | null`.
+
+## Brainstorming escalation
+
+When the thicken path (or thick-mode add-story path) runs and the staged draft still leaves ≥ 2 of the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) empty AND the provided source does not support filling them, the wrapper invokes a shared brainstorming primitive **exactly once per flow** to batch clarifying questions in a single turn. The Claude wrapper resolves the reference against the `superpowers:brainstorming` skill; the Codex wrapper resolves it against its native brainstorming primitive (the same pattern used by `workflows/p2e-bootstrap.md --mode=onboarding`).
+
+### When to escalate
+
+Escalate **only** when ALL of the following are true after the first draft/thicken pass:
+
+1. Two or more of the six thick-spec fields are still empty.
+2. The provided source (the `source` argument, if any) does not contain evidence to fill them, and no sibling story under the same UXO supplies matching capabilities or AC patterns.
+3. The user's original invocation did not explicitly opt out (for example via a `--no-brainstorm` flag on the wrapper, if implemented).
+
+Do NOT escalate for thin mode. Do NOT escalate when the gap is a single optional field. Do NOT escalate more than once per flow — if answers still leave major gaps, leave the cells empty and continue to the preview. Empty cells are preferred over filler.
+
+### Question shape
+
+The wrapper batches 2–4 concrete questions in a single turn. Prefer multiple-choice or closed-form questions over open-ended prose. Typical questions:
+
+- Which files or modules does this story touch? (pick from detected candidates, or free-form)
+- What are the non-negotiable constraints? (timezone / currency / backwards-compat / visible-screen / etc.)
+- What is explicitly out of scope?
+- Which existing document or sibling story most closely describes the shape of this work?
+- What command would verify this story is done? (defaults to the track's `verificationCmd`)
+
+### Fold-back rules
+
+- Answers fold back into the staged draft as if they had been in the original source. Any field populated from the interview is annotated `derived-from-brainstorming` in the re-rendered preview.
+- The brainstorming interview does not bypass the preview/confirm gate — the wrapper must still render the preview and return to the confirm prompt.
+- If the user aborts the interview (or declines to answer), continue to the preview with the fields left empty. Do not force-answer on the user's behalf.
+
+## AuditLog
+
+Every mutation on `Story`, `AcceptanceCriterion`, or `StoryCapability` writes an `AuditLog` row server-side via `src/lib/audit.ts` in the P2E main repo. The plugin never calls audit helpers directly — it relies on the MCP layer to record history.

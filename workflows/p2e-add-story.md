@@ -34,29 +34,7 @@ The legacy `--fill <storyId>` path is deprecated as of v0.6 and now delegates to
 
 ## UXO placement matching
 
-When a phase+tier cell has more than one UXO, the drafter MUST score each candidate against the story description using `title + objective + objectives[]` and pick the best match — never by cuid sort order.
-
-### Matching algorithm
-
-1. Fetch candidate UXOs via `mcp__p2e__uxos op=get` (or from the project data already in context).
-2. For each candidate, build a match signal from:
-   - `title` (always present)
-   - `objective` (prose description, may be null)
-   - `objectives[]` (array of short goal bullets; may be empty — falls back to `title + objective` only)
-3. Score the story description against each candidate's signal. Pick the highest-scoring UXO.
-4. Record the match reason as a single phrase, e.g. `"surfaces relevant signals matches 'reduce time-to-first-insight'"` or `"title 'Technical charting' matches charting work"`.
-5. If no `objectives[]` are set on any candidate, the fallback signal is `title + objective` — equivalent to pre-A-03-L4 behavior.
-
-### Preview output
-
-The preview MUST include a `UXO match reason:` line immediately after the UXO row:
-
-```
-UXO: P-01 — Discover product  (attach)
-UXO match reason: objective bullet "reduce time-to-first-insight" matches story intent
-```
-
-If the cell has only one UXO, omit the match reason (no ambiguity to explain).
+See `## UXO placement matching` in `workflows/p2e-uxo-recipe.md` for the canonical matching algorithm, preview output format, and re-evaluation rules.
 
 ## Workflow
 
@@ -124,44 +102,11 @@ If the user does not accept, do not write.
 
 ## Priority rules
 
-`Story.priority` is a work-queue ordering field — distinct from `sizing` (which is an effort estimate). Priority controls the order in which `/p2e-work-on-next` surfaces OPEN stories: `P0 → P1 → P2 → P3 → null`, then by `createdAt` within each band.
-
-- Default is `null` (unprioritized). Most stories should be created with `null`.
-- Set `P0` or `P1` only when the user explicitly signals urgency: the words "urgent", "blocker", "P0", "critical", "must ship now" → map to `P0`; "high priority", "P1", "important", "needs to go next" → map to `P1`.
-- Plain requests without urgency language → leave `null`. Do not infer urgency from the story topic.
-- `P2` (normal) and `P3` (lowest) are available for explicit queue-ordering but are rarely needed at add time; set them only if the user explicitly asks.
-- Priority is NOT part of the thick-spec predicate — leaving it `null` never blocks `DRAFT → OPEN`.
-- The `priority` field is included in the `mcp__p2e__stories op=create` payload; it accepts `"P0" | "P1" | "P2" | "P3" | null`.
+See `## Priority rules` in `workflows/p2e-policy.md` for the canonical priority mapping, urgency-signal vocabulary, and queue-ordering semantics.
 
 ## Brainstorming escalation
 
-When the source signal is insufficient to credibly populate the thick-spec fields, the wrapper invokes a shared brainstorming primitive exactly once per flow to batch clarifying questions in a single turn. The Claude wrapper resolves the reference against the `superpowers:brainstorming` skill; the Codex wrapper resolves it against its native brainstorming primitive (the same pattern used by `workflows/p2e-bootstrap.md --mode=onboarding`).
-
-### When to escalate
-
-Escalate in thick mode **only** when ALL of the following are true after the first draft pass:
-
-1. Two or more of the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) are still empty.
-2. The original source does not contain evidence to fill them (no linked PRD, no issue body, no spec YAML, no sibling stories with matching capabilities).
-3. The user's original invocation did not explicitly opt out of escalation (for example via a `--no-brainstorm` flag on the wrapper, if implemented).
-
-Do NOT escalate for thin mode. Do NOT escalate when the gap is a single optional field. Do NOT escalate more than once per flow — if answers still leave major gaps, leave the cells empty and continue to the preview. Empty cells are preferred over filler.
-
-### Question shape
-
-The wrapper must batch 2–4 concrete questions in a single turn. Prefer multiple-choice or closed-form questions over open-ended prose. Typical questions:
-
-- Which files or modules does this story touch? (pick from detected candidates, or free-form)
-- What are the non-negotiable constraints? (timezone / currency / backwards-compat / visible-screen / etc.)
-- What is explicitly out of scope?
-- Which existing document or sibling story most closely describes the shape of this work?
-- What command would verify this story is done? (defaults to the track's `verificationCmd`)
-
-### Fold-back rules
-
-- Answers fold back into the staged draft as if they had been in the original source, with the provenance annotation `derived-from-brainstorming` on any field filled from the interview.
-- The brainstorming interview does not bypass the preview/confirm gate — the wrapper must still render the preview and ask for accept/adjust/abort before any write.
-- If the user aborts the brainstorming interview (or declines to answer), continue to the preview with the fields left empty. Do not force-answer on the user's behalf.
+See `## Brainstorming escalation` in `workflows/p2e-policy.md` for the canonical trigger conditions, question shape, and fold-back rules. The `derived-from-brainstorming` provenance annotation is required on any thick-spec field filled from the interview.
 
 ## Error behavior
 
