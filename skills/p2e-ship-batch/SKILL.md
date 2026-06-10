@@ -11,7 +11,7 @@ Read:
 - `workflows/p2e-work-on-next.md`
 - `workflows/p2e-first-turn-briefing.md`
 
-Execute the shared ship-batch workflow exactly. Phase B delegates to `workflows/p2e-work-on-next.md` without modification — do not fork briefing, status-gate, two-strike, or AC-toggle logic. The implementer deviation-reporting contract is enforced via the briefing's `## Deviation reporting` section so a hands-off batch run produces a fully-auditable story log.
+Execute the shared ship-batch workflow exactly. Phase B delegates to `workflows/p2e-work-on-next.md` without modification — do not fork briefing, status-gate, verify-gate, or label-sync logic. The implementer deviation-reporting contract is enforced via the briefing's `## Deviation reporting` section so a hands-off batch run produces a fully-auditable story log.
 
 ## Codex-specific notes
 
