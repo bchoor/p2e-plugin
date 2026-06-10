@@ -211,7 +211,7 @@ The plugin exposes the P2E MCP server tools via `mcp__plugin_p2e_p2e__*`. Each t
 
 | Tool | Ops | Summary |
 |------|-----|---------|
-| `stories` | `list`, `get`, `create`, `update`, `delete`, `move` | Core story CRUD. `create` / `update` use an `items:[{...}]` array payload and accept `priority` (`"P0"`…`"P3"` or `null` = unprioritized; orders the `/p2e-work-on-next` queue). `list` supports multi-value filters (see below). `get` returns full detail including audit log, capabilities, and acceptance criteria. `move` re-parents a story to another UXO. |
+| `stories` | `list`, `get`, `create`, `update`, `delete`, `move` | Core story CRUD. `create` / `update` use an `items:[{...}]` array payload and accept `priority` (`"P0"`…`"P3"` or `null` = unprioritized; orders the `/p2e-work-on-next` queue). `update` also accepts `github_pr_url` (string or `null`) to manually set or clear a story's PR link — the GitHub webhook overwrites this on real PR events, so this is a fallback for manual wiring. `list` supports multi-value filters (see below). `get` returns full detail including audit log, capabilities, and acceptance criteria. `move` re-parents a story to another UXO. |
 | `criteria` | `list`, `get`, `create`, `update`, `delete` | Acceptance criteria attached to a story. |
 | `capabilities` | `list`, `get`, `create`, `update`, `delete` | Story capabilities (INTRODUCES / MODIFIES / DEPRECATES change entries). |
 | `relations` | `list`, `get`, `create`, `delete` | Inter-story relations (BUILDS_ON, DEPENDS_ON, SUPERSEDES, FIXES, etc.). |
