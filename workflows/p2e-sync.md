@@ -200,7 +200,7 @@ Do not abort the whole flow for a single unparseable field. Treat it as null on 
 
 ## AuditLog
 
-Every mutation on `Story`, `AcceptanceCriterion`, or `StoryCapability` writes an AuditLog row server-side via `src/lib/audit.ts` in the P2E main repo. The plugin never calls audit helpers directly — it relies on the MCP layer to record history.
+See `## AuditLog` in `workflows/p2e-policy.md` for the canonical rule. Every MCP write in this workflow follows that policy — no direct audit helper calls from the plugin.
 
 ---
 

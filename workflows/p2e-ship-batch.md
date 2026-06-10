@@ -29,7 +29,7 @@ Reach for this when shipping a release. For single-story or fast-track spot work
 ### Phase A — Select & plan
 
 1. Resolve filters: `release=`, `phase=`, `tag=`, `priority=` (comma-separated `P0,P1`), `story_id=` (repeatable), `--exclude=<id>` (repeatable), `--max=<n>`.
-2. Query the queue using the canonical selection rule from `workflows/p2e-work-on-next.md` steps 1–4: `mcp__p2e__stories op=list status=OPEN` with the filters, sort by `priority` ascending then `createdAt` ascending, fetch full detail (`op=get`) for each candidate, and apply the thin-draft check per `## Thin drafts` in policy.
+2. Query the queue by following `workflows/p2e-work-on-next.md` steps 1–4 exactly (with the resolved filters applied). Do not re-implement the selection, sort, or thin-draft-check logic here.
 3. Apply the **thick-gate** (per `## Thick-gate` in policy) to every candidate. **Hard refuse the batch** if any selected story has `isThick=false` or `status != "OPEN"` — direct the user to `/p2e-update-story <story_id>` for each failing story, or to re-run with `--exclude=<bad-id>`. Do not proceed with a partial batch.
 4. Apply the adaptive router (per `## Adaptive router` in policy) per story to classify track and decide whether the architect + `superpowers:writing-plans` run (`--full-team` passes through to work-on-next).
 5. Ask `p2e-staff-engineer` for a wave plan (this workflow is by definition multi-story — batch size ≥ 1 but the staff engineer always runs because of the post-implementation gates).

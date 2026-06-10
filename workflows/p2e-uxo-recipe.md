@@ -212,3 +212,35 @@ These five UXOs were drafted end-to-end under this recipe.
 ## Audit trail
 
 This recipe was authored by calibrating AU-01 across five feedback rounds with the project steward (2026-04-20) and then extended to AU-02..AU-05 under the locked recipe. The resulting descriptions + objectives[] for the Authenticate phase are the canonical reference examples above.
+
+## UXO placement matching
+
+When a phase+tier cell has more than one UXO, the drafter MUST score each candidate against the story description using `title + objective + objectives[]` and pick the best match — never by cuid sort order.
+
+### Matching algorithm
+
+1. Fetch candidate UXOs via `mcp__p2e__uxos op=get` (or from the project data already in context).
+2. For each candidate, build a match signal from:
+   - `title` (always present)
+   - `objective` (prose description, may be null)
+   - `objectives[]` (array of short goal bullets; may be empty — falls back to `title + objective` only)
+3. Score the story description against each candidate's signal. Pick the highest-scoring UXO.
+4. Record the match reason as a single phrase, e.g. `"surfaces relevant signals matches 'reduce time-to-first-insight'"` or `"title 'Technical charting' matches charting work"`.
+5. If no `objectives[]` are set on any candidate, the fallback signal is `title + objective` — equivalent to pre-A-03-L4 behavior.
+
+### Preview output
+
+The preview MUST include a `UXO match reason:` line immediately after the UXO row:
+
+```
+UXO: P-01 — Discover product  (attach)
+UXO match reason: objective bullet "reduce time-to-first-insight" matches story intent
+```
+
+If the cell has only one UXO, omit the match reason (no ambiguity to explain).
+
+### Re-evaluation on Move UXO or thicken
+
+When the user picks **Move UXO**, or when the thicken path infers the story might belong to a different UXO in the same cell, re-evaluate placement using the same signal construction above. The updated UXO choice must be included in the re-rendered preview. If the re-evaluation surfaces a better match than the current UXO, annotate it `derived-from-source: objectives match` and include a one-line explanation. If the current UXO is still the best match, annotate `populated` and leave it.
+
+If the re-evaluation shows that the *target* UXO itself has weak or absent `description` / `objectives[]` — so the signal is thin in either direction — surface the gap to the user and point them at `workflows/p2e-uxo-recipe.md` rather than silently guessing placement. A UXO whose scope isn't articulated cannot reliably receive new layers.
