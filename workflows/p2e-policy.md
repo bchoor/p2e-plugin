@@ -38,19 +38,6 @@ Fast-track stays lightweight: no architect, no staff engineer.
 
 Wrappers should reserve higher-capacity specialist roles for architect and staff-engineer work only when the workflow explicitly calls for them.
 
-## Model ladder
-
-Roles and default models for the supervisor architecture (Claude Code). Other platforms map to their nearest equivalent and document the asymmetry.
-
-| Role | Model | Notes |
-| --- | --- | --- |
-| Supervisor (main session) | `fable` high-effort recommended; `opus` acceptable | Plans, dispatches, reviews. Never implements. The workflow should surface the recommendation once at run start if the session model is below opus. |
-| `p2e-staff-engineer` | `opus` | Wave planning, batch ≥ 2 (unchanged). |
-| `p2e-architect` | `opus` | Opt-in approach review + two-strike escalation (unchanged). |
-| `p2e-story-lead` | `sonnet` (Fast/Standard) / `opus` (Architectural) | Owns one story's lifecycle. Supervisor passes the model explicitly at dispatch. |
-| Workers (spawned by story-lead) | `haiku` mechanical/UAT capture; `sonnet` coding; `opus` debugging or cross-cutting refactors | Nested under the story-lead; total agent depth must stay ≤ 5. |
-| `fable` subagents | Only with explicit user approval at dispatch time | Reserved for judgment-critical one-offs. Never auto-dispatched. |
-
 ## Adaptive skill matrix
 
 The story-lead (or the inline implementer on platforms without subagents) selects implementation skills from the story's signals. First matching row per category wins; rows are additive across categories.
@@ -66,14 +53,20 @@ The story-lead (or the inline implementer on platforms without subagents) select
 
 ## Review tiering
 
-Exactly one **primary** reviewer per story — never two review tools on the same diff.
+This section defines the **tool mapping** for `## Verify gate` step 3 (risk-tiered review). Exactly one primary review tool per story — never two review tools on the same diff.
 
-| Track | Primary review | When |
-| --- | --- | --- |
-| Fast | `/code-review` on the working-tree diff | Before the PR is opened; findings fixed, then commit + PR |
-| Standard / Architectural | `pr-review-toolkit:review-pr` on the open PR | After the PR is opened |
+| Risk class | Review tool | Timing | Notes |
+| --- | --- | --- | --- |
+| **Schema / Auth** | `pr-review-toolkit:review-pr` (consolidated pass) + `/security-review` | After commit + push + PR opened | Multi-dimension: correctness + security in sequence |
+| **Standard backend / MCP** | `pr-review-toolkit:review-pr` (consolidated pass) | After commit + push + PR opened | Correctness + parity + input-validation in a single pass |
+| **UI** | `/code-review` (or `pr-review-toolkit:review-pr` if PR already open) + Turbopack dev-compile + `frontend-design` pass | Fast: pre-PR on working-tree diff; Standard+Arch: post-PR | Compile check and design pass layer on top |
+| **S/XS** | Story-lead inline diff review via `/code-review` | Pre-PR on working-tree diff; fix findings, then commit + PR | Orchestrator/story-lead inline only; no external tool invocation required |
 
-`/security-review` is a conditional **secondary** dimension, not a duplicate: it fires only when (a) the diff touches the security globset (auth/session/crypto/secret/PII/migration paths, as defined in `workflows/p2e-ship-batch.md` Phase D), (b) the story's UXO sits in the Foundation **Security** slot, or (c) `--security` was passed. `--no-security` forces it off and requires a `kind: DECISION` story-log entry with the reason.
+**PR-creation timing:**
+- Fast track and S/XS: run `/code-review` on the working-tree diff BEFORE opening the PR; fix findings; then commit + PR.
+- Standard / Architectural / Schema / Auth: commit + push + open PR first; then run `pr-review-toolkit:review-pr` as gate step 3 on the open PR. Findings from review feed the adaptive fix loop (fix commits push to the same PR).
+
+`/security-review` is a **secondary** dimension for Schema/Auth risk class only. It fires additionally when: (a) the diff touches the security globset (auth/session/crypto/secret/PII/migration paths, as defined in `workflows/p2e-ship-batch.md` Phase D), (b) the story's UXO sits in the Foundation **Security** slot, or (c) `--security` was passed. `--no-security` forces it off and requires a `kind: DECISION` story-log entry with the reason.
 
 `/ultrareview` is user-triggered and billed; no workflow may auto-invoke it.
 
@@ -94,7 +87,7 @@ Exactly one **primary** reviewer per story — never two review tools on the sam
 - The canonical lifecycle is `DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE`. A `BLOCKED` status sits outside this linear path and marks stories waiting on unfinished `DEPENDS_ON` relations OR escalated per the two-strike rule.
 - DRAFT → OPEN is gated server-side by the `isThick` predicate (enforced by the P2E MCP); the plugin does not perform this transition itself.
 - On wave-start the orchestrator moves selected stories to `IN_PROGRESS`.
-- On successful verification the orchestrator moves the story to `IN_REVIEW` and toggles its acceptance criteria. PR and review activity happen with the story at `IN_REVIEW`; the merge itself is outside the orchestrator (release is a separate, user-triggered concern).
+- On successful implementation the orchestrator runs the verify gate (`## Verify gate`): verificationCmd + consumer-impact sweep + risk-tiered review (per `## Review tiering`). The gate records per-AC verdicts via `mcp__p2e__criteria op=verdict` (with concrete evidence in the `note` field) and writes the mandatory DEVIATIONS story-log entry (per `## Orchestrator DEVIATIONS checkpoint`). Only after those gate steps pass does the orchestrator flip the story to `IN_REVIEW`. For Fast/S/XS stories the PR is opened as part of the gate (after pre-PR review); for Standard/Architectural/Schema/Auth stories the PR is opened before the `pr-review-toolkit:review-pr` step and the story flips to `IN_REVIEW` after the review completes. The merge itself is outside the orchestrator (release is a separate, user-triggered concern).
 - On two consecutive verification failures the orchestrator moves the story to `BLOCKED` and stops retrying (see `## Two-strike escalation`).
 - Final acceptance (IN_REVIEW → DONE) is a human action outside the orchestrator's scope, with one explicit carve-out for `/p2e-cut-release` (see below).
 
@@ -122,9 +115,10 @@ When the carve-out applies, the workflow also appends a `kind: VERIFICATION` sto
 
 ## Two-strike escalation
 
-- After each implementer pass the orchestrator runs the story's verification (the `verificationCmd` from the thick-spec, or the batch-level verification command).
-- First failure: the orchestrator re-briefs the implementer with the failure output and allows one more pass.
-- Second failure: the orchestrator stops. It sets the story's `status` to `BLOCKED` via `mcp__p2e__stories op=update`, posts the failure summary back to the linked issue, and routes the story to either the `p2e-architect` agent for a fresh approach OR the `codex:rescue` skill for a deeper diagnosis — the choice depends on the caller (Claude Code → architect; Codex → `codex:rescue`).
+The adaptive fix loop (inside the story-lead or inline implementer) is the first line of recovery — it iterates within the gate while each round strictly shrinks the open-problem count. Two-strike is the supervisor-level escalation protocol that activates when the fix loop itself exits BLOCKED.
+
+- The story-lead's adaptive fix loop exits BLOCKED (stall, oscillation, or 6-round cap) → story-lead reports `outcome: "blocked"` → this is **strike 1** from the supervisor's perspective. The story-lead writes one `kind: BLOCKER` (`"author": "implementer"`) entry.
+- The supervisor receives the BLOCKED report and routes the story to either the `p2e-architect` agent for a fresh approach OR the `codex:rescue` skill for a deeper diagnosis (Claude Code → architect; Codex → `codex:rescue`). If the second attempt (architect-driven) also exits BLOCKED → **strike 2**. The orchestrator stops: sets `status` to `BLOCKED` via `mcp__p2e__stories op=update`, posts the failure summary to the linked issue, writes the strike-2 BLOCKER checkpoint (`"author": "orchestrator"`).
 - Every escalation comment posted to the linked GitHub issue ends with the `— bchoor-claude` signature line, matching the project-wide convention.
 - There is no third retry.
 
@@ -181,13 +175,13 @@ The verify gate runs once per story, between implementer completion and PR creat
 
 Classify the story using the same inputs as the adaptive router (tags, sizing, `isBreaking`):
 
-| Risk class | Trigger conditions | Review tier |
+| Risk class | Trigger conditions | Review tier (see `## Review tiering` for tool mapping) |
 | --- | --- | --- |
-| **Schema** | Tag `schema` or `migration`, or any `isBreaking: true` capability, or capability action `DEPRECATES`/`REMOVES` | Multi-dimension: correctness reviewer + security pass |
-| **Auth** | Foundation Flow `Security` slot, or any changed file matching `**/auth*`, `**/session*`, `**/jwt*`, `**/oauth*`, `**/permission*`, `**/secret*`, `**/token*` | Multi-dimension: correctness reviewer + security pass |
-| **Standard backend / MCP** | Tag `server`, `mcp`, `data`, `infra`, or `api`; no schema/auth trigger | One consolidated reviewer: correctness + parity + input-validation in a single pass |
-| **UI** | Tag `ui`; no schema/auth trigger | One consolidated reviewer + Turbopack dev-compile check + frontend-design pass |
-| **S/XS** | Sizing `S` or `XS`; no schema/auth trigger | Orchestrator inline diff review only |
+| **Schema** | Tag `schema` or `migration`, or any `isBreaking: true` capability, or capability action `DEPRECATES`/`REMOVES` | `review-pr` + `/security-review` |
+| **Auth** | Foundation Flow `Security` slot, or any changed file matching `**/auth*`, `**/session*`, `**/jwt*`, `**/oauth*`, `**/permission*`, `**/secret*`, `**/token*` | `review-pr` + `/security-review` |
+| **Standard backend / MCP** | Tag `server`, `mcp`, `data`, `infra`, or `api`; no schema/auth trigger | `review-pr` consolidated pass |
+| **UI** | Tag `ui`; no schema/auth trigger | `/code-review` (or `review-pr` if PR already open) + Turbopack dev-compile + `frontend-design` pass |
+| **S/XS** | Sizing `S` or `XS`; no schema/auth trigger | Story-lead inline diff review via `/code-review` |
 
 A story may fall into multiple tiers; apply the highest matching tier (Schema > Auth > Standard > UI > S/XS).
 
@@ -216,9 +210,12 @@ Each round logs the open-problem count so the trend is auditable. On BLOCKED, es
 
 1. Run `verificationCmd` (or the track-default fallback from `## Verification matrix`).
 2. If `verificationCmd` passes: run the consumer-impact sweep.
-3. If sweep is clean: run the risk-tiered review.
-4. If review finds problems: dispatch fix batch to the same implementer agent; re-run from step 1.
-5. If gate passes: record per-AC verdicts via `mcp__p2e__criteria op=verdict` (see `## Story log checkpoint policy` Checkpoint 1 in `workflows/p2e-work-on-next.md`) and write the DEVIATIONS story-log entry (see `## Orchestrator DEVIATIONS checkpoint`).
+3. **PR-creation branch point:**
+   - **Fast / S/XS:** run `/code-review` on the working-tree diff (pre-PR). If findings: dispatch fix batch to same implementer, re-run from step 1 (adaptive fix loop). When clean: commit + open PR.
+   - **Standard / Architectural / Schema / Auth:** commit + push + open PR. Then run `pr-review-toolkit:review-pr` (+ `/security-review` for Schema/Auth) on the open PR (see `## Review tiering`). If findings: dispatch fix batch to same implementer, push fix commits to the same PR, re-run review (adaptive fix loop — re-run from step 3 review only, not step 1, unless new failures appear). When clean: proceed.
+4. If gate passes (all findings addressed or triaged): record per-AC verdicts via `mcp__p2e__criteria op=verdict` (see `## Story log checkpoint policy` Checkpoint 1 in `workflows/p2e-work-on-next.md`) and write the DEVIATIONS story-log entry (see `## Orchestrator DEVIATIONS checkpoint`). Then flip story to `IN_REVIEW`.
+
+The adaptive fix loop (step 3 iterates while problem count strictly shrinks), the 6-round cap, and the stall/oscillation → BLOCKED exit condition are defined in `### Adaptive fix loop (inside the gate)` and are NOT weakened by this ordering. Per-AC verdicts and the DEVIATIONS entry are written once, after the loop exits with pass.
 
 ## Orchestrator DEVIATIONS checkpoint
 
@@ -234,19 +231,22 @@ If no deviations were reported by the implementer, the entry still fires with `"
 
 ## Model routing
 
-Every agent-dispatching workflow uses this routing table. Default to the cheapest adequate model; escalate only when the work genuinely requires it.
+Every agent-dispatching workflow uses this routing table. Default to the cheapest adequate model; escalate only when the work genuinely requires it. This is the single merged table — `## Model ladder` is retired; all role definitions now live here.
 
 | Role | Default model | Override conditions |
 | --- | --- | --- |
-| **Implementer** | `sonnet` | `opus` only when `approach-review` constraint present or `--full-team` passed |
-| **Reviewer** (any risk tier) | `sonnet` | No override — reviewers do not need opus |
-| **Mechanical steps** | `haiku` | Mechanical = label sync, status flips, MCP plumbing, AC/verdict recording, story-log writes, PR URL capture |
-| **Architect** | `sonnet` | `opus` only when `--full-team` |
-| **Staff engineer** | `sonnet` | `opus` only when `--full-team` |
+| **Supervisor (main session)** | session model; `fable` high-effort recommended for multi-story wave runs, `opus` acceptable | Surface the recommendation once at run start if the active session model is below `opus` — do not block on it. The supervisor plans, dispatches, and reviews; it never implements. |
+| **`p2e-story-lead`** | `sonnet` | `opus` when Architectural track, `approach-review` constraint present, or `--full-team` passed. Supervisor passes the model explicitly at dispatch. |
+| **Implementer workers** (spawned by story-lead) | `sonnet` for coding | `haiku` for mechanical steps (scripted edits, UAT capture); `opus` only for debugging escalation or cross-cutting refactors (include `opus-justified: <reason>` in the prompt). Total agent depth ≤ 5. |
+| **Reviewer** (any risk tier) | `sonnet` | No override — reviewers do not need opus. |
+| **Mechanical steps** | `haiku` | Mechanical = label sync, status flips, MCP plumbing, AC/verdict recording, story-log writes, PR URL capture. |
+| **`p2e-architect`** | `sonnet` | `opus` only when `--full-team`. The agent's frontmatter `model:` is overridden at dispatch. |
+| **`p2e-staff-engineer`** | `sonnet` | `opus` only when `--full-team`. The agent's frontmatter `model:` is overridden at dispatch. |
+| **`fable` subagents** | (never auto-dispatched) | Only with explicit user approval at dispatch time. Reserved for judgment-critical one-offs. |
 
 **Mechanical steps** are any steps where the agent is filling in known values with no reasoning required: toggling a status, writing a known story-log entry, syncing labels, recording a pre-computed verdict. Use `haiku` for these — they are high-frequency and token cost adds up.
 
-**First-turn briefing and work-on-next** reference this table instead of leaving model choice to the session. The model router operates independently of the adaptive router (track selection) — they share inputs but produce orthogonal outputs.
+**First-turn briefing, supervisor, and story-lead** reference this table instead of leaving model choice to the session. The model router operates independently of the adaptive router (track selection) — they share inputs but produce orthogonal outputs.
 
 ## Priority rules
 

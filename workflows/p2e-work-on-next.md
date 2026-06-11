@@ -32,7 +32,7 @@ Recommend `/model fable` (high-effort) for the supervisor session; `opus` is acc
 2. **Architect + writing-plans** (opt-in per shape-aware rule): for each story where `constraints` contains `approach-review` OR `--full-team` was passed, dispatch `p2e-architect` and `superpowers:writing-plans` before dispatch. The resulting sketch is appended to that story's turn-1 briefing.
 3. **Ensure a batch worktree exists.** If running from `main`, create an appropriately named worktree before proceeding. The branch name follows the convention in `## Branch-name convention`.
 4. **Confirm gate** (one turn with the user): present the following in a single summary before any writes:
-   - Selected queue (story id, title, track, model per the `## Model ladder` in policy)
+   - Selected queue (story id, title, track, model per the `## Model routing` in policy)
    - Skill-matrix hits per story (from `## Adaptive skill matrix` in policy)
    - Wave plan and any file collisions flagged by staff-engineer
    - Review tier per story (from `## Review tiering` in policy)
@@ -55,7 +55,7 @@ Materialize the first-turn briefing per `workflows/p2e-first-turn-briefing.md` f
 
 ### 2c — Dispatch
 
-Dispatch one `p2e-story-lead` per story, **in parallel within the wave**, each with `isolation: worktree`. Model per the policy model ladder: `sonnet` for Fast/Standard tracks, `opus` for Architectural. The briefing (plus architect sketch if produced) is the turn-1 message. Update each story's task via `TaskUpdate` to `in_progress`.
+Dispatch one `p2e-story-lead` per story, **in parallel within the wave**, each with `isolation: worktree`. Model per the policy model routing table (`## Model routing`): `sonnet` for Fast/Standard tracks, `opus` for Architectural. The briefing (plus architect sketch if produced) is the turn-1 message. Update each story's task via `TaskUpdate` to `in_progress`.
 
 ### 2d — Workflow batch mode (N ≥ 4 or `--workflow`)
 
@@ -83,16 +83,19 @@ On receiving each story-lead report, the supervisor processes it immediately (do
 
 ### `outcome: "pass"`
 
+The story-lead ran the verify gate inside its lifecycle (verificationCmd + consumer sweep + tiered review tool + adaptive fix loop). The supervisor's Phase 3 responsibilities are the close-out steps after the gate:
+
 1. Review the report's `acceptance_criteria` array against the story's ACs — spot-check evidence, do not rubber-stamp.
-2. Toggle ACs: `mcp__p2e__criteria op=toggle` for each criterion marked `met: true`.
-3. Write Checkpoint 1 (AC verdicts) and Checkpoint 2 (VERIFICATION) story-log entries (see `## Story log checkpoint policy`).
-4. Flip the story to `IN_REVIEW`: `mcp__p2e__stories op=update status=IN_REVIEW`.
-5. Post the summary and PR URL to the linked GitHub issue.
-6. `TaskUpdate` the story's task to `completed`.
+2. Record per-AC verdicts via `mcp__p2e__criteria op=verdict` for each criterion in the report (see `## Story log checkpoint policy` Checkpoint 1). Use the evidence from `report.acceptance_criteria[n].evidence` as the `note` field. Do NOT use `op=toggle` — verdicts replace toggles.
+3. Write Checkpoint 2 (VERIFICATION) story-log entry (see `## Story log checkpoint policy`).
+4. Write the DEVIATIONS story-log entry (see `## Orchestrator DEVIATIONS checkpoint` in policy). If the story-lead's report `deviations` array is non-empty, summarize those entries; otherwise write `"DEVIATIONS: none"`.
+5. Flip the story to `IN_REVIEW`: `mcp__p2e__stories op=update status=IN_REVIEW`.
+6. Post the summary and PR URL to the linked GitHub issue.
+7. `TaskUpdate` the story's task to `completed`.
 
 ### `outcome: "blocked"`
 
-The story-lead has exhausted its internal strike-1 retry — this IS strike 2 from the supervisor's perspective.
+The story-lead's adaptive fix loop exited non-pass (stall, oscillation, or 6-round cap) — this is the BLOCKED report that maps to strike 2 from the supervisor's perspective. The story-lead already wrote one `kind: BLOCKER` ("author":"implementer") entry summarizing the fix-loop rounds and final open-problem count.
 
 1. Write the strike-2 BLOCKER checkpoint (see `## Story log checkpoint policy` Checkpoint 3).
 2. Set `mcp__p2e__stories op=update status=BLOCKED`.
@@ -109,7 +112,7 @@ The story-lead (`agents/p2e-story-lead.md`) receives the following at dispatch:
 - **Verification command** (`story.verificationCmd` or the track default from `## Verification matrix` in policy).
 - **Branch name**: `feat/<STORY-ID>-<topic-kebab>` (supervisor provides this; the lead renames the worktree branch before pushing if it doesn't match).
 
-The story-lead's 5-step lifecycle (defined in `agents/p2e-story-lead.md`): plan via the adaptive skill matrix → implement via nested workers → verify with one internal strike-1 retry → commit + PR → track-tiered review.
+The story-lead's 5-step lifecycle (defined in `agents/p2e-story-lead.md`): plan via the adaptive skill matrix → implement via nested workers → run the verify gate (verificationCmd + consumer-impact sweep + tiered review tool + adaptive fix loop per policy) → commit + PR (ordering per risk class in `## Review tiering`) → return structured report.
 
 The story-lead's final message is a single JSON report block the supervisor parses:
 
@@ -220,9 +223,9 @@ One entry per verification run that passed. The state flip to `IN_REVIEW` itself
 
 #### Checkpoint 3 — Gate failure / BLOCKED
 
-**Strike 1 (story-lead's internal retry consumed):** written by the **story-lead** (`"author": "implementer"`):
+**Fix-loop exited non-pass (story-lead reports `outcome: "blocked"`):** written by the **story-lead** (`"author": "implementer"`) when its adaptive fix loop exits with stall, oscillation, or 6-round cap — exactly one entry summarizing the rounds run and the final open-problem count:
 ```json
-{ "kind": "BLOCKER", "author": "implementer", "message": "Verification failed (strike 1): <short reason>" }
+{ "kind": "BLOCKER", "author": "implementer", "message": "Fix loop exited blocked: <N rounds, final open-problem count, short reason>" }
 ```
 
 **Strike 2 (supervisor receives `outcome: "blocked"` report in Phase 3):** written by the **supervisor** (`"author": "orchestrator"`):
