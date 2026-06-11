@@ -11,7 +11,7 @@ Follow the shared workflow contract exactly.
 
 ## Modes
 
-- **thick (default)** — populate ALL fields `/p2e-update-story` thicken would populate (including `filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Before drafting, gather graph context per `workflows/p2e-thicken.md ## Context gathering`. Run the sizing inference heuristic per `workflows/p2e-sizing-rubric.md`, and render the preview with `derived-from-source` annotations. If the source signal is insufficient, escalate once to the host brainstorming primitive per `workflows/p2e-add-story.md ## Brainstorming escalation`.
+- **thick (default)** — populate ALL fields `/p2e-update-story` thicken would populate (including `filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Before drafting, gather graph context per `workflows/p2e-thicken.md ## Context gathering`. Run the sizing inference heuristic per `workflows/p2e-sizing-rubric.md`, and render the preview with `derived-from-source` annotations. If the source signal is insufficient, escalate once to the host brainstorming primitive per `workflows/p2e-add-story.md ## Brainstorming escalation`. The legacy `--thick` flag is accepted as an explicit alias for the default thick mode (a no-op).
 - **thin (`--thin`)** — the fast opt-out path. Infer phase, tier, UXO, title, RRR, a conservative AC list, and a conservative capabilities list. Leave the six thick-spec fields empty. `sizing: M defaulted`.
 
 ## Preview rendering (sizing)

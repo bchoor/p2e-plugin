@@ -15,7 +15,7 @@ Hard rules:
 - Your job is to create or fill a P2E story, not to troubleshoot the user's product request.
 - Infer phase, tier, UXO, title, RRR, acceptance criteria, capabilities, and release from the request.
 - Honor the invocation mode:
-  - **thick (default)**: before drafting, gather graph context per `workflows/p2e-thicken.md ## Context gathering` (anchor = target UXO id). Populate ALL six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) per `workflows/p2e-thicken.md ## Thick-spec field population`. Run sizing inference per `workflows/p2e-thicken.md ## Sizing inference`. Annotate the inferred tier `derived-from-source: <evidence>`.
+  - **thick (default)**: before drafting, gather graph context per `workflows/p2e-thicken.md ## Context gathering` (anchor = target UXO id). Populate ALL six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) per `workflows/p2e-thicken.md ## Thick-spec field population`. Run sizing inference per `workflows/p2e-thicken.md ## Sizing inference`. Annotate the inferred tier `derived-from-source: <evidence>`. The legacy `--thick` flag is accepted as an explicit alias for the default thick mode (a no-op).
   - **thin (`--thin`)**: set `sizing: M` annotated `defaulted`. Do NOT populate the six thick-spec fields. Do NOT run the sizing heuristic.
 - ALWAYS show a preview and ask for review or confirmation before any write. The preview must include the `sizing` row, and the confirm step must let the user override it before the write. In thick mode the preview additionally shows the six thick-spec fields with provenance annotations.
 - NEVER silently create the story or issue without that preview gate.

@@ -17,4 +17,4 @@ Execute the shared workflow exactly.
 
 Cursor has no `AskUserQuestion` or `superpowers:brainstorming` primitive. Where the workflow specifies brainstorming escalation, batch the 2–4 questions into a single chat message and parse the user's reply inline. Cross-platform mirrors: `commands/p2e-add-story.md` (Claude), `skills/p2e-add-story/SKILL.md` (Codex).
 
-The default mode is **thick** — graph context is gathered and all six thick-spec fields are populated before the preview. Pass `--thin` to opt out to fast placeholder capture.
+The default mode is **thick** — graph context is gathered and all six thick-spec fields are populated before the preview. Pass `--thin` to opt out to fast placeholder capture. The legacy `--thick` flag is accepted as an explicit alias for the default thick mode (a no-op), so existing invocations keep working.

@@ -101,6 +101,7 @@ def validate_expected_files():
         "p2e-sizing-rubric.md",
         "p2e-sync.md",
         "p2e-sync-labels.md",
+        "p2e-thicken.md",
         "p2e-update-story.md",
         "p2e-uxo-recipe.md",
         "p2e-verify-story.md",
