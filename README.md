@@ -224,7 +224,7 @@ The plugin exposes the P2E MCP server tools via `mcp__plugin_p2e_p2e__*`. Each t
 | `tags` | `list` | Project-scoped tag registry derived from story tags. |
 | `members` | `list`, `invite`, `remove`, `update` | Product membership management. |
 | `coverage` | `get` | UXO coverage report: counts of DONE/partial/gap stories per UXO. |
-| `story_assets` | `list`, `get`, `create`, `delete` | File assets attached to a story (e.g. screenshots, specs). |
+| `story_assets` | `list`, `get`, `upload_url`, `link`, `create`, `delete` | File assets attached to a story (e.g. screenshots, specs). **Preferred upload path for binary/screenshot evidence:** `op=upload_url` mints a signed token; the browser/evidence subagent PUTs bytes directly to Vercel Blob (bytes never enter the orchestrator — see `## Screenshot evidence upload` in `workflows/p2e-policy.md`). Legacy `op=upload` with `data_base64` is retained for tiny files (<~25 KB) only. |
 | `story_log` | `append` | Append a narrative log entry to a story (AC change, verification, blocker, decision). Append-only — no `update` or `delete`. Used by `/p2e-work-on-next` checkpoints and by `/p2e-fix` discipline-log entries. |
 | `validate` | `run` | Run the P2E story-thickness predicate against a story and return failing clauses. |
 | `create_github_issue` | — | Create a linked GitHub issue for a story (one-shot). |

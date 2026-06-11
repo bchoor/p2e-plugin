@@ -202,7 +202,7 @@ mcp__p2e__story_log op=append project_slug=<slug> items=[{ "story_id": "<id>", "
 
 For UI-tagged stories, the verify gate invokes `/p2e-verify-story` as the evidence engine for the browser phases:
 - Phases 2–3 reproduce each AC and capture screenshots.
-- Screenshots are uploaded via `mcp__p2e__story_assets op=upload` with `criterion_id=<ac-cuid>` to link evidence directly to the criterion.
+- Screenshots are uploaded via `mcp__p2e__story_assets op=upload_url` (signed-URL path — see `## Screenshot evidence upload` in `workflows/p2e-policy.md`) with `criterion_id=<ac-cuid>` to link evidence directly to the criterion.
 - Verdicts are recorded via `mcp__p2e__criteria op=verdict items=[{"id":"<ac-cuid>","verdict":"PASS|FAIL|BLOCKED","note":"<screenshot path or test ref>"}]`.
 - The HTML report is an optional `--report` artifact; the tracker (detail panel + map badge) is the primary output.
 
