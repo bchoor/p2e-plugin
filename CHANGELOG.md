@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.10.6 — 2026-06-10
+
+Patch release packaging three changes that landed on `main` after `v0.10.5`: the converged verify gate, single-source recipe consolidation, and the `github_pr_url` doc note. No new workflow surface; refinements to existing verify/review behavior and docs.
+
+### Added
+- **Converged verify gate (P-07-L9, #34)** — risk-tiered review (Schema/Auth/Standard/UI/S-XS classes), per-AC UAT verdicts via `mcp__p2e__criteria op=verdict`, `verify-story` as the evidence engine, the consumer-impact sweep, the adaptive in-gate fix loop, and the model-routing table — all codified in `workflows/p2e-policy.md`.
+
+### Changed
+- **Recipe consolidation (P-07-L10, #35)** — duplicated recipe text across workflows folded into single-source sections referenced by pointer, removing drift between copies.
+- **`github_pr_url` documentation (B-02-L5, #36)** — README/MCP-surface note documenting `github_pr_url` on `stories op=update`.
+
 ## v0.10.5 — 2026-05-24
 
 Adds a shared 6-step task ladder (TaskCreate-backed) to `workflows/p2e-work-on-next.md`, providing live per-story progress tracking across multi-story implementation waves. Codifies two previously-implicit gaps in the workflow (step 4: `git commit` + `gh pr create`; step 5: `pr-review-toolkit /review-pr` invocation) and wires step 6 to the already-shipped `/p2e-cut-release` (v0.10.4). Also documents the same ladder structure for the global `/implement-spec` command (not shipped via this plugin) as a documented asymmetry.
