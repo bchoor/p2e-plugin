@@ -1,12 +1,14 @@
 ---
-title: Story preview — P-07-L9 (work-on-next v2 supervisor)
+title: Story preview — P-07-L15 (work-on-next v2 supervisor)
 hash: 0843ae6
 status: draft
 date: 2026-06-11
 owner: bchoor
 ---
 
-# Story preview — `P-07-L9`
+# Story preview — `P-07-L15`
+
+*Story id assigned at write time was P-07-L15; earlier draft used P-07-L9.*
 
 Thick-mode preview for `/p2e-add-story --thick`. Nothing below has been written to P2E yet — this is the confirm-gate render. Provenance: every field is `derived-from-source` (the approved plan at `docs/feat-work-on-next-v2/plan.md`) unless marked otherwise.
 
@@ -14,7 +16,7 @@ Thick-mode preview for `/p2e-add-story --thick`. Nothing below has been written 
 
 | Field | Value | Provenance |
 |---|---|---|
-| story_id | `P-07-L9` (server auto-appends next layer under `P-07`) | auto |
+| story_id | `P-07-L15` | auto |
 | UXO | attach to existing `P-07` — "Story lifecycle + health" | matched: same UXO as P-07-L8 (the v0.10.5 ladder story) |
 | Phase / Flow | **Plan** / persona Flow "Build the product" | from UXO |
 | Status | `OPEN` | thick spec passes the isThick predicate |

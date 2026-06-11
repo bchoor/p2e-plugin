@@ -95,13 +95,12 @@ The story-lead ran the verify gate inside its lifecycle (verificationCmd + consu
 
 ### `outcome: "blocked"`
 
-The story-lead's adaptive fix loop exited non-pass (stall, oscillation, or 6-round cap) — this is the BLOCKED report that maps to strike 2 from the supervisor's perspective. The story-lead already wrote one `kind: BLOCKER` ("author":"implementer") entry summarizing the fix-loop rounds and final open-problem count.
+The story-lead's adaptive fix loop exited non-pass (stall, oscillation, or 6-round cap) — this is **strike 1** from the supervisor's perspective. The story-lead already wrote one `kind: BLOCKER` (`"author":"implementer"`) entry summarizing the fix-loop rounds and final open-problem count.
 
-1. Write the strike-2 BLOCKER checkpoint (see `## Story log checkpoint policy` Checkpoint 3).
-2. Set `mcp__p2e__stories op=update status=BLOCKED`.
-3. Post the failure summary to the linked GitHub issue.
-4. Route to `p2e-architect` for a fresh approach (Claude Code) or `codex:rescue` (Codex).
-5. `TaskUpdate` the story's task description to `BLOCKED (strike 2)`, leave task status `in_progress`.
+1. Write a `kind: NOTE` (`"author":"orchestrator"`) strike-1 context entry naming the blocking problem and the architect approach being tried next.
+2. Route to `p2e-architect` for a fresh approach (Claude Code) or `codex:rescue` (Codex). The architect produces an implementation sketch; dispatch a new story-lead attempt (or inline implementer on Codex/Cursor) with that sketch.
+3. If the second attempt also exits BLOCKED — **strike 2**: write the strike-2 BLOCKER checkpoint (see `## Story log checkpoint policy` Checkpoint 3), set `mcp__p2e__stories op=update status=BLOCKED`, post the failure summary to the linked GitHub issue, and `TaskUpdate` the story's task description to `BLOCKED (strike 2)` (leave task status `in_progress`).
+4. If the second attempt passes: continue with the normal `outcome: "pass"` close-out steps above.
 
 ## Story-lead dispatch contract
 
@@ -153,11 +152,11 @@ Full supervisor architecture as described above: Phase 0–4, parallel story-lea
 
 ### Codex
 
-Codex has no nested Agent tree or dynamic Workflow tool. Use the **sequential fallback** — per story, in priority order: materialize first-turn briefing → implement inline (adaptive skill matrix still applies) → verify with one internal retry → commit + PR → tiered review. Track progress with `update_plan` (one entry per story). Stories end at `IN_REVIEW`; never cut a release inline.
+Codex has no nested Agent tree or dynamic Workflow tool. Use the **sequential fallback** — per story, in priority order: materialize first-turn briefing → implement inline (adaptive skill matrix still applies) → verify via the adaptive fix loop (per `## Verify gate` in policy; same 6-round/stall/oscillation exits) → commit + PR → tiered review. Track progress with `update_plan` (one entry per story). Stories end at `IN_REVIEW`; never cut a release inline.
 
 ### Cursor
 
-Same sequential fallback as Codex. No task primitive: emit one `kind: NOTE` story-log entry per lifecycle transition as the progress surface:
+Same sequential fallback as Codex (verify via the adaptive fix loop, not a single retry). No task primitive: emit one `kind: NOTE` story-log entry per lifecycle transition as the progress surface:
 
 ```
 mcp__p2e__story_log op=append project_slug=<slug> items=[{"story_id":"<id>","kind":"NOTE","author":"orchestrator","message":"Step: implementing — starting implementation"}]
@@ -209,7 +208,7 @@ mcp__p2e__criteria op=verdict items=[{"id":"<criterion-db-cuid>","verdict":"PASS
 
 Verdict values: `PASS` | `FAIL` | `BLOCKED` | `NOT_TESTED`. The `note` field (max 2000 chars) is required at Checkpoint 1; a bare verdict with no evidence is insufficient. When `note` is provided, the MCP server appends a `UAT_RESULT` StoryLogEntry automatically — the supervisor does NOT write a separate log entry for this checkpoint.
 
-For UI-tagged stories where `/p2e-verify-story` ran as the evidence engine (see `## Gate integration` in policy), the verdict and note are written by the verify-story phase; the supervisor confirms they were recorded rather than writing them directly.
+For UI-tagged stories where `/p2e-verify-story` ran as the evidence engine (see `### Gate integration with /p2e-verify-story` below), the verdict and note are written by the verify-story phase; the supervisor confirms they were recorded rather than writing them directly.
 
 #### Checkpoint 2 — Verification pass (Phase 3, right before `IN_REVIEW` flip)
 
@@ -230,7 +229,7 @@ One entry per verification run that passed. The state flip to `IN_REVIEW` itself
 
 **Strike 2 (supervisor receives `outcome: "blocked"` report in Phase 3):** written by the **supervisor** (`"author": "orchestrator"`):
 ```json
-{ "kind": "BLOCKER", "author": "orchestrator", "message": "Verification failed (strike 2): <short reason> — escalated to architect" }
+{ "kind": "BLOCKER", "author": "orchestrator", "message": "Verification failed (strike 2): <short reason> — architect-assisted retry also exited blocked" }
 ```
 
 The state flip to `BLOCKED` on strike 2 is NOT a separate log entry — it's implied by the strike-2 BLOCKER message and recorded in `story.status`.
