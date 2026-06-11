@@ -60,7 +60,7 @@ After the phases + UXOs are accepted, the wrapper can draft thin DRAFT stories f
 
 - Default: drafting is one-UXO-at-a-time. The user picks a UXO, the wrapper proposes 0–N title-only stories with a one-line justification citing the source passage (or the repo evidence in onboarding mode), and writes the accepted ones as `DRAFT` via `mcp__p2e__stories op=create`.
 - `--all`: fan drafting across every UXO in the matrix in a single pass, then render ONE combined multi-select accept so the user reviews every proposed draft in one view before any write. Fail-fast on the batched write; earlier successful drafts remain persisted.
-- All drafts written this way use `status=DRAFT`. The workflow does NOT create GitHub issues at draft time. Thickening and issue creation are deferred to `/p2e-update-story`.
+- All drafts written this way use `status=DRAFT`. The workflow does NOT create GitHub issues at draft time. Thickening and issue creation are deferred to `/p2e-update-story`. Batch drafting here is **thin by design** — story titles are captured quickly for the whole UXO set, with thick-spec population deferred to `/p2e-update-story`. When invoking `/p2e-add-story` from bootstrap batch flows, pass `--thin` explicitly so the thick-default in add-story does not trigger. Stories created here are not expected to pass the thick-gate until explicitly thickened.
 
 ## `--backfill-built` (onboarding only)
 

@@ -8,7 +8,7 @@ description: Plain-language Cursor router for P2E workflows. Route requests into
 Mirrors the Codex `p2e` router. Read `workflows/p2e-policy.md` first, then choose the one best-fit workflow, load it, and execute it end-to-end:
 
 - starting or mapping a project → `workflows/p2e-bootstrap.md`
-- creating a new story → `workflows/p2e-add-story.md`
+- creating a new story → `workflows/p2e-add-story.md` + `workflows/p2e-thicken.md` (thick by default — all six thick-spec fields and graph context; `--thin` opts out)
 - updating, thickening, steering, renaming, re-parenting, or retagging an existing story → `workflows/p2e-update-story.md`
 - implementing planned work → `workflows/p2e-work-on-next.md` AND `workflows/p2e-first-turn-briefing.md` (pick the next open story/stories and run the v2 supervisor; story-lead waves on Claude Code, sequential fallback on Codex/Cursor; stories end at IN_REVIEW, no release)
 - shipping or batching MULTIPLE planned stories through implementation + 360° verify + per-story PR + review + roll-up doc (e.g., "ship all v0.13 stories", "work through the release backlog with full gates") → `workflows/p2e-ship-batch.md` (which delegates Phase B to `workflows/p2e-work-on-next.md`); the heavyweight cousin of work-on-next — reach for it when shipping a release
