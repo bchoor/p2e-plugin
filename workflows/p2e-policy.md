@@ -253,3 +253,32 @@ The wrapper batches 2–4 concrete questions in a single turn. Prefer multiple-c
 ## AuditLog
 
 Every mutation on `Story`, `AcceptanceCriterion`, or `StoryCapability` writes an `AuditLog` row server-side via `src/lib/audit.ts` in the P2E main repo. The plugin never calls audit helpers directly — it relies on the MCP layer to record history.
+
+## Screenshot evidence upload
+
+**Preferred path: signed URL (`op=upload_url`)** — mint a token server-side, then PUT raw bytes directly to Vercel Blob. File bytes never enter the orchestrator/model context, so files of any size round-trip intact. The raw PUT is executed by the **browser/evidence subagent (sonnet/haiku)** — per `## Model routing`, browser work is always delegated to a sonnet/haiku subagent so bytes bypass the orchestrator entirely (P-07-L12). Verified on prod 2026-06-11: a 43,524-byte JPEG and a 587-byte PDF both landed at full size.
+
+```
+1. Mint token:
+   story_assets op=upload_url { project_slug, story_id, filename, content_type, criterion_id?, size? }
+   → returns { client_token, upload_url: "https://vercel.com/api/blob", api_version: "12",
+               pathname, max_bytes, allowed_content_types }
+
+2. PUT bytes (run by the browser/evidence subagent — bytes never enter the orchestrator/model context):
+   curl -X PUT "https://vercel.com/api/blob/?pathname=<URL-encoded-pathname>" \
+     -H "Authorization: Bearer <client_token>" \
+     -H "x-api-version: 12" \
+     -H "x-content-type: <content_type>" \
+     -H "x-vercel-blob-access: private" \
+     -H "x-content-length: <bytes>" \
+     --upload-file <file>
+   All 5 headers are required. x-api-version must be exactly "12".
+   URL-encode the pathname (slashes → %2F).
+
+3. Vercel fires onUploadCompleted server-to-server → the StoryAsset row is created automatically.
+   NO finalize step. Confirm with: story_assets op=list project_slug=<slug> story_id=<id>
+```
+
+**Legacy fallback: base64 (`op=upload data_base64=<base64>`)** — retained for tiny files (<~25 KB) only. The opus-1M orchestrator truncates large base64 literals in tool-call args, silently corrupting any file above that threshold. Do NOT use for UAT screenshots (typically 100 KB–900 KB).
+
+Pass `criterion_id=<ac-cuid>` on either path to scope the asset to the acceptance criterion.
