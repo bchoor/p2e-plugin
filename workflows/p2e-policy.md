@@ -38,6 +38,45 @@ Fast-track stays lightweight: no architect, no staff engineer.
 
 Wrappers should reserve higher-capacity specialist roles for architect and staff-engineer work only when the workflow explicitly calls for them.
 
+## Model ladder
+
+Roles and default models for the supervisor architecture (Claude Code). Other platforms map to their nearest equivalent and document the asymmetry.
+
+| Role | Model | Notes |
+| --- | --- | --- |
+| Supervisor (main session) | `fable` high-effort recommended; `opus` acceptable | Plans, dispatches, reviews. Never implements. The workflow should surface the recommendation once at run start if the session model is below opus. |
+| `p2e-staff-engineer` | `opus` | Wave planning, batch ≥ 2 (unchanged). |
+| `p2e-architect` | `opus` | Opt-in approach review + two-strike escalation (unchanged). |
+| `p2e-story-lead` | `sonnet` (Fast/Standard) / `opus` (Architectural) | Owns one story's lifecycle. Supervisor passes the model explicitly at dispatch. |
+| Workers (spawned by story-lead) | `haiku` mechanical/UAT capture; `sonnet` coding; `opus` debugging or cross-cutting refactors | Nested under the story-lead; total agent depth must stay ≤ 5. |
+| `fable` subagents | Only with explicit user approval at dispatch time | Reserved for judgment-critical one-offs. Never auto-dispatched. |
+
+## Adaptive skill matrix
+
+The story-lead (or the inline implementer on platforms without subagents) selects implementation skills from the story's signals. First matching row per category wins; rows are additive across categories.
+
+| Signal | Skill to pull in | When it runs |
+| --- | --- | --- |
+| `constraints` contains `approach-review` OR `--full-team` | `p2e-architect` + `superpowers:writing-plans` | Before dispatch (supervisor-side, unchanged shape-aware rule) |
+| Tag `ui` with code changes (not copy-only) | `frontend-design` | During implementation |
+| Standard/Architectural story whose `filesHint` spans ≥ 3 top-level directories OR has ≥ 3 capabilities | `feature-dev` phased pattern (explore → architect → implement) | During implementation |
+| Tag `bug` or `fix`, or story has a `FIXES` relation | `superpowers:systematic-debugging` | Before any fix is written |
+| Any capability with `isBreaking: true` | `superpowers:test-driven-development` | Tests precede implementation (unchanged rule) |
+| None of the above | Self-plan inline from the first-turn briefing | Default |
+
+## Review tiering
+
+Exactly one **primary** reviewer per story — never two review tools on the same diff.
+
+| Track | Primary review | When |
+| --- | --- | --- |
+| Fast | `/code-review` on the working-tree diff | Before the PR is opened; findings fixed, then commit + PR |
+| Standard / Architectural | `pr-review-toolkit:review-pr` on the open PR | After the PR is opened |
+
+`/security-review` is a conditional **secondary** dimension, not a duplicate: it fires only when (a) the diff touches the security globset (auth/session/crypto/secret/PII/migration paths, as defined in `workflows/p2e-ship-batch.md` Phase D), (b) the story's UXO sits in the Foundation **Security** slot, or (c) `--security` was passed. `--no-security` forces it off and requires a `kind: DECISION` story-log entry with the reason.
+
+`/ultrareview` is user-triggered and billed; no workflow may auto-invoke it.
+
 ## Canonical orchestrator naming
 
 - `work-on-next` is the canonical orchestrator name.
@@ -55,7 +94,7 @@ Wrappers should reserve higher-capacity specialist roles for architect and staff
 - The canonical lifecycle is `DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE`. A `BLOCKED` status sits outside this linear path and marks stories waiting on unfinished `DEPENDS_ON` relations OR escalated per the two-strike rule.
 - DRAFT → OPEN is gated server-side by the `isThick` predicate (enforced by the P2E MCP); the plugin does not perform this transition itself.
 - On wave-start the orchestrator moves selected stories to `IN_PROGRESS`.
-- On successful verification the orchestrator runs the verify gate (`## Verify gate`), records per-AC verdicts via `mcp__p2e__criteria op=verdict` with concrete evidence, writes the DEVIATIONS story-log entry, then moves the story to `IN_REVIEW`.
+- On successful verification the orchestrator moves the story to `IN_REVIEW` and toggles its acceptance criteria. PR and review activity happen with the story at `IN_REVIEW`; the merge itself is outside the orchestrator (release is a separate, user-triggered concern).
 - On two consecutive verification failures the orchestrator moves the story to `BLOCKED` and stops retrying (see `## Two-strike escalation`).
 - Final acceptance (IN_REVIEW → DONE) is a human action outside the orchestrator's scope, with one explicit carve-out for `/p2e-cut-release` (see below).
 
