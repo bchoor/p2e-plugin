@@ -9,6 +9,8 @@
 #   1. P2E_SKIP_STATUS_GATE=1 is set in environment
 #   2. No P2E story id matching /[A-Z]{1,2}-[0-9]+(-L[0-9]+)?/ found in the prompt
 #   3. subagent_type is one of: p2e-architect, p2e-staff-engineer, rescue
+#      (p2e-story-lead is deliberately NOT allowlisted — story-lead spawns are the
+#       implementer spawns this gate exists for; Phase 2a must flip IN_PROGRESS first)
 #
 # Cache: ~/.cache/p2e/<slug>/<story_id>.json  { "status": "...", "ts": <unix-epoch> }
 #        TTL = 30 seconds (warm-cache p99 < 500ms; cold cache may exceed due to MCP HTTP round trip)
@@ -143,7 +145,7 @@ fi
 # --------------------------------------------------------------------------- #
 # Block with remediation message
 # --------------------------------------------------------------------------- #
-echo "BLOCKED [pre-agent-spawn-story-status]: story ${STORY_ID} is at status '${CURRENT_STATUS}' — implementer spawn requires IN_PROGRESS or IN_REVIEW." >&2
+echo "BLOCKED [pre-agent-spawn-story-status]: story ${STORY_ID} is at status '${CURRENT_STATUS}' — implementer/p2e-story-lead spawn requires IN_PROGRESS or IN_REVIEW (work-on-next Phase 2a)." >&2
 echo "  Remediation: run '/p2e-update-story ${STORY_ID} status=IN_PROGRESS' to move it to IN_PROGRESS, then retry." >&2
 echo "  To bypass this gate (not recommended): set P2E_SKIP_STATUS_GATE=1." >&2
 exit 1
