@@ -5,7 +5,7 @@ This workflow verifies a P2E story's acceptance criteria by reproducing each one
 The workflow serves two modes:
 
 - **Standalone UAT** — invoked directly by the user or by `/p2e-ship-batch` Phase C. Presents a preview, requires explicit go-ahead, and produces a full HTML report.
-- **Gate evidence engine** — invoked by the verify gate in `workflows/p2e-work-on-next.md` step 11a for UI-tagged stories. Skips the preview confirm (the gate has already committed to running), uploads screenshots via `mcp__p2e__story_assets op=upload_url` (signed-URL path — see `## Screenshot evidence upload` in `workflows/p2e-policy.md`), records verdicts via `mcp__p2e__criteria op=verdict`, and produces an HTML report only when `--report` is passed.
+- **Gate evidence engine** — invoked by the verify gate in `workflows/p2e-work-on-next.md` step 11a for UI-tagged stories. Skips the preview confirm (the gate has already committed to running), uploads screenshots via the TOKEN-CARRY pattern (see `## Screenshot evidence upload → TOKEN-CARRY DISCIPLINE` in `workflows/p2e-policy.md`: write `op=upload_url` JSON to a temp file, then run `skills/p2e-verify-story/scripts/upload-asset.sh`), records verdicts via `mcp__p2e__criteria op=verdict`, and produces an HTML report only when `--report` is passed.
 
 The workflow combines the P2E plugin's MCP-first story sourcing with the cross-platform UAT pipeline (reproduce → capture → assemble → review → teardown). Primary output in gate-engine mode: tracker verdicts and scoped screenshot assets. Optional output: a single `.html` file plus per-AC evidence files, deposited under `docs/feat-<topic>/uat-results/` (preferred) or `.claude/uat-results/<story-id>/` (fallback).
 
@@ -22,7 +22,7 @@ The workflow combines the P2E plugin's MCP-first story sourcing with the cross-p
 ## Purpose
 
 - Reproduce each AC end-to-end and record a `PASS` / `FAIL` / `BLOCKED` verdict with concrete evidence (screenshot path or curl-output ref) directly in the tracker via `mcp__p2e__criteria op=verdict`.
-- Upload per-AC screenshot evidence via `mcp__p2e__story_assets op=upload_url` (signed-URL path — see `## Screenshot evidence upload` in `workflows/p2e-policy.md`) so the detail panel and map badge reflect UAT state.
+- Upload per-AC screenshot evidence using the TOKEN-CARRY pattern (see `## Screenshot evidence upload → TOKEN-CARRY DISCIPLINE` in `workflows/p2e-policy.md`): call `op=upload_url`, Write the returned JSON to a temp file, run `skills/p2e-verify-story/scripts/upload-asset.sh <ticket.json> <screenshot.png>`. Do NOT use base64 `op=upload`.
 - Optionally assemble a human-digestible HTML report (`--report` flag or standalone mode).
 - Use the same shape regardless of host platform — Claude Code, Codex, and Cursor all invoke the same workflow with the same outputs.
 - Make the failure mode of "reading PASS from a synthetic probe alone" structurally impossible by requiring a screenshot or curl-output artifact for every verdict.
@@ -76,7 +76,7 @@ For each acceptance criterion in `order`:
 4. **Probe state for completeness** — `evaluate_script` to read store / localStorage / network logs as *supporting* evidence (not the verdict).
 5. **Record verdict in the tracker** — call `mcp__p2e__criteria op=verdict` with `id=<ac-cuid>`, `verdict=PASS|FAIL|BLOCKED`, and `note=<screenshot path or curl output ref>`. In gate-engine mode this is mandatory per AC; in standalone mode it is performed unless `--no-tracker` is passed. `CAVEAT` is not a tracker verdict — map it to `PASS` with a note (caveat is informational, shipping acceptable) or `BLOCKED` (caveat gates shipping).
 
-After recording the verdict, if a screenshot was saved: upload it via the signed-URL path — see `## Screenshot evidence upload` in `workflows/p2e-policy.md` for the full two-step recipe (mint token with `story_assets op=upload_url`, then curl PUT bytes with the 5 required headers). Pass `story_id=<story-id>`, `filename=<NN-ac-slug.png>`, `content_type=image/png`, `caption=<one-line description>`, and `criterion_id=<ac-cuid>` on the `op=upload_url` call. The raw PUT is executed by the browser/evidence subagent so bytes never enter the orchestrator/model context. Fallback for tiny files (<~25 KB): `story_assets op=upload data_base64=<base64>` — do NOT use for UAT screenshots.
+After recording the verdict, if a screenshot was saved: upload it using the TOKEN-CARRY pattern — see `## Screenshot evidence upload → TOKEN-CARRY DISCIPLINE` in `workflows/p2e-policy.md` for the canonical recipe. Short form: (1) call `story_assets op=upload_url` with `story_id`, `filename`, `content_type=image/png`, `caption`, and `criterion_id=<ac-cuid>`; (2) Write the full JSON response to `/tmp/upload-ticket.json`; (3) run `skills/p2e-verify-story/scripts/upload-asset.sh /tmp/upload-ticket.json <screenshot.png> image/png`. The helper reads the HMAC-signed `client_token` from the file — never inline it in a shell command. Do NOT use `op=upload data_base64` (being removed server-side, B-01-L15).
 
 Store screenshots at `<artifacts-dir>/<NN>-<ac-slug>.png`. The two-digit prefix preserves order; the slug helps a reviewer scan filenames.
 

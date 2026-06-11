@@ -258,27 +258,49 @@ Every mutation on `Story`, `AcceptanceCriterion`, or `StoryCapability` writes an
 
 **Preferred path: signed URL (`op=upload_url`)** — mint a token server-side, then PUT raw bytes directly to Vercel Blob. File bytes never enter the orchestrator/model context, so files of any size round-trip intact. The raw PUT is executed by the **browser/evidence subagent (sonnet/haiku)** — per `## Model routing`, browser work is always delegated to a sonnet/haiku subagent so bytes bypass the orchestrator entirely (P-07-L12). Verified on prod 2026-06-11: a 43,524-byte JPEG and a 587-byte PDF both landed at full size.
 
+### TOKEN-CARRY DISCIPLINE (mandatory — P-07-L14)
+
+The `client_token` returned by `op=upload_url` is **HMAC-signed**. A single character of transcription drift — whitespace, newline, truncation, or shell escape — invalidates the signature and the PUT fails with a 4xx. Agents that re-emit the token inline into a curl command string reliably drift.
+
+**The only safe pattern:**
+
+1. Call `op=upload_url` via MCP. The orchestrator receives the JSON result.
+2. **Write the entire JSON result verbatim to a temp file** (e.g. `/tmp/upload-ticket.json`) using the Write tool — emitted once as a file, never as a shell argument.
+3. **Run the bundled helper** `skills/p2e-verify-story/scripts/upload-asset.sh <ticket.json> <local-file> [content_type]` — it reads `client_token`, `upload_url`, and `pathname` **from the file** using a JSON parser (`python3 -c` or `jq`), never via shell interpolation of the token value.
+4. Confirm with `story_assets op=list`.
+
+**What the `client_token` is and is NOT:**
+- It IS the `client_token` field in the `op=upload_url` JSON response — a short-lived Vercel Blob upload credential.
+- It is NOT an MCP/OAuth credential, a p2e API key, or anything stored in a credential store. Do not hunt for it anywhere except the JSON written in step 2.
+
 ```
-1. Mint token:
+1. Mint token (orchestrator):
    story_assets op=upload_url { project_slug, story_id, filename, content_type, criterion_id?, size? }
    → returns { client_token, upload_url: "https://vercel.com/api/blob", api_version: "12",
                pathname, max_bytes, allowed_content_types }
 
-2. PUT bytes (run by the browser/evidence subagent — bytes never enter the orchestrator/model context):
-   curl -X PUT "https://vercel.com/api/blob/?pathname=<URL-encoded-pathname>" \
+2. Write JSON to temp file (orchestrator, via Write tool — NEVER inline the token in a shell command):
+   Write the full JSON response to /tmp/upload-ticket.json
+
+3. PUT bytes (browser/evidence subagent runs the helper — token stays file-carried):
+   skills/p2e-verify-story/scripts/upload-asset.sh /tmp/upload-ticket.json <local-file> [content_type]
+
+   The helper builds this PUT internally (do not hand-assemble):
+   curl -X PUT "${upload_url}/?pathname=<URL-encoded-pathname>" \
      -H "Authorization: Bearer <client_token>" \
      -H "x-api-version: 12" \
      -H "x-content-type: <content_type>" \
      -H "x-vercel-blob-access: private" \
      -H "x-content-length: <bytes>" \
-     --upload-file <file>
+     --upload-file <local-file>
    All 5 headers are required. x-api-version must be exactly "12".
-   URL-encode the pathname (slashes → %2F).
+   URL-encode the pathname (slashes → %2F). Note the trailing slash in the URL: /?pathname=..., NOT ?pathname=... — the slash is required; omitting it returns 400 "Invalid client token" even with a valid HMAC.
+   Script exits non-zero on any non-2xx response.
 
-3. Vercel fires onUploadCompleted server-to-server → the StoryAsset row is created automatically.
+4. Vercel fires onUploadCompleted server-to-server → the StoryAsset row is created automatically.
    NO finalize step. Confirm with: story_assets op=list project_slug=<slug> story_id=<id>
 ```
 
-**Legacy fallback: base64 (`op=upload data_base64=<base64>`)** — retained for tiny files (<~25 KB) only. The opus-1M orchestrator truncates large base64 literals in tool-call args, silently corrupting any file above that threshold. Do NOT use for UAT screenshots (typically 100 KB–900 KB).
+**Legacy fallback: base64 (`op=upload data_base64=<base64>`)** — NOT supported for new uploads. The `op=upload` base64 path is being removed server-side (B-01-L15). `op=upload_url` is the only binary upload path. Do NOT use base64 for UAT screenshots.
 
-Pass `criterion_id=<ac-cuid>` on either path to scope the asset to the acceptance criterion.
+Pass `criterion_id=<ac-cuid>` on the `op=upload_url` call to scope the asset to the acceptance criterion.
