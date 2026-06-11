@@ -22,7 +22,7 @@ Call `mcp__p2e__stories op=context` with:
 
 When anchored by `story_id`, the response contains:
 - `anchor` — slim story row for the anchored story itself
-- `relations[]` — stories in a DEPENDS_ON / BUILDS_ON / etc. relation; each row carries `relationType` and `relationDirection` (inbound or outbound)
+- `relations[]` — stories in a DEPENDS_ON / BUILDS_ON / etc. relation; relation type and direction are encoded in each row's `roles[]` array (see Row shape below)
 - `siblings[]` — other stories under the same UXO
 - `phase_peers[]` — stories in other UXOs within the same phase
 
@@ -106,12 +106,12 @@ After populating thick-spec fields, ensure the story carries the signals the exe
 
 - **Tags** — add or confirm `ui` if the story has a clearly UI-facing request (AC or capability names a visible surface, component, or layout). Add `bug`/`fix` if the story repairs broken behavior. Do not invent tags beyond what the source supports.
 - **Capabilities** — mark `isBreaking: true` on any capability that changes a public API, an exported action signature, a schema, or a behavior contract that existing callers depend on.
-- **`filesHint`** — populated per the field-population rules above; the matrix reads its length to decide whether to invoke the `feature-dev` phased pattern.
+- **`filesHint`** — populated per the field-population rules above; the matrix reads whether it spans ≥ 3 top-level directories to decide whether to invoke the `feature-dev` phased pattern.
 
 These fields are part of the normal thick-spec output; no additional step is needed beyond filling them correctly.
 
 ## Brainstorming trigger
 
-If, after the first thick-spec draft pass, ≥ 2 of the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) are still empty AND neither the source argument nor the graph context supplies evidence to fill them, escalate exactly once to the host brainstorming primitive. See `## Brainstorming escalation` in `workflows/p2e-policy.md` for the canonical trigger conditions, question shape, and fold-back rules.
+If, after the first thick-spec draft pass, ≥ 2 of the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) are still empty AND neither the source argument nor sibling stories under the same UXO supply evidence to fill them, escalate exactly once to the host brainstorming primitive. See `## Brainstorming escalation` in `workflows/p2e-policy.md` for the canonical trigger conditions, question shape, and fold-back rules.
 
 Do NOT escalate for thin mode. Do NOT escalate more than once per flow. Empty cells are preferred over filler if the brainstorming answers still leave gaps.
