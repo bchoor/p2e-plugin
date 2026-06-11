@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.10.7 — 2026-06-11
+
+Patch release: the `p2e-verify-story` evidence engine and the `work-on-next` / `ship-batch` gates now upload UAT screenshots via the signed-URL path (`story_assets op=upload_url`) instead of base64 `op=upload`. Base64 truncates files >~25KB through the model — the exact failure B-01-L14 fixed app-side — corrupting 100KB–900KB screenshots into black/grey blobs. Docs-only; no new workflow surface.
+
+### Changed
+- **Signed-URL evidence upload (P-07-L13, #37)** — single-sourced the `op=upload_url` recipe in `workflows/p2e-policy.md` (`## Screenshot evidence upload`): mint a token, then the browser/evidence subagent PUTs bytes directly to Vercel Blob so file bytes never enter the orchestrator/model context (cross-ref P-07-L12). All 5 reference sites (`p2e-verify-story.md`, `p2e-work-on-next.md`, `p2e-ship-batch.md`, and both `p2e-verify-story/SKILL.md` mirrors) now point at it, and the README MCP-surface `story_assets` row lists `upload_url` + `link`. Base64 `op=upload` retained as a documented <~25KB legacy fallback.
+
 ## v0.10.6 — 2026-06-10
 
 Patch release packaging three changes that landed on `main` after `v0.10.5`: the converged verify gate, single-source recipe consolidation, and the `github_pr_url` doc note. No new workflow surface; refinements to existing verify/review behavior and docs.
