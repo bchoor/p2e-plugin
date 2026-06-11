@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- **`/p2e-work-on-next` v2 — supervisor architecture.** Replaces the 6-step TaskCreate ladder (v0.10.5) with: parallel `p2e-story-lead` subagent waves (nested workers, depth ≤ 5), dynamic-Workflow batch mode at N ≥ 4 (`--workflow`), one TaskCreate per story, adaptive skill matrix (`frontend-design` / `feature-dev` / `systematic-debugging` / TDD by story signals), track-tiered single-primary reviews (Fast / S/XS → `/code-review` pre-PR; Standard/Architectural/Schema/Auth → `pr-review-toolkit:review-pr` post-PR; conditional `/security-review` for Schema/Auth), and **no in-loop release** — stories end at `IN_REVIEW`, `/p2e-cut-release` is user-triggered. New `limit=N` arg. New agent `agents/p2e-story-lead.md`. Policy gains `## Adaptive skill matrix`; v2 model roles merged into existing `## Model routing` (the `## Model ladder` section introduced in this story is retired — all role definitions, including supervisor, story-lead, and implementer workers, now live in `## Model routing`); `## Review tiering` rewritten to define the tool mapping for the verify gate rather than a parallel review system. Story-lead runs the full verify gate (verificationCmd + consumer-impact sweep + adaptive fix loop per P-07-L9 policy) inside its lifecycle; supervisor records `op=verdict` + DEVIATIONS + IN_REVIEW flip in Phase 3.
+
+## v0.10.8 — 2026-06-11
+
+Patch release: mandates TOKEN-CARRY DISCIPLINE for Vercel Blob uploads (HMAC-signed `client_token` must never be inlined in a shell command — write JSON to temp file, run `upload-asset.sh`). Ships the bundled helper `skills/p2e-verify-story/scripts/upload-asset.sh` that reads token/url/pathname from the ticket file and executes the verified 5-header PUT. Supersedes the P-07-L13 recipe; docs-only otherwise.
+
+### Changed
+- **Token-carry discipline (P-07-L14, #38)** — `## Screenshot evidence upload` in `workflows/p2e-policy.md` gains the `TOKEN-CARRY DISCIPLINE` sub-block: write `op=upload_url` JSON verbatim to temp file; run `upload-asset.sh` to PUT (token never in a shell string). Trailing-slash warning added (`/?pathname=…` required). Base64 `op=upload` marked NOT supported for new uploads (B-01-L15 removes it server-side). New helper script `skills/p2e-verify-story/scripts/upload-asset.sh`.
+
 ## v0.10.7 — 2026-06-11
 
 Patch release: the `p2e-verify-story` evidence engine and the `work-on-next` / `ship-batch` gates now upload UAT screenshots via the signed-URL path (`story_assets op=upload_url`) instead of base64 `op=upload`. Base64 truncates files >~25KB through the model — the exact failure B-01-L14 fixed app-side — corrupting 100KB–900KB screenshots into black/grey blobs. Docs-only; no new workflow surface.
