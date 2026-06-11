@@ -1,7 +1,7 @@
 ---
 name: p2e-add-story
-description: Draft a new P2E story from a free-form description; `--thick` fills all thick-spec fields at add time; `--dry-run` previews without writing.
-argument-hint: <free-form description> [--thick] [--dry-run]
+description: Draft a new P2E story from a free-form description; thick by default — all thick-spec fields populated at add time. `--thin` opts out to fast placeholder capture. `--dry-run` previews without writing.
+argument-hint: <free-form description> [--thin] [--dry-run]
 ---
 
 # /p2e-add-story
@@ -11,8 +11,8 @@ Follow the shared workflow contract exactly.
 
 ## Modes
 
-- **thin (default)** — the fast path. Infer phase, tier, UXO, title, RRR, a conservative AC list, and a conservative capabilities list. Leave the six thick-spec fields empty. `sizing: M defaulted`.
-- **thick (`--thick`)** — populate ALL fields `/p2e-update-story` thicken would populate (including `filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`), run the sizing inference heuristic per `workflows/p2e-sizing-rubric.md`, and render the preview with `derived-from-source` annotations. If the source signal is insufficient, escalate once to the host brainstorming primitive per `workflows/p2e-add-story.md` `## Brainstorming escalation`.
+- **thick (default)** — populate ALL fields `/p2e-update-story` thicken would populate (including `filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Before drafting, gather graph context per `workflows/p2e-thicken.md ## Context gathering`. Run the sizing inference heuristic per `workflows/p2e-sizing-rubric.md`, and render the preview with `derived-from-source` annotations. If the source signal is insufficient, escalate once to the host brainstorming primitive per `workflows/p2e-add-story.md ## Brainstorming escalation`.
+- **thin (`--thin`)** — the fast opt-out path. Infer phase, tier, UXO, title, RRR, a conservative AC list, and a conservative capabilities list. Leave the six thick-spec fields empty. `sizing: M defaulted`.
 
 ## Preview rendering (sizing)
 

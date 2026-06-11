@@ -38,7 +38,21 @@ Fast-track stays lightweight: no architect, no staff engineer.
 
 Wrappers should reserve higher-capacity specialist roles for architect and staff-engineer work only when the workflow explicitly calls for them.
 
+## Draft-time skill-consult table
+
+During thick-spec drafting (add-story thick mode or update-story Thicken path), certain signals call for a pre-draft consult with a specialized skill. Consult mode only — the skill informs the draft; no full skill execution runs at draft time.
+
+| Signal | Skill to consult | What it shapes |
+| --- | --- | --- |
+| Tag `ui` OR a clearly UI-facing request (AC or capability names a visible surface, component, or layout) | `frontend-design` lens | Shapes AC wording, `constraints`, and `nonGoals` to reflect UI/UX concerns |
+| Ambiguity: ≥ 2 thick-spec fields unfillable after first draft pass AND source is insufficient | `superpowers:brainstorming` consult (see `## Brainstorming escalation`) | Batch 2–4 clarifying questions; fold answers back before preview |
+| Story has ≥ 3 capabilities OR `filesHint` spans ≥ 3 top-level directories | `feature-dev` explore pass | Informs `filesHint`, `contextDocs`, and `constraints` — a brief codebase scan before drafting |
+
+Cross-reference: the consult table is the **pre-draft** counterpart to the **execution-time** `## Adaptive skill matrix` below. Thicken must write the signals the execution matrix reads (tags, capabilities, `isBreaking`, `filesHint`) so `/p2e-work-on-next` can pick the right execution-time skills without a separate annotation channel.
+
 ## Adaptive skill matrix
+
+(Pre-draft consults that inform story shape before dispatch live in `## Draft-time skill-consult table` above.)
 
 The story-lead (or the inline implementer on platforms without subagents) selects implementation skills from the story's signals. First matching row per category wins; rows are additive across categories.
 

@@ -87,35 +87,11 @@ When the user picks **Move UXO**, or when the thicken path infers the story migh
 
 ## Thicken rules
 
-When the user picks **Thicken empty fields**, infer proposed values from these sources in priority order:
-
-1. The story's own `title` + existing populated fields.
-2. The optional `source` argument (PRD path, GH issue URL, or spec YAML under `specs/<projectSlug>/`).
-3. Sibling stories under the same UXO (same `uxoId`), especially their capabilities and acceptance-criteria patterns.
-
-Each thickened field must be annotated with the concrete derivation source in the re-rendered preview. If no source supports a field, leave it empty — empty cells are preferred over filler.
+When the user picks **Thicken empty fields**, follow the source-priority order, field-population rules, and provenance annotation contract in `workflows/p2e-thicken.md ## Thick-spec field population`. Graph context is gathered per `workflows/p2e-thicken.md ## Context gathering` (anchor = `story_id` for update-story). If no source supports a field, leave it empty — empty cells are preferred over filler.
 
 ### Sizing inference
 
-Sizing is a special case: it is always populated (every Story row has a `sizing` value after P-07-L6), so the thicken path does not fill an empty cell — it **re-infers** a proposed tier from the staged state of the story and compares it to the current value. If the inferred tier differs from the current one, the preview shows a before/after diff with a `derived-from-source` annotation; otherwise the row is annotated `populated` and left alone.
-
-The inference reads five inputs from the staged state (the post-thicken projection, not the pre-thicken values):
-
-1. **Title** — scanned for the bump-triggers `rewrite`, `migrate`, `redesign`, `refactor`, `extract`.
-2. **Capabilities** — count of capabilities and whether any has `isBreaking: true`.
-3. **Acceptance criteria count** — `≤ 3` and `≥ 8` thresholds per the rubric.
-4. **Tags** — normalized (lowercased, trimmed, whitespace→`-`), matched against the weighting table.
-5. **`files_hint` length** — `≥ 7` and `≥ 12` thresholds per the rubric.
-
-The canonical tier definitions, weighting rules, and worked examples live in `workflows/p2e-sizing-rubric.md` — the thicken path must not re-invent them.
-
-The annotation cites the specific inputs that forced the tier. Examples the preview renderer should emit:
-
-> `derived-from-source: 3 capabilities + 6 AC + Schema tag → L`
-> `derived-from-source: 2 capabilities + 2 AC + Docs tag + 1 file_hint → S`
-> `derived-from-source: isBreaking capability + UI tag + 9 AC → XL`
-
-The inferred value is a proposal; the user can override it in the confirm step via the **Adjust sizing** action (see `## Steer rules`).
+See `workflows/p2e-thicken.md ## Sizing inference` for the full five-input inference block and annotation examples. The canonical rubric lives in `workflows/p2e-sizing-rubric.md`. The inferred value is a proposal; the user can override it in the confirm step via the **Adjust sizing** action (see `## Steer rules`).
 
 ## Steer rules
 

@@ -18,10 +18,12 @@ This workflow drafts a single story, its acceptance criteria, and its capabiliti
 
 The command supports two drafting modes, selected at invocation:
 
-- **thin (default)** — infer phase, tier, UXO, title, RRR, a conservative acceptance-criteria list, a conservative capabilities list, and `priority` from the description. Do NOT populate the thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Leave `sizing` at the defaulted `M` and `priority` at the defaulted `null` unless the user signals urgency (see `## Priority rules`). This is the fastest path and is the right default when the intent is to capture a placeholder for later thickening.
-- **thick (`--thick`)** — populate ALL fields the `/p2e-update-story` thicken path would populate, including the six thick-spec fields. Run the sizing inference heuristic per `workflows/p2e-sizing-rubric.md` and annotate the inferred tier `derived-from-source: <evidence>` instead of `defaulted`. If the source signal is insufficient, invoke the host brainstorming primitive exactly once (see `## Brainstorming escalation`) to batch 2–4 questions before drafting. Thick mode is opt-in; thin-mode behavior is unchanged.
+- **thick (default)** — populate ALL fields the `/p2e-update-story` thicken path would populate, including the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Before drafting, gather graph context per `workflows/p2e-thicken.md ## Context gathering`. Run the sizing inference heuristic per `workflows/p2e-sizing-rubric.md` and annotate the inferred tier `derived-from-source: <evidence>` instead of `defaulted`. If the source signal is insufficient, invoke the host brainstorming primitive exactly once (see `## Brainstorming escalation`) to batch 2–4 questions before drafting. This is the default and ensures stories pass the thick-gate immediately on capture.
+- **thin (`--thin`)** — the fast opt-out path. Infer phase, tier, UXO, title, RRR, a conservative acceptance-criteria list, a conservative capabilities list, and `priority` from the description. Do NOT populate the thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`). Leave `sizing` at the defaulted `M` and `priority` at the defaulted `null` unless the user signals urgency (see `## Priority rules`). Use this path for fast placeholder capture when thickening is explicitly deferred.
 
 Both modes share the preview/confirm contract below. Thick mode adds more fields and richer provenance annotations; it does not change the accept/adjust/abort gate.
+
+**Bootstrap batch flows** (`/p2e-bootstrap --all` and the onboarding backfill sub-step) invoke with `--thin` semantics explicitly and are unaffected by the thick default. Do not change bootstrap drafting behavior.
 
 ## Deprecated fill mode
 
@@ -38,8 +40,8 @@ See `## UXO placement matching` in `workflows/p2e-uxo-recipe.md` for the canonic
 
 ## Workflow
 
-1. Resolve the source description or the existing story being filled. Note whether `--thick` is set; if so, enter thick mode.
-2. Determine phase, tier, UXO (using `## UXO placement matching` when multiple UXOs share the cell), release, title, RRR fields, acceptance criteria, capabilities, and `priority` (see `## Priority rules`). In thick mode, additionally draft the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) and run sizing inference per `workflows/p2e-sizing-rubric.md`.
+1. Resolve the source description or the existing story being filled. Note whether `--thin` is set; if not set, enter thick mode (the default).
+2. Determine phase, tier, UXO (using `## UXO placement matching` when multiple UXOs share the cell), release, title, RRR fields, acceptance criteria, capabilities, and `priority` (see `## Priority rules`). In thick mode, gather graph context per `workflows/p2e-thicken.md ## Context gathering` BEFORE drafting the thick-spec fields; then draft the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) and run sizing inference per `workflows/p2e-thicken.md ## Sizing inference` (which in turn references `workflows/p2e-sizing-rubric.md`).
 3. Signal check (thick mode only): if after the first draft pass ≥ 2 thick-spec fields are still empty AND the source lacks evidence to fill them, invoke the brainstorming primitive once per `## Brainstorming escalation`, fold the answers back into the staged draft, and re-run the draft.
 4. The wrapper must render a preview that annotates what was matched, inferred, defaulted, or derived-from-source (see `## Required preview contents`).
 5. The wrapper must ask for a single confirm step with adjustment options for phase/tier, UXO, story fields, acceptance criteria, capabilities, sizing, thick-spec fields (thick mode), or abort.
@@ -90,12 +92,12 @@ If the user does not accept, do not write.
 - Capabilities should describe distinct behavior changes.
 - Breaking changes must be marked explicitly.
 - Release defaults should be derived from existing planned stories when available.
-- In thick mode, the six thick-spec fields follow the same provenance rules as `/p2e-update-story` thicken: cite the concrete derivation source in the annotation, and leave the cell empty if no source supports it. Empty cells are preferred over filler.
+- In thick mode, the six thick-spec fields follow the source-priority order and provenance rules in `workflows/p2e-thicken.md ## Thick-spec field population`. Cite the concrete derivation source in the annotation, and leave the cell empty if no source supports it. Empty cells are preferred over filler.
 
 ## Sizing rules
 
 - In thin mode, every new story is drafted with `sizing: M` and the annotation `defaulted`. No heuristic runs at add time — in thin mode the story usually has only a title and a small AC list, which is not enough signal to credibly infer a tier.
-- In thick mode, the drafter runs the rubric's inference heuristic against the staged post-draft projection (title + capabilities + AC count + tags + `files_hint` length) and proposes a tier annotated `derived-from-source: <evidence>`. The evidence string cites the specific inputs that forced the tier. The rubric in `workflows/p2e-sizing-rubric.md` is authoritative; thick mode must not inline it.
+- In thick mode, run the sizing inference per `workflows/p2e-thicken.md ## Sizing inference`, which references `workflows/p2e-sizing-rubric.md` as the canonical rubric.
 - The drafter never asks the LLM to pick a sizing in thin mode. The confirm step is the only place where sizing may change before the write in thin mode; in thick mode, the confirm step may either accept the inferred tier or override it.
 - The MCP write passes the final accepted `sizing` value and the final accepted `priority` value through to `mcp__p2e__stories op=create`. If the user does not override sizing, the annotated value (`defaulted` in thin mode, inferred in thick mode) is written. If the user does not override priority, the defaulted `null` (or stated-by-user value) is written.
 - The canonical rubric (XS → XXL) and the inference inputs used during thicken are documented in `workflows/p2e-sizing-rubric.md`; commands and skills must not inline that rubric — they only reference it.

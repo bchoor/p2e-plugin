@@ -16,3 +16,7 @@ The preview rendered by this command includes a `sizing` row alongside the other
 ## Brainstorming escalation
 
 The thicken path may invoke the host brainstorming primitive (`superpowers:brainstorming` on Claude; Codex's native equivalent) when ≥ 2 of the six thick-spec fields (`filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`) would otherwise remain empty AND neither the provided `source` argument nor sibling stories under the same UXO supply enough evidence. The escalation batches 2–4 clarifying questions in a single turn, folds the answers back into the staged draft, and annotates resulting fields `derived-from-brainstorming` in the re-rendered preview. Single round per flow; never bypasses the preview/confirm gate. See `workflows/p2e-update-story.md` `## Brainstorming escalation` for the full contract.
+
+## Context gathering
+
+Before the Thicken path drafts thick-spec fields, it gathers story-graph context per `workflows/p2e-thicken.md ## Context gathering` (anchor = `story_id` of the story being updated). This surfaces neighboring capabilities so the thicken draft does not re-propose already-built work.

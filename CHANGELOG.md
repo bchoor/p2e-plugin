@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **`workflows/p2e-thicken.md`** — new single-source thicken recipe (A-03-L6). Consolidates context-gathering (`stories op=context` primary + `op=get include=[relations,siblings]` + `relations op=stack` fallback), thick-spec field-population source-priority order, sizing inference (five-input block, `effortHint` mapping), signal-annotation rules for execution-time routing, and the brainstorming trigger pointer. Referenced by both `p2e-add-story.md` and `p2e-update-story.md`; removes duplicated thicken prose from both.
+- **`## Draft-time skill-consult table`** in `workflows/p2e-policy.md` — pre-draft consult table cross-referenced with the execution-time `## Adaptive skill matrix`: `ui` signal → `frontend-design` lens shapes AC/constraints; ambiguity (≥ 2 unfillable thick fields) → `superpowers:brainstorming`; ≥ 3 capabilities or multi-directory `filesHint` → `feature-dev` explore pass. Consult mode only — no full skill runs at draft time.
+
+### Changed
+- **`workflows/p2e-add-story.md`** — **thick is now the default drafting mode; `--thin` opts out** to fast placeholder capture. Inline thick-spec drafting rules and sizing-inference prose replaced with pointers to `workflows/p2e-thicken.md`. Bootstrap batch flows stay thin (explicit `--thin`).
+- **`workflows/p2e-update-story.md`** — `## Thicken rules` body replaced with pointer to `workflows/p2e-thicken.md`; `### Sizing inference` sub-section replaced with pointer. Section headings preserved so existing cross-references stay valid.
+- **`workflows/p2e-bootstrap.md`** — explicit note that batch drafting is thin by design and that bootstrap flows pass `--thin` when invoking add-story.
+- **All add-story + update-story wrappers** (`commands/p2e-add-story.md`, `commands/p2e-update-story.md`, `skills/p2e-add-story/SKILL.md`, `skills/p2e-update-story/SKILL.md`, `.cursor/skills/p2e-add-story/SKILL.md`, `.cursor/skills/p2e-update-story/SKILL.md`) updated: thick-default + `--thin` wording for add-story; `workflows/p2e-thicken.md` added to read lists; context-gathering note for update-story.
+- **`skills/p2e/SKILL.md`** and **`.cursor/skills/p2e/SKILL.md`** router lines for add-story updated to reflect thick default.
+- **README.md** — add-story command-table row updated to show `--thin` opt-out and thick-default description.
+
 ## v0.11.0 — 2026-06-11
 
 Minor release: /p2e-work-on-next v2 supervisor architecture (P-07-L15, #39).
