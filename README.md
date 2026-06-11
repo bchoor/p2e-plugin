@@ -10,7 +10,7 @@ Primary workflows:
 - `/p2e-bootstrap` and `p2e-bootstrap` — supports `--mode={new,onboarding}`, `--backfill-built`, and `--all`
 - `/p2e-add-story` and `p2e-add-story`
 - `/p2e-update-story` and `p2e-update-story` — thicken or steer any existing story (replaces `/p2e-add-story --fill`)
-- `/p2e-work-on-next` and `p2e-work-on-next` — picks the top story by priority, then orchestrates implementation
+- `/p2e-work-on-next` and `p2e-work-on-next` — v2 supervisor: selects the next story/stories by priority, dispatches parallel story-lead subagent waves, stories end at `IN_REVIEW` (no release)
 - `/p2e-sync-labels`, `/p2e-sync`, `/p2e-manage-uxo`, `/p2e-archaeology` — label/drift reconciliation, UXO authoring, autonomous repo onboarding
 - `/p2e-fix` and `p2e-fix` — fix one or more bugs by uprooting and re-implementing, not by layering patches (per-bug fix-shape gate)
 - `/p2e-bind` and `p2e-bind` — bind this repo checkout to a P2E project for automatic slug calibration
@@ -31,7 +31,7 @@ Neither hook does anything in repos that lack `.p2e/project.json` — non-P2E re
 - `bootstrap` turns a PRD into a 2D P2E story map (`--mode=new`, default) or onboards an existing repo via a brainstorming interview that reads docs, route tree, tests, recent git history, and open GH issues (`--mode=onboarding`). `--backfill-built` proposes DONE layers from merged PRs; `--all` fans story drafting across every UXO with one combined accept.
 - `add-story` creates a new story through the P2E MCP and links its GitHub issue.
 - `update-story` thickens empty fields or steers populated ones on any existing story — rename, re-parent, retag, adjust release, thicken from source — with an annotated preview/confirm loop and the same fail-fast MCP write path. Enforces the P-07-L1 thickness predicate on DRAFT → OPEN.
-- `work-on-next` selects planned work — the OPEN queue is ordered by `Story.priority` (`P0` → `P1` → `P2` → `P3` → unprioritized), then oldest-first — classifies it, orchestrates implementation, and performs normal end-of-run label reconciliation when context is sufficient.
+- `work-on-next` v2 supervisor — selects the next story/stories by `Story.priority` (`P0` → `P1` → `P2` → `P3` → unprioritized, then oldest-first), dispatches parallel `p2e-story-lead` subagent waves (one per story), and performs end-of-run label reconciliation. Stories end at `IN_REVIEW`; no release is cut automatically — use `/p2e-cut-release` when ready to ship.
 - `sync-labels` remains available as an explicit standalone repair/reconcile workflow when automatic sync is incomplete or external changes need cleanup.
 - `fix` resolves a batch of bugs with a per-bug discipline: identify what to **delete** before what to **add**, name (and reject) the band-aid alternative, then verify both the original problem and the absence of regressions before completing.
 
@@ -95,7 +95,7 @@ Every workflow below is one shared `workflows/<name>.md`. Claude invokes it via 
 | Bootstrap | `/p2e-bootstrap <doc-or-repo> [project=<slug>] [--mode={new,onboarding}] [--backfill-built] [--all] [--dry-run]` | `p2e-bootstrap` / NL | `/p2e-bootstrap` / NL | Start a new project map from a PRD (`--mode=new`, default) or onboard an existing repo (`--mode=onboarding`). Discovers the seeded persona + Foundation Flows; never creates Foundation phases. `--backfill-built` proposes DONE layers from merged PRs; `--all` fans story drafting across every UXO. |
 | Add story | `/p2e-add-story <description>` | `p2e-add-story` / NL | `/p2e-add-story` / NL | Create a new story (`priority` defaults to unprioritized; stated urgency maps to `P0`/`P1`). The legacy `--fill <storyId>` path is deprecated and delegates to `/p2e-update-story` for one release. |
 | Update story | `/p2e-update-story <story_id> [source=<prd-or-issue>] [--dry-run]` | `p2e-update-story` / NL | `/p2e-update-story` / NL | Thicken empty fields, steer populated ones, rename, re-parent, retag, adjust release, or re-prioritize on any existing story. Enforces the P-07-L1 thickness predicate on DRAFT → OPEN. |
-| Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [--full-team] [--dry-run]` | `p2e-work-on-next` / NL | `/p2e-work-on-next` / NL | Pick the top OPEN story by priority (`P0`→`P3`→null, then oldest-first; one global queue across all Flows), classify it, orchestrate implementation, and run the normal sync path. |
+| Work next | `/p2e-work-on-next [story_id=X-YY-LZ] [limit=N] [--full-team] [--workflow] [--dry-run]` | `p2e-work-on-next` / NL | `/p2e-work-on-next` / NL | Pick the next open P2E story/stories (`story_id=` or `limit=N`) and run the v2 supervisor — parallel story-lead waves, tiered reviews, stories end at `IN_REVIEW` (no release). `--workflow` forces dynamic-Workflow batch mode (auto at N ≥ 4). |
 | Ship batch | `/p2e-ship-batch [release=v0.13] [phase=Build] [tag=plugin] [priority=P0,P1] [story_id=X-00-L0]… [--exclude=Y]… [--max=5] [--full-team] [--security \| --no-security] [--stop-on-fail] [--cut-release] [--budget=<td>] [--yes] [--dry-run]` | `p2e-ship-batch` / NL | `/p2e-ship-batch` / NL | Heavyweight batch ship — delegates per-story implementation to work-on-next (Phase B), then layers 360° verify via `/p2e-verify-story` (the v0.10.2 UAT-report workflow), per-story PR + `/pr-review-toolkit:review-pr`, conditional `/security-review` auto-triggered from diff paths (auth / session / crypto / secret / token / oauth / permission / password / identity / login / jwt / saml / iam paths, PII / GDPR / HIPAA / PCI / PHI markers, sensitive migration columns, capabilities `DEPRECATES`/`REMOVES`-ing auth identifiers, or Foundation `Security` slot membership — full globset in workflow step 18), and a rich-Markdown roll-up at `docs/feat-ship-batch-<date>/index.md`. Implementer-side spec deviations are captured as `SCOPE_CHANGE` / `DECISION` story-log entries via the shared first-turn briefing contract, and audited at the end of Phase B. Each story is tracked as a `TaskCreate` task with live status updates. Failure isolation defaults to skip-and-continue; `--stop-on-fail` halts the whole batch. Reach for this when shipping a release. |
 | Fix bugs | `/p2e-fix <bug-1>[, <bug-2>, …] [--dry-run] [--allow-band-aid="<bug-id>=<reason>"]` | `p2e-fix` / NL | `/p2e-fix` / NL | Resolve a batch of bugs by uprooting and re-implementing — per-bug fix-shape gate (Deleted / Replaced / Preserved / Band-aid rejected), root-cause discipline, verify-both-directions before completing. |
 | Verify story | `/p2e-verify-story <story_id-or-spec-path-or-issue-url> [--artifacts-dir=<path>]` | `p2e-verify-story` / NL | `/p2e-verify-story` / NL | Reproduce every AC against the running app, capture visible-pixel evidence (screenshots for UI ACs, curl output for backend-only ACs), and assemble a self-contained rich-HTML UAT report. Output is information only — does not move the story's lifecycle. |
@@ -112,7 +112,7 @@ Every workflow below is one shared `workflows/<name>.md`. Claude invokes it via 
 
 ## Sync behavior
 
-`work-on-next` now performs normal end-of-run label reconciliation when it has enough issue and merge context to do so safely.
+The `work-on-next` v2 supervisor performs end-of-run label reconciliation (Phase 4) when it has enough issue and merge context to do so safely. Stories complete the run at `IN_REVIEW`; reconciliation reflects that state.
 
 Use `sync-labels` separately when:
 
@@ -130,12 +130,13 @@ When `work-on-next` classifies a story, it routes it through the shared track lo
 | Standard | general implementer plus architect |
 | Architectural | general implementer plus architect and staff-engineer planning |
 
-Specialist prompts remain:
+Bundled agents:
 
-- `p2e-architect`
-- `p2e-staff-engineer`
+- `p2e-story-lead` — per-story lifecycle owner dispatched by the v2 supervisor; owns plan → implement → verify gate → commit+PR → review for one story and returns a structured JSON report.
+- `p2e-architect` — approach design and sketch for Standard/Architectural stories; invoked at strike-1 escalation.
+- `p2e-staff-engineer` — wave dependency graph and file-collision analysis for batch runs.
 
-Those prompts are shared across Claude orchestration and Codex subagent orchestration.
+Those agents are shared across Claude orchestration and Codex subagent orchestration.
 
 ## Status gate hook (PreToolUse)
 

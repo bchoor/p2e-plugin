@@ -53,13 +53,13 @@ Reach for this when shipping a release. For single-story or fast-track spot work
 
 ### Phase B — Implement (delegated to work-on-next)
 
-9. `TaskUpdate` each story's task to `in_progress` as its wave starts. Delegate per-wave implementation to `workflows/p2e-work-on-next.md` **steps 9–12 exactly as written** (steps 7–8 — worktree setup and staff-engineer wave plan — were already handled in Phase A steps 5–7 above; do not re-run them). Do not fork the briefing, status-gate, verify-gate, or label-sync logic. Pass `--full-team` through if the user supplied it. The only ship-batch-specific interception inside this range is the scope-change audit (step 11 below), which fires after work-on-next step 9c (implementer verification passes) and before work-on-next step 11 (the verify gate + verdict recording + DEVIATIONS checkpoint + IN_REVIEW flip).
+9. `TaskUpdate` each story's task to `in_progress` as its wave starts. Delegate per-wave implementation to `workflows/p2e-work-on-next.md` **Phases 2–3 exactly as written** (Phase 1 — wave plan + worktree setup — was already handled in Phase A steps 5–7 above; do not re-run it). Do not fork the briefing, status-gate, verify-gate, or label-sync logic. Pass `--full-team` through if the user supplied it. The only ship-batch-specific interception inside this range is the scope-change audit (step 11 below), which fires after work-on-next Phase 2 execute (story-lead verification passes) and before work-on-next Phase 3 close (records AC verdicts, writes VERIFICATION + DEVIATIONS log entries, flips IN_REVIEW — the verify gate itself already ran inside the story-lead).
 
 10. **Implementer deviation reporting** (enforced via `workflows/p2e-first-turn-briefing.md` — see its `## Deviation reporting` section). The implementer is contracted to emit a story-log entry **before** any mid-flight spec deviation:
     - `kind: SCOPE_CHANGE` for changes to the spec itself (AC dropped/modified, capability adjusted, non-goal added, scope reduced/expanded).
     - `kind: DECISION` for non-obvious judgment calls that don't change the spec (chose library A over B, picked a wrapper over a fork, deferred X to a follow-up story).
 
-11. **Scope-change audit** — after the implementer reports completion (work-on-next step 9c finishes with verification pass) and **before** work-on-next step 11 executes the verify gate + verdict recording + DEVIATIONS checkpoint + IN_REVIEW flip, the orchestrator runs the audit:
+11. **Scope-change audit** — after the story-lead reports completion (work-on-next Phase 2 execute finishes with verification pass) and **before** work-on-next Phase 3 close (records AC verdicts, writes VERIFICATION + DEVIATIONS log entries, flips IN_REVIEW — the verify gate itself already ran inside the story-lead), the orchestrator runs the audit:
     - Diff the as-implemented state against the briefed spec: ACs toggled vs. checked, capabilities matched vs. specced, non-goals respected vs. crossed.
     - **Non-trivial delta + zero `SCOPE_CHANGE`/`DECISION` entries in the post-briefing window = a missed report.** Surface it to the user with the diff and one of three resolutions:
       a. Author a retroactive `SCOPE_CHANGE` / `DECISION` entry now (user dictates the message).
@@ -78,7 +78,9 @@ Reach for this when shipping a release. For single-story or fast-track spot work
 
 ### Phase D — PR per story + review
 
-16. For each story that passed Phase C, open **one PR per story** (clean diff-per-story is the right grain for review):
+> **Review dedup rule (v2 supervisor):** When Phase B ran the work-on-next v2 supervisor, each story-lead already executed the track-tiered review in-loop (Fast → `/code-review` pre-PR; Standard/Architectural → `pr-review-toolkit:review-pr` on the open PR). Phase D does NOT re-run `pr-review-toolkit:review-pr` on the same PR in that case — doing so would duplicate the review. Instead, Phase D (a) verifies that each story-lead report's `review` block is present and that `findings_addressed` is non-null (i.e., the lead actually ran the review), and (b) runs `/security-review` only when the report's `security_review` field is `"skipped"` AND the security gate triggers (Phase D step 18) would otherwise fire. If `security_review` is already `"run"`, skip it. If the Phase B substrate was a pre-v2 orchestrator (no structured JSON report), fall through to step 17 as normal.
+
+16. For each story that passed Phase C: when Phase B ran the v2 supervisor and the story-lead report carries a non-null `pr_url`, the PR already exists — skip PR creation and proceed directly to step 17. Otherwise, open **one PR per story** (clean diff-per-story is the right grain for review):
     - Branch: `feat/<story_id>-<short-slug>` (per repo branch-naming convention in `CLAUDE.md`).
     - PR title: `<story_id>: <story title>`.
     - PR body: links to the story (via the linked GH issue if present), the UAT-report HTML path (from Phase C), and a one-paragraph summary sourced from the story log's VERIFICATION entry. Attach the UAT report as a PR artifact when supported.
@@ -176,7 +178,7 @@ Phase C / Phase D failures append `kind: BLOCKER` per the existing pattern — m
 - `/security-review` is a user-installed command; when missing on the host, the Phase D security gate hard-skips with a logged `kind: DECISION` entry recording the skip reason and the matched trigger paths.
 - `TaskCreate` / `TaskUpdate` are Claude Code natives. On Codex and Cursor, the per-story tracking degrades to a chat-prose progress block printed at each phase boundary; the workstream visibility contract stays the same, just without the spinner UI.
 - Phase F `--cut-release` auto-handoff is **Claude Code only**. On Codex and Cursor, the workflow prints the next step for the user to run manually.
-- The `PreToolUse` status-gate hook is Claude Code only — Phase B inherits work-on-next's self-enforced MCP status discipline (`workflows/p2e-work-on-next.md` step 9a — the `OPEN → IN_PROGRESS` transition that must complete before implementers are spawned).
+- The `PreToolUse` status-gate hook is Claude Code only — Phase B inherits work-on-next's self-enforced MCP status discipline (`workflows/p2e-work-on-next.md` Phase 2a status flip — the `OPEN → IN_PROGRESS` transition that must complete before story-leads are spawned).
 - The `p2e-architect` and `p2e-staff-engineer` subagents are Claude Code natives. On Codex and Cursor, the workflow inlines the equivalent prompts as sub-steps in the same chat (per `skills/p2e/SKILL.md` persona routing matrix).
 
 ## Cost ceiling
