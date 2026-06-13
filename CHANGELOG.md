@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## v0.11.2 — 2026-06-13
 
 ### Removed
 - **`hooks/pre-agent-spawn-story-status.sh`** + its `PreToolUse` / `Agent` registration in `hooks/hooks.json` — the implementer status-gate hook is **removed**. It had two defects that cannot be fixed inside a hook: (1) its only P2E-detection was a regex matching any `[A-Z]{1,2}-[0-9]+` token, so it false-blocked unrelated agents (e.g. a data label `EB-2`) in any repo; (2) it verified status with an unauthenticated `curl` to the OAuth-gated MCP, which always failed → fail-closed → blocked every spawn. No hook-readable MCP credential exists, so the gate could not function from a hook subprocess. Status discipline is now self-enforced by `/p2e-work-on-next` Phase 2a (the `OPEN → IN_PROGRESS` flip before story-lead spawn) on every platform — the same self-enforced model Codex and Cursor already relied on. The now-vestigial `~/.cache/p2e/<slug>/<story_id>.json` cache-refresh step (only the hook read it) is dropped from `/p2e-update-story`. References updated across README, CLAUDE.md, `reference/`, and the affected workflows/skills.
+
+## v0.11.1 — 2026-06-11
 
 ### Added
 - **`workflows/p2e-thicken.md`** — new single-source thicken recipe (A-03-L6). Consolidates context-gathering (`stories op=context` primary + `op=get include=[relations,siblings]` + `relations op=stack` fallback), thick-spec field-population source-priority order, sizing inference (five-input block, `effortHint` mapping), signal-annotation rules for execution-time routing, and the brainstorming trigger pointer. Referenced by both `p2e-add-story.md` and `p2e-update-story.md`; removes duplicated thicken prose from both.
