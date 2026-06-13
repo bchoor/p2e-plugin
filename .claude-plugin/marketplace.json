@@ -4,14 +4,14 @@
     "name": "bchoor"
   },
   "metadata": {
-    "description": "Marketplace for the p2e plugin \u2014 shared P2E workflows across Claude Code, Codex, and Cursor, backed by the P2E MCP."
+    "description": "Marketplace for the p2e plugin — shared P2E workflows across Claude Code, Codex, and Cursor, backed by the P2E MCP."
   },
   "plugins": [
     {
       "name": "p2e",
       "source": "./",
       "description": "Adds /p2e-bootstrap, /p2e-add-story, /p2e-update-story, /p2e-work-on-next, /p2e-sync-labels, /p2e-sync, /p2e-bind, /p2e-manage-uxo, /p2e-archaeology, /p2e-fix, /p2e-ship-batch, /p2e-cut-release, /p2e-verify-story, /p2e-html, /p2e-md, /p2e-md-to-html, and the p2e-story-lead / p2e-architect / p2e-staff-engineer agents. Includes the writing-rich-docs skill for rich docs (Markdown with embedded HTML blocks). Ships Codex skills and a Cursor `.cursor/` surface from the same shared workflows. Aligned with the P2E Patton v3 Flow/Foundation model. Backed by the P2E MCP server (configurable via P2E_MCP_URL).",
-      "version": "0.11.1",
+      "version": "0.11.2",
       "author": {
         "name": "bchoor"
       },
