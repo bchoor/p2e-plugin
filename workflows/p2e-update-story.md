@@ -149,15 +149,14 @@ A lifecycle boundary is any status transition that changes the status field. Exa
 
 Non-status updates (thicken / steer / rename / move UXO / retag / release / AC / capabilities diff) do **not** trigger label sync — see AC3.
 
-### Write ordering for lifecycle transitions (fail-fast, 3 phases)
+### Write ordering for lifecycle transitions (fail-fast, 2 phases)
 
 When the accept path includes a status transition:
 
 1. **Phase 1 — MCP update** (`mcp__p2e__stories op=update`): write the new status and all other staged fields. Stop on any failure; surface phase 1 + item index.
 2. **Phase 2 — Label reconciliation** (`scripts/sync-github-label.sh <repo> <issue#> <from-status> <to-status>`): invoke the helper with the from/to status values resolved from the label map. Stop on non-zero exit (unless the exit is a "label not found" warning, which exits 0). Surface phase 2 on failure.
-3. **Phase 3 — Cache refresh**: write `~/.cache/p2e/<slug>/<story_id>.json` with `{"status":"<new-status>","ts":<unix-epoch>}` so the PreToolUse hook (see `hooks/pre-agent-spawn-story-status.sh`) reads the fresh status within its 30-second TTL window. This phase is best-effort: a write failure here does not stop the overall flow — log a stderr warning and continue.
 
-After phase 3, the flow continues to the GH issue body patch (existing reconciliation step) if applicable.
+After phase 2, the flow continues to the GH issue body patch (existing reconciliation step) if applicable.
 
 For non-lifecycle updates, the existing write ordering (phase 1 MCP + optional GH body patch) remains unchanged.
 

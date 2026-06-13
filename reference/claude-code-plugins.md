@@ -91,5 +91,5 @@ Standard MCP server config. Servers start automatically when the plugin is enabl
 - `commands/` (one slash command per workflow)
 - `skills/` (codex-facing routing skills, also discoverable by Claude)
 - `agents/` (`p2e-architect`, `p2e-staff-engineer`)
-- `hooks/` (PreToolUse status gate, SessionStart project briefing)
+- `hooks/` (PreToolUse project-slug validator, SessionStart project briefing)
 - `.mcp.json` (P2E MCP)

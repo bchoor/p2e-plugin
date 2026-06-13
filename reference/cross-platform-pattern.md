@@ -110,7 +110,7 @@ These differences are real and intentional. Don't try to paper over them:
 | `SessionStart` hooks | yes | partial | no |
 | MCP servers | yes (`.mcp.json`) | yes (`.mcp.json`) | yes (`.cursor/mcp.json` or shared) |
 
-When a workflow depends on a hook (e.g. the status gate), document the asymmetry in the workflow itself and degrade gracefully on platforms that lack the hook.
+When a workflow depends on a hook (e.g. the project-slug validator), document the asymmetry in the workflow itself and degrade gracefully on platforms that lack the hook.
 
 ## When to deviate
 

@@ -47,7 +47,7 @@ Process one wave at a time. Never fire wave k+1 before every story in wave k is 
 
 For each story in the wave, run `/p2e-update-story <story_id> status=IN_PROGRESS`. This triggers the lifecycle label reconciliation in `workflows/p2e-update-story.md`: the MCP status write, the GitHub label flip (`ready` → `in-progress`), and the local cache refresh all happen as required side effects. Do not skip this step or inline the `op=update` call directly.
 
-> **Note:** the `hooks/pre-agent-spawn-story-status.sh` PreToolUse hook enforces this independently — a story-lead spawn against a story still at `OPEN` will be blocked. The hook allowlist covers `{p2e-architect, p2e-staff-engineer, rescue}` only; `p2e-story-lead` is deliberately NOT in the allowlist — story-lead spawns are the implementer spawns this gate exists for. Phase 2a must flip `IN_PROGRESS` first.
+> **Note:** this status flip IS the dispatch gate — it must complete before any `p2e-story-lead` is spawned, because a story-lead is the implementer this discipline exists for. The flip is self-enforced by this workflow on every platform (there is no `PreToolUse` hook backstop); spawning an implementer against a story still at `OPEN` is a workflow violation. Phase 2a must flip `IN_PROGRESS` first.
 
 ### 2b — Briefing
 
@@ -162,7 +162,7 @@ Same sequential fallback as Codex (verify via the adaptive fix loop, not a singl
 mcp__p2e__story_log op=append project_slug=<slug> items=[{"story_id":"<id>","kind":"NOTE","author":"orchestrator","message":"Step: implementing — starting implementation"}]
 ```
 
-One NOTE per transition; do NOT write NOTEs for intermediate state within a step (only on transition). The Claude Code `PreToolUse` status-gate hook does not run in Cursor — confirm a story is `IN_PROGRESS` through MCP before starting implementation.
+One NOTE per transition; do NOT write NOTEs for intermediate state within a step (only on transition). Status discipline is self-enforced by this workflow on every platform (Claude Code, Codex, Cursor) — confirm a story is `IN_PROGRESS` through MCP before starting implementation.
 
 Parallel waves and dynamic-Workflow batch mode are Claude-Code-only features. This is a documented asymmetry, not a defect.
 
