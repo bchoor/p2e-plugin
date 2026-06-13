@@ -125,7 +125,7 @@ Aggregate output: a per-bug table with status `FIXED | DRY-RUN | SKIPPED | BLOCK
 
 ## Platform asymmetries
 
-- **Claude Code**: invoke `superpowers:systematic-debugging` in Phase 2. The status-gate hook is irrelevant unless a P2E story id was provided AND the orchestrator is also running.
+- **Claude Code**: invoke `superpowers:systematic-debugging` in Phase 2. The workflow self-enforces the fix-shape gate; there is no `PreToolUse` hook backstop.
 - **Codex**: use the native debugging primitive in Phase 2; escalate to `codex:rescue` if root cause is not reached after one pass. No `PreToolUse` hook is available — the workflow self-enforces the fix-shape gate.
 - **Cursor**: use the host's debugging skill in Phase 2 if available; otherwise apply the four-field root-cause checklist directly. No native hook surface; rely on the discipline encoded in this workflow.
 

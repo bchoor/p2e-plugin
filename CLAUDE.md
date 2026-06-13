@@ -51,7 +51,7 @@ skills/                     ← Codex skills (thin wrappers + p2e router)
 .cursor/skills/             ← Cursor skills (thin wrappers)
 .cursor/rules/              ← Cursor always-apply rules
 agents/                     ← Claude Code subagents (architect, staff-engineer)
-hooks/                      ← Claude Code hooks (status gate, session start)
+hooks/                      ← Claude Code hooks (project-slug validator, session start)
 .mcp.json                   ← shared MCP server config
 .claude-plugin/plugin.json  ← Claude Code manifest
 .codex-plugin/plugin.json   ← Codex manifest
@@ -81,7 +81,7 @@ These are real and documented — don't try to paper over them.
 | MCP servers | yes (`.mcp.json`) | yes (`.mcp.json`) | yes (`.cursor/mcp.json` or shared) |
 | Task primitive (orchestrator progress board) | yes (`TaskCreate`/`TaskUpdate`) | yes (`update_plan` or equivalent) | no — fall back to per-step `kind: NOTE` `story_log` entries |
 
-Workflows that depend on a hook (e.g. the P2E status gate) must degrade gracefully on platforms that lack it.
+Workflows that depend on a hook (e.g. the P2E project-slug validator) must degrade gracefully on platforms that lack it.
 
 Doc-rendering surface: the cross-platform skill is `writing-rich-docs` (`skills/writing-rich-docs/`, mirrored at `.cursor/skills/writing-rich-docs/`), which any host can invoke. Its **default output is rich Markdown** — a `.md` file with embedded HTML blocks: Markdown carries the structure/prose (the cheap ~50%), HTML blocks carry the high-fidelity rest (decision cards, comparison matrices, grids, callouts, inline-SVG diagrams). The skill ships a bundled template (`references/template.md` — front-matter + a scoped `<style>` preamble + a section scaffold), component snippets (`references/components.md` — each with its MD-native alternative and a "promote when" trigger), and a promote-or-not menu (`references/strategies.md`). The behavior contract is `workflows/p2e-rich-docs.md`.
 
@@ -120,4 +120,4 @@ This plugin tracks the P2E backend's Patton v3 ontology — keep workflow prose 
 - `workflows/p2e-policy.md`: shared operating rules (MCP access, status lifecycle, escalation, thick-gate, two-strike rule)
 - `reference/`: platform schemas + cross-platform pattern
 - `agents/`: `p2e-architect`, `p2e-staff-engineer` subagents
-- `hooks/`: status gate + session start (Claude Code only)
+- `hooks/`: project-slug validator + session start (Claude Code only)

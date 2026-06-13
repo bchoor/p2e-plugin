@@ -11,11 +11,11 @@ Read:
 - `workflows/p2e-work-on-next.md`
 - `workflows/p2e-first-turn-briefing.md`
 
-Execute the shared ship-batch workflow exactly. Phase B delegates to `workflows/p2e-work-on-next.md` without modification — do not fork briefing, status-gate, verify-gate, or label-sync logic. The implementer deviation-reporting contract is enforced via the briefing's `## Deviation reporting` section so a hands-off batch run produces a fully-auditable story log.
+Execute the shared ship-batch workflow exactly. Phase B delegates to `workflows/p2e-work-on-next.md` without modification — do not fork briefing, status-flip, verify-gate, or label-sync logic. The implementer deviation-reporting contract is enforced via the briefing's `## Deviation reporting` section so a hands-off batch run produces a fully-auditable story log.
 
 ## Cursor-specific notes
 
-- The Claude `PreToolUse` status-gate hook does NOT run in Cursor. Phase B inherits work-on-next's self-enforced MCP status discipline — confirm `OPEN → IN_PROGRESS` transitions through MCP before dispatching implementer work.
+- Phase B inherits work-on-next's self-enforced MCP status discipline — confirm `OPEN → IN_PROGRESS` transitions through MCP before dispatching implementer work. There is no `PreToolUse` hook backstop on any platform.
 - The `p2e-architect` and `p2e-staff-engineer` subagents are not native to Cursor. Where the workflow invokes them, inline the equivalent prompt as a sub-step in the same chat (or escalate to the Claude/Codex hosts that support them natively).
 - `TaskCreate` / `TaskUpdate` are Claude Code natives — on Cursor, the per-story tracking degrades to a chat-prose progress block printed at each phase boundary.
 - Phase F `--cut-release` auto-handoff is Claude Code only. On Cursor, the workflow prints the next step for the user to run manually.
