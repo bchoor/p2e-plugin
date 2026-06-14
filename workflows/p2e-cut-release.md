@@ -48,7 +48,7 @@ This workflow's pre-flight replaces both reads with authoritative sources, in th
 3. **Read manifest version from the source-of-truth list (not just `package.json`).** Probe each candidate in order; use the first that exists:
    - `.claude-plugin/plugin.json` (`"version"` key)
    - `.codex-plugin/plugin.json` (`"version"` key)
-   - `marketplace.json` (root `"version"` or `plugins[].version` — match by plugin name from `.claude-plugin/plugin.json`)
+   - `marketplace.json` — probe BOTH the repo root AND `.claude-plugin/marketplace.json` (the standard Claude Code marketplace-manifest path; a repo that doubles as its own marketplace keeps it there). Read root `"version"` or `plugins[].version` — match by plugin name from `.claude-plugin/plugin.json`.
    - `package.json` (`"version"` key)
    - `Cargo.toml` (`[package].version`)
    - `pyproject.toml` (`[project].version` or `[tool.poetry].version`)
@@ -148,7 +148,7 @@ All irreversible steps in this phase (push, merge) are pre-authorized by the use
 
 15. Sync main: in the main worktree, `git fetch origin && git checkout main && git pull --ff-only`.
 
-16. Bump version in every manifest from the source-of-truth list in step 3 that exists in this repo (not just the one that won the probe). All of them must match the new version after this step. The plugin repos in this org typically carry both `.claude-plugin/plugin.json` AND `.codex-plugin/plugin.json` — bump both. If a `marketplace.json` exists at the root, bump the matching plugin entry too (the historical "marketplace.json drift" gotcha — see commit `b89c71c`).
+16. Bump version in every manifest from the source-of-truth list in step 3 that exists in this repo (not just the one that won the probe). All of them must match the new version after this step. The plugin repos in this org typically carry both `.claude-plugin/plugin.json` AND `.codex-plugin/plugin.json` — bump both. If a `marketplace.json` exists — at the repo root OR at `.claude-plugin/marketplace.json` (the standard Claude Code marketplace-manifest path) — bump the matching plugin entry too. Both locations must be checked: missing the `.claude-plugin/` one is the "marketplace.json drift" gotcha (the catalog keeps serving the old version because `/plugin` reads `plugins[].version` from that file, not from `plugin.json`). See commit `b89c71c` and the v0.11.2 follow-up that surfaced the `.claude-plugin/` path.
 
 17. Commit: `Release v<next> — <one-line summary>` with a longer body listing the changes (read commits since the previous tag).
 
