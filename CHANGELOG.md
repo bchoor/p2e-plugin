@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- **`scripts/install-p2e-cursor-skills.sh`** — Cloud Agent install helper for **product repos**. Call it from `.cursor/environment.json` `install` (clone + link) and `start --update` (pull latest) so `/p2e-*` skills, the always-apply rule, `workflows/`, and the P2E MCP server land in the workspace without vendoring this plugin. Documented under README "Install in Cursor → Cloud Agents". Symlinks are listed in `.git/info/exclude` so agents do not commit them.
+
 ### Fixed
 - **`workflows/p2e-cut-release.md`** — the version-truth probe now checks for `marketplace.json` at **both** the repo root **and** `.claude-plugin/marketplace.json` (the standard Claude Code marketplace-manifest path), in Phase 0 step 3 and Phase B step 16. Previously it only looked at the repo root, so a repo that doubles as its own marketplace (`source: "./"`, manifest under `.claude-plugin/`) had its `plugins[].version` silently skipped on bump — the catalog kept serving the old version even though the tag and `plugin.json` were current. This is what made v0.11.2 install as 0.11.1 until the marketplace entry was bumped manually. Repo-agnostic fix; applies to any self-marketplace plugin repo.
 

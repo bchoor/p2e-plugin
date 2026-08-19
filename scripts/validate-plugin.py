@@ -181,6 +181,23 @@ def validate_expected_files():
 
     assert_true((ROOT / "assets" / "p2e-icon.svg").exists(), "Missing p2e icon asset")
 
+    install_script = ROOT / "scripts" / "install-p2e-cursor-skills.sh"
+    assert_true(
+        install_script.exists(),
+        "Missing scripts/install-p2e-cursor-skills.sh — Cloud Agent skill installer",
+    )
+    script_text = read_text(install_script)
+    for required_phrase in (
+        "repositoryDependencies",
+        "--update",
+        ".cursor/skills",
+        "github.com/bchoor/p2e-plugin",
+    ):
+        assert_true(
+            required_phrase in script_text,
+            f"scripts/install-p2e-cursor-skills.sh missing {required_phrase}",
+        )
+
 
 def validate_wrapper_references():
     workflow_map = {

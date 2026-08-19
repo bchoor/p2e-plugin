@@ -33,6 +33,8 @@ Cursor users invoke workflows via `/p2e-<name>` (skills). Examples:
 
 Each skill in `.cursor/skills/p2e-<name>/SKILL.md` is a thin wrapper. Read the linked `workflows/<name>.md` and execute it exactly.
 
+When this workspace is a **product repo** (not `p2e-plugin` itself) and Cloud Agents installed the plugin via `scripts/install-p2e-cursor-skills.sh`, skill wrappers still say `workflows/<name>.md`. Resolve that path in this order: repo-root `workflows/` (symlink or vendor), then `.cursor/p2e-plugin/workflows/`.
+
 ## P2E Flow/Foundation model (Patton v3)
 
 A project is a **Product** (`mcp__p2e__products`, `product_slug`; legacy `mcp__p2e__projects`/`project_slug` still works for one window — every other MCP tool is unchanged and still uses `project_slug`). Every Product has two seeded **Flows** — a **persona Flow** (user-journey lane) and an immutable **Foundation Flow** (8 fixed slots: Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting). Story → UXO → Phase → Flow → Product. Never create new Foundation phases; the tier axis is deprecated; `Story.priority` (`P0`…`P3`/`null`) orders the `/p2e-work-on-next` queue. Full detail: README "Flow / Foundation model" + `workflows/p2e-policy.md`.

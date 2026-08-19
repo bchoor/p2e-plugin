@@ -83,6 +83,7 @@ Simplified always-on instructions in repo root or subdirectories. No frontmatter
 
 - `.cursor/skills/<workflow>/SKILL.md` — one alias skill per workflow, mirrors the Codex skill, points at the same shared `workflows/<name>.md`
 - `.cursor/rules/p2e-policy.mdc` — repo-wide policy rule (always-apply) summarizing scope and pointing at `workflows/p2e-policy.md`
+- `scripts/install-p2e-cursor-skills.sh` — product-repo Cloud Agent helper: clone this plugin (outside the product git tree) and symlink skills/rules/workflows into the workspace from `.cursor/environment.json` `install` / `start --update`
 - `AGENTS.md` — minimal pointer file so non-Cursor IDEs that read `AGENTS.md` (e.g. Codex CLI in some flows) get the same orientation
 
 ## Cross-platform compliance note
