@@ -72,6 +72,22 @@ Cursor reads the `.cursor/` directory directly — it does not load `.claude-plu
 - the always-applied rule `.cursor/rules/p2e-policy.mdc` keeps Cursor aligned with the same `workflows/p2e-policy.md` contract Claude and Codex follow
 - point Cursor at the P2E MCP server via `.cursor/mcp.json` (or your global Cursor MCP config) using the same URL as [`.mcp.json`](./.mcp.json) — `https://p2e-mocha.vercel.app/api/mcp` by default, override with your own instance
 
+### Cloud Agents (product repos)
+
+Do **not** put a skill path in `.env`. Hook the same `.cursor/environment.json` `install` / `start` scripts that already materialize `.env`:
+
+```json
+{
+  "install": "git clone --depth 1 https://github.com/bchoor/p2e-plugin.git \"$HOME/p2e-plugin\" && bash \"$HOME/p2e-plugin/scripts/install-p2e-cursor-skills.sh\"",
+  "start": "bash \"$HOME/p2e-plugin/scripts/install-p2e-cursor-skills.sh\" --update",
+  "repositoryDependencies": ["github.com/bchoor/p2e-plugin"]
+}
+```
+
+Append those commands to your existing `install` / `start` (keep your `.env` and dependency steps). `install` snapshots the clone into the Build; `start --update` pulls `main` at the beginning of each session so new Cloud Agents pick up plugin changes without a rebuild. The script symlinks `/p2e-*` skills, the always-apply rule, and `workflows/` into the product workspace and ignores those links in `.git/info/exclude` so they are not committed.
+
+Commit a `p2e` entry in the product repo's `.cursor/mcp.json` (same URL as [`.mcp.json`](./.mcp.json)) so MCP is present even before the script merges it.
+
 The `/p2e-html`, `/p2e-md`, and `/p2e-md-to-html` doc-output override commands are Claude-Code-specific (they override the default rich-Markdown output set in `~/.claude/CLAUDE.md`) and have no Codex or Cursor equivalent — the `writing-rich-docs` skill is the cross-platform doc-rendering surface (default output: Markdown with embedded HTML blocks). See [`reference/cross-platform-pattern.md`](./reference/cross-platform-pattern.md) for the full asymmetry table.
 
 ## Configure
