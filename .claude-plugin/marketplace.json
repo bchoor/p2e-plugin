@@ -4,14 +4,14 @@
     "name": "bchoor"
   },
   "metadata": {
-    "description": "Marketplace for the p2e plugin — P2E operating mode across Claude Code, Codex, and Cursor, backed by the P2E MCP."
+    "description": "Marketplace for the p2e plugin \u2014 P2E operating mode across Claude Code, Codex, and Cursor, backed by the P2E MCP."
   },
   "plugins": [
     {
       "name": "p2e",
       "source": "./",
-      "description": "Single p2e-mode skill: entity model, MCP surface, story lifecycle, and Coder→Verifier→Auditor→Human review pipeline. Legacy /p2e-* commands, granular workflow skills, and bundled subagents removed in v0.12. Ships Codex skills and a Cursor `.cursor/` surface. Backed by the P2E MCP server (configurable via P2E_MCP_URL).",
-      "version": "0.12.3",
+      "description": "Single p2e-mode skill: bind, MCP surface, lifecycle contract, and assessment gates. Legacy /p2e-* commands, granular workflow skills, and bundled subagents removed in v0.12. Ships Codex skills and a Cursor `.cursor/` surface. Backed by the P2E MCP server (configurable via P2E_MCP_URL).",
+      "version": "0.12.4",
       "author": {
         "name": "bchoor"
       },
