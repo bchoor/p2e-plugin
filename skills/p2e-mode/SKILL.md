@@ -72,6 +72,7 @@ Upload via `story_assets`; assessments via `op=propose` with one-line `summary` 
 - AuditLog on every mutation.
 - Specs in git (`specs/<slug>/`), read-only in P0.
 - Coder does not write assessments; human does not per-AC approve.
+- Never create Foundation phases via MCP — the 8 Foundation slots are seeded and immutable.
 
 ## Subagents (optional)
 

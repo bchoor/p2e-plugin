@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.12.1 — 2026-08-27
+
+Documentation reconciliation for the v0.12 p2e-mode-only architecture. No behavior changes to the skill or MCP surface.
+
+### Added
+- **`agents/CONTRACTS.md`** — reference-only orchestration contracts salvaged from pre-v0.12 workflows (briefing schema, skill matrix, review tiering, verify gate, checkpoint policy). Subagents point here instead of deleted `workflows/` paths.
+- **`docs/archive/`** — pre-v0.12 historical feature docs moved from `docs/feat-*` and `docs/superpowers/`.
+- **`scripts/validate-plugin.py`** — stale-reference guard: fails if `workflows/`, `commands/p2e-`, or active `/p2e-bind` references appear outside allowlisted historical/archive files.
+
+### Changed
+- **`README.md`** — rewritten for p2e-mode-only: install, bind, MCP table, Flow model, documentation map. Removed legacy command table and workflow descriptions.
+- **`AGENTS.md`**, **`CLAUDE.md`** — aligned with single-skill architecture; contributor conventions updated.
+- **`agents/p2e-story-lead.md`**, **`p2e-architect.md`**, **`p2e-staff-engineer.md`** — references updated to `agents/CONTRACTS.md`; trigger phrasing no longer cites removed slash commands.
+- **`reference/`** — cross-platform pattern marked historical; cursor-skills-rules updated for p2e-mode-only layout.
+- **`.cursor-plugin/plugin.json`** — bumped to 0.12.1, p2e-mode-only description, removed `commands` key.
+- **`hooks/*.sh`** — binding repair messages no longer reference `/p2e-bind`.
+- **`skills/p2e-mode/SKILL.md`** — added Foundation phase immutability invariant.
+
+### Removed
+- Stale Unreleased CHANGELOG entries describing pre-v0.12 install surfaces.
+
 ## v0.12.0 — 2026-08-27
 
 **Breaking:** Consolidates all P2E guidance into a single **`p2e-mode`** skill. Legacy `/p2e-*` slash commands, granular workflow skills, and the entire `workflows/` tree are removed.
@@ -37,14 +58,6 @@ Adds the **ac-evidence-proof/v1** contract — a generalizable, MCP-validated fo
 - **`workflows/p2e-policy.md`** — verify gate references `mcp__p2e__evidence op=validate_proof` before story_assets upload.
 
 Requires P2E MCP with the `evidence` tool (validate_proof + template ops).
-
-## Unreleased
-
-### Added
-- **`scripts/install-p2e-cursor-skills.sh`** — Cloud Agent install helper for **product repos**. Call it from `.cursor/environment.json` `install` (clone + link) and `start --update` (pull latest) so `/p2e-*` skills, the always-apply rule, `workflows/`, and the P2E MCP server land in the workspace without vendoring this plugin. Documented under README "Install in Cursor → Cloud Agents". Symlinks are listed in `.git/info/exclude` so agents do not commit them.
-
-### Fixed
-- **`workflows/p2e-cut-release.md`** — the version-truth probe now checks for `marketplace.json` at **both** the repo root **and** `.claude-plugin/marketplace.json` (the standard Claude Code marketplace-manifest path), in Phase 0 step 3 and Phase B step 16. Previously it only looked at the repo root, so a repo that doubles as its own marketplace (`source: "./"`, manifest under `.claude-plugin/`) had its `plugins[].version` silently skipped on bump — the catalog kept serving the old version even though the tag and `plugin.json` were current. This is what made v0.11.2 install as 0.11.1 until the marketplace entry was bumped manually. Repo-agnostic fix; applies to any self-marketplace plugin repo.
 
 ## v0.11.2 — 2026-06-13
 

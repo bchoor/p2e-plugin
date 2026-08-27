@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "P2E operating mode for Codex — single p2e-mode skill covering entity model, MCP surface, story lifecycle, and Coder→Verifier→Auditor→Human review pipeline. Legacy granular workflow skills removed in v0.12. Backed by the P2E MCP.",
   "author": {
     "name": "bchoor",
@@ -38,7 +38,7 @@
       "Implement this P2E layer and move it to IN_REVIEW",
       "Verify this story and propose verifier assessments per AC",
       "Audit this story blind and propose auditor assessments",
-      "Bootstrap a P2E product from this PRD"
+      "Read p2e-mode and work on the next open P2E layer"
     ],
     "brandColor": "#0f766e",
     "composerIcon": "./assets/p2e-icon.svg",

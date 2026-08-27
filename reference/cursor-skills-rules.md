@@ -79,13 +79,13 @@ Simplified always-on instructions in repo root or subdirectories. No frontmatter
 - Agent-requested rules: model selects based on `description`
 - Manual rules: `@<rule-name>`
 
-## What this repo uses
+## What this repo uses (v0.12+)
 
-- `.cursor/skills/<workflow>/SKILL.md` — one alias skill per workflow, mirrors the Codex skill, points at the same shared `workflows/<name>.md`
-- `.cursor/rules/p2e-policy.mdc` — repo-wide policy rule (always-apply) summarizing scope and pointing at `workflows/p2e-policy.md`
-- `scripts/install-p2e-cursor-skills.sh` — product-repo Cloud Agent helper: clone this plugin (outside the product git tree) and symlink skills/rules/workflows into the workspace from `.cursor/environment.json` `install` / `start --update`
-- `AGENTS.md` — minimal pointer file so non-Cursor IDEs that read `AGENTS.md` (e.g. Codex CLI in some flows) get the same orientation
+- `.cursor/skills/p2e-mode/SKILL.md` — sole Cursor skill (entry point)
+- `.cursor/rules/p2e-policy.mdc` — repo-wide policy rule (always-apply) summarizing scope and pointing at `p2e-mode`
+- `scripts/install-p2e-cursor-skills.sh` — product-repo Cloud Agent helper: clone this plugin and symlink `p2e-mode` + policy rule into the workspace from `.cursor/environment.json` `install` / `start --update`
+- `AGENTS.md` — minimal pointer file so non-Cursor IDEs that read `AGENTS.md` get the same orientation
 
 ## Cross-platform compliance note
 
-Cursor cannot read `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json`. The pattern (see `cross-platform-pattern.md`) is to keep the **workflow definition** as the source of truth and ship a thin per-platform wrapper that points at it.
+Cursor cannot read `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json`. Since v0.12, behavior lives in the single **`p2e-mode`** skill mirrored across platforms. See `skills/p2e-mode/SKILL.md` and `.cursor/skills/p2e-mode/SKILL.md`.

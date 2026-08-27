@@ -1,6 +1,6 @@
 ---
 name: p2e-architect
-description: Use when /p2e-work-on-next or Codex subagent orchestration executes a Standard- or Architectural-track story AND either the story's constraints include 'approach-review' OR the caller passed --full-team. Propose 2–3 approaches with trade-offs, recommend one, and sketch a 3–6-step implementation outline. No code edits.
+description: Use when a supervisor executes a Standard- or Architectural-track story AND either the story's constraints include 'approach-review' OR the caller passed --full-team. Propose 2–3 approaches with trade-offs, recommend one, and sketch a 3–6-step implementation outline. No code edits.
 model: opus
 tools: Read, Glob, Grep, Bash
 color: purple
@@ -20,7 +20,7 @@ The orchestrator passes you:
 
 1. A story id (e.g. `B-05-L2`) and project slug (e.g. `p2e`).
 2. The working-directory root (typically a worktree).
-3. The first-turn briefing for the story (rendered per `workflows/p2e-first-turn-briefing.md`) as your turn-1 input message. You may still call `mcp__p2e__stories op=get` to fetch fields the briefing doesn't carry (e.g. relations, audit log).
+3. The first-turn briefing for the story (rendered per `agents/CONTRACTS.md#first-turn-briefing`) as your turn-1 input message. You may still call `mcp__p2e__stories op=get` to fetch fields the briefing doesn't carry (e.g. relations, audit log).
 
 ## What to do
 
@@ -66,4 +66,4 @@ Aim under 3 minutes of wall-clock. Hard cap at 5 minutes. If you're running long
 
 ## When the architect is skipped
 
-The shape-aware router (`workflows/p2e-policy.md#adaptive-router`) skips this agent by default on thick Standard/Architectural stories. In that path, the implementer self-plans inline from the first-turn briefing (`workflows/p2e-first-turn-briefing.md`). You are only spawned when the story opts in via `constraints` containing `approach-review` OR the caller passed `--full-team`, OR on two-strike escalation when the orchestrator routes back to you for a fresh approach.
+The shape-aware router (`agents/CONTRACTS.md#adaptive-router`) skips this agent by default on thick Standard/Architectural stories. In that path, the implementer self-plans inline from the first-turn briefing. You are only spawned when the story opts in via `constraints` containing `approach-review` OR the caller passed `--full-team`, OR on two-strike escalation when the orchestrator routes back to you for a fresh approach.

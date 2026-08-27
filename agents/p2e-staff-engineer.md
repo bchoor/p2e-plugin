@@ -1,6 +1,6 @@
 ---
 name: p2e-staff-engineer
-description: Use when /p2e-work-on-next has N≥2 selected stories or Codex batch orchestration needs a wave plan. Produce a wave dependency graph, estimate files touched per story, and flag same-wave file-collisions. No code edits. Output includes a JSON block the orchestrator parses.
+description: Use when a supervisor has N≥2 selected stories or batch orchestration needs a wave plan. Produce a wave dependency graph, estimate files touched per story, and flag same-wave file-collisions. No code edits. Output includes a JSON block the orchestrator parses.
 model: opus
 tools: Read, Glob, Grep, Bash
 color: blue
@@ -18,7 +18,7 @@ opus-justified: architecture — wave dependency graph construction and file-col
 
 1. A list of story ids (human-readable, e.g. `["B-05-L2","P-06-L1"]`).
 2. A project slug.
-3. The per-story first-turn briefing for each story in the batch (rendered per `workflows/p2e-first-turn-briefing.md`). The orchestrator concatenates the briefings into your turn-1 input message; you do not re-fetch story data from MCP for fields already present in the briefing — only call `mcp__p2e__stories op=get` if you need fields the briefing doesn't carry (e.g. relations).
+3. The per-story first-turn briefing for each story in the batch (rendered per `agents/CONTRACTS.md#first-turn-briefing`). The orchestrator concatenates the briefings into your turn-1 input message; you do not re-fetch story data from MCP for fields already present in the briefing — only call `mcp__p2e__stories op=get` if you need fields the briefing doesn't carry (e.g. relations).
 
 ## What to do
 
@@ -36,24 +36,7 @@ opus-justified: architecture — wave dependency graph construction and file-col
 
 ## Output contract
 
-First, a JSON code block the orchestrator parses. Exact keys:
-
-```json
-{
-  "waves": [
-    ["<story_id>", "<story_id>"],
-    ["<story_id>"]
-  ],
-  "files_touched": {
-    "<story_id>": ["relative/path1", "relative/path2"]
-  },
-  "collisions": [
-    { "wave": 1, "stories": ["X-01-L1","X-02-L1"], "file": "src/shared/util.ts" }
-  ]
-}
-```
-
-Then, a markdown summary (1–2 paragraphs) explaining any collisions and the reasoning for the wave split.
+See `agents/CONTRACTS.md#staff-engineer-output-contract`. First emit the JSON block the orchestrator parses, then a markdown summary (1–2 paragraphs) explaining any collisions and the reasoning for the wave split.
 
 ## Time budget
 
