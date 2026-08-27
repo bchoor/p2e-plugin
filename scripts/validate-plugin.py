@@ -58,110 +58,43 @@ def validate_json_files():
     )
 
     assert_true(
-        "description" in claude_plugin and "/p2e-work-on-next" in claude_plugin["description"],
-        "Claude plugin description should reference /p2e-work-on-next",
+        "p2e-mode" in claude_plugin["description"],
+        "Claude plugin description should reference p2e-mode",
     )
     assert_true("mcpServers" in mcp and "p2e" in mcp["mcpServers"], "Missing p2e MCP server")
 
 
 def validate_expected_files():
-    expected_commands = {
-        "p2e-add-story.md",
-        "p2e-archaeology.md",
-        "p2e-bind.md",
-        "p2e-bootstrap.md",
-        "p2e-cut-release.md",
-        "p2e-fix.md",
-        "p2e-html.md",
-        "p2e-manage-uxo.md",
-        "p2e-md.md",
-        "p2e-md-to-html.md",
-        "p2e-ship-batch.md",
-        "p2e-sync.md",
-        "p2e-sync-labels.md",
-        "p2e-update-story.md",
-        "p2e-verify-story.md",
-        "p2e-work-on-next.md",
-    }
-    actual_commands = {p.name for p in (ROOT / "commands").glob("*.md")}
-    assert_equal(actual_commands, expected_commands, "Unexpected Claude command set")
+    assert_true(
+        not (ROOT / "commands").exists(),
+        "commands/ must be removed — p2e-mode is the sole entry point",
+    )
+    assert_true(
+        not (ROOT / "workflows").exists(),
+        "workflows/ must be removed — guidance lives in p2e-mode skill",
+    )
 
-    expected_workflows = {
-        "p2e-add-story.md",
-        "p2e-archaeology.md",
-        "p2e-bind.md",
-        "p2e-bootstrap.md",
-        "p2e-cut-release.md",
-        "p2e-first-turn-briefing.md",
-        "p2e-fix.md",
-        "p2e-manage-uxo.md",
-        "p2e-policy.md",
-        "p2e-rich-docs.md",
-        "p2e-ship-batch.md",
-        "p2e-sizing-rubric.md",
-        "p2e-sync.md",
-        "p2e-sync-labels.md",
-        "p2e-thicken.md",
-        "p2e-update-story.md",
-        "p2e-uxo-recipe.md",
-        "p2e-verify-story.md",
-        "p2e-work-on-next.md",
+    expected_codex_skill_paths = {
+        ROOT / "skills" / "p2e-mode" / "SKILL.md",
     }
-    actual_workflows = {p.name for p in (ROOT / "workflows").glob("*.md")}
-    assert_equal(actual_workflows, expected_workflows, "Unexpected shared workflow set")
+    actual_codex_skill_paths = set((ROOT / "skills").glob("*/SKILL.md"))
+    assert_equal(
+        actual_codex_skill_paths, expected_codex_skill_paths, "Unexpected Codex skill set"
+    )
 
-    expected_skill_paths = {
-        ROOT / "skills" / "p2e" / "SKILL.md",
-        ROOT / "skills" / "p2e-add-story" / "SKILL.md",
-        ROOT / "skills" / "p2e-archaeology" / "SKILL.md",
-        ROOT / "skills" / "p2e-bind" / "SKILL.md",
-        ROOT / "skills" / "p2e-bootstrap" / "SKILL.md",
-        ROOT / "skills" / "p2e-cut-release" / "SKILL.md",
-        ROOT / "skills" / "p2e-fix" / "SKILL.md",
-        ROOT / "skills" / "p2e-manage-uxo" / "SKILL.md",
-        ROOT / "skills" / "p2e-ship-batch" / "SKILL.md",
-        ROOT / "skills" / "p2e-sync" / "SKILL.md",
-        ROOT / "skills" / "p2e-sync-labels" / "SKILL.md",
-        ROOT / "skills" / "p2e-update-story" / "SKILL.md",
-        ROOT / "skills" / "p2e-verify-story" / "SKILL.md",
-        ROOT / "skills" / "p2e-work-on-next" / "SKILL.md",
-        ROOT / "skills" / "writing-rich-docs" / "SKILL.md",
-    }
-    actual_skill_paths = set((ROOT / "skills").glob("*/SKILL.md"))
-    assert_equal(actual_skill_paths, expected_skill_paths, "Unexpected Codex skill set")
-
-    # Cross-platform compliance: every workflow must ship a .cursor/skills/<name>/SKILL.md
-    # mirror (Cursor surface), plus the p2e router and the writing-rich-docs skill.
     expected_cursor_skill_paths = {
-        ROOT / ".cursor" / "skills" / name / "SKILL.md"
-        for name in (
-            "p2e",
-            "p2e-add-story",
-            "p2e-archaeology",
-            "p2e-bind",
-            "p2e-bootstrap",
-            "p2e-cut-release",
-            "p2e-fix",
-            "p2e-manage-uxo",
-            "p2e-ship-batch",
-            "p2e-sync",
-            "p2e-sync-labels",
-            "p2e-update-story",
-            "p2e-verify-story",
-            "p2e-work-on-next",
-            "writing-rich-docs",
-        )
+        ROOT / ".cursor" / "skills" / "p2e-mode" / "SKILL.md",
     }
     actual_cursor_skill_paths = set((ROOT / ".cursor" / "skills").glob("*/SKILL.md"))
     assert_equal(
         actual_cursor_skill_paths,
         expected_cursor_skill_paths,
-        "Unexpected Cursor skill set (cross-platform compliance: every workflow must ship a .cursor/skills/<name>/SKILL.md mirror)",
+        "Unexpected Cursor skill set",
     )
 
     assert_true(
         (ROOT / ".cursor" / "rules" / "p2e-policy.mdc").exists(),
-        "Missing .cursor/rules/p2e-policy.mdc — the always-applied Cursor policy rule",
+        "Missing .cursor/rules/p2e-policy.mdc",
     )
 
     for ref_file in (
@@ -173,25 +106,22 @@ def validate_expected_files():
     ):
         assert_true(
             (ROOT / "reference" / ref_file).exists(),
-            f"Missing reference/{ref_file} — platform schema reference is mandatory",
+            f"Missing reference/{ref_file}",
         )
 
     assert_true((ROOT / "CLAUDE.md").exists(), "Missing project-level CLAUDE.md")
     assert_true((ROOT / "AGENTS.md").exists(), "Missing AGENTS.md")
-
     assert_true((ROOT / "assets" / "p2e-icon.svg").exists(), "Missing p2e icon asset")
 
     install_script = ROOT / "scripts" / "install-p2e-cursor-skills.sh"
-    assert_true(
-        install_script.exists(),
-        "Missing scripts/install-p2e-cursor-skills.sh — Cloud Agent skill installer",
-    )
+    assert_true(install_script.exists(), "Missing scripts/install-p2e-cursor-skills.sh")
     script_text = read_text(install_script)
     for required_phrase in (
         "repositoryDependencies",
         "--update",
         ".cursor/skills",
         "github.com/bchoor/p2e-plugin",
+        "p2e-mode",
     ):
         assert_true(
             required_phrase in script_text,
@@ -199,371 +129,80 @@ def validate_expected_files():
         )
 
 
-def validate_wrapper_references():
-    workflow_map = {
-        "commands/p2e-add-story.md": "workflows/p2e-add-story.md",
-        "commands/p2e-archaeology.md": "workflows/p2e-archaeology.md",
-        "commands/p2e-bind.md": "workflows/p2e-bind.md",
-        "commands/p2e-bootstrap.md": "workflows/p2e-bootstrap.md",
-        "commands/p2e-fix.md": "workflows/p2e-fix.md",
-        "commands/p2e-html.md": "workflows/p2e-rich-docs.md",
-        "commands/p2e-manage-uxo.md": "workflows/p2e-manage-uxo.md",
-        "commands/p2e-md.md": "workflows/p2e-rich-docs.md",
-        "commands/p2e-md-to-html.md": "workflows/p2e-rich-docs.md",
-        "commands/p2e-cut-release.md": "workflows/p2e-cut-release.md",
-        "commands/p2e-ship-batch.md": "workflows/p2e-ship-batch.md",
-        "commands/p2e-sync.md": "workflows/p2e-sync.md",
-        "commands/p2e-sync-labels.md": "workflows/p2e-sync-labels.md",
-        "commands/p2e-update-story.md": "workflows/p2e-update-story.md",
-        "commands/p2e-verify-story.md": "workflows/p2e-verify-story.md",
-        "commands/p2e-work-on-next.md": "workflows/p2e-work-on-next.md",
-        "skills/p2e-add-story/SKILL.md": "workflows/p2e-add-story.md",
-        "skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
-        "skills/p2e-bind/SKILL.md": "workflows/p2e-bind.md",
-        "skills/p2e-bootstrap/SKILL.md": "workflows/p2e-bootstrap.md",
-        "skills/p2e-fix/SKILL.md": "workflows/p2e-fix.md",
-        "skills/p2e-manage-uxo/SKILL.md": "workflows/p2e-manage-uxo.md",
-        "skills/p2e-cut-release/SKILL.md": "workflows/p2e-cut-release.md",
-        "skills/p2e-ship-batch/SKILL.md": "workflows/p2e-ship-batch.md",
-        "skills/p2e-sync/SKILL.md": "workflows/p2e-sync.md",
-        "skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
-        "skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
-        "skills/p2e-verify-story/SKILL.md": "workflows/p2e-verify-story.md",
-        "skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
-        "skills/writing-rich-docs/SKILL.md": "workflows/p2e-rich-docs.md",
-        ".cursor/skills/p2e-add-story/SKILL.md": "workflows/p2e-add-story.md",
-        ".cursor/skills/p2e-archaeology/SKILL.md": "workflows/p2e-archaeology.md",
-        ".cursor/skills/p2e-bind/SKILL.md": "workflows/p2e-bind.md",
-        ".cursor/skills/p2e-bootstrap/SKILL.md": "workflows/p2e-bootstrap.md",
-        ".cursor/skills/p2e-fix/SKILL.md": "workflows/p2e-fix.md",
-        ".cursor/skills/p2e-manage-uxo/SKILL.md": "workflows/p2e-manage-uxo.md",
-        ".cursor/skills/p2e-cut-release/SKILL.md": "workflows/p2e-cut-release.md",
-        ".cursor/skills/p2e-ship-batch/SKILL.md": "workflows/p2e-ship-batch.md",
-        ".cursor/skills/p2e-sync/SKILL.md": "workflows/p2e-sync.md",
-        ".cursor/skills/p2e-sync-labels/SKILL.md": "workflows/p2e-sync-labels.md",
-        ".cursor/skills/p2e-update-story/SKILL.md": "workflows/p2e-update-story.md",
-        ".cursor/skills/p2e-verify-story/SKILL.md": "workflows/p2e-verify-story.md",
-        ".cursor/skills/p2e-work-on-next/SKILL.md": "workflows/p2e-work-on-next.md",
-        ".cursor/skills/writing-rich-docs/SKILL.md": "skills/writing-rich-docs/SKILL.md",
-    }
-
-    # Doc-output override commands + the writing-rich-docs skill (and its Cursor
-    # mirror) are not bound to the P2E story-workflow policy — they sit outside that contract.
-    skip_policy_check = {
-        "commands/p2e-html.md",
-        "commands/p2e-md.md",
-        "commands/p2e-md-to-html.md",
-        "skills/writing-rich-docs/SKILL.md",
-        ".cursor/skills/writing-rich-docs/SKILL.md",
-    }
-
-    for rel_path, workflow_ref in workflow_map.items():
+def validate_p2e_mode_skill():
+    for rel_path in (
+        "skills/p2e-mode/SKILL.md",
+        ".cursor/skills/p2e-mode/SKILL.md",
+    ):
         content = read_text(ROOT / rel_path)
-        if rel_path not in skip_policy_check:
-            assert_true(
-                "workflows/p2e-policy.md" in content,
-                f"{rel_path} must reference workflows/p2e-policy.md",
-            )
-        assert_true(
-            workflow_ref in content,
-            f"{rel_path} must reference {workflow_ref}",
-        )
-
-    router_paths = (
-        ROOT / "skills" / "p2e" / "SKILL.md",
-        ROOT / ".cursor" / "skills" / "p2e" / "SKILL.md",
-    )
-    for router_path in router_paths:
-        router = read_text(router_path)
-        for workflow_ref in (
-            "workflows/p2e-policy.md",
-            "workflows/p2e-bootstrap.md",
-            "workflows/p2e-add-story.md",
-            "workflows/p2e-update-story.md",
-            "workflows/p2e-work-on-next.md",
-            "workflows/p2e-sync-labels.md",
-            "workflows/p2e-sync.md",
-            "workflows/p2e-manage-uxo.md",
-            "workflows/p2e-uxo-recipe.md",
-            "workflows/p2e-archaeology.md",
-            "workflows/p2e-fix.md",
-            "workflows/p2e-ship-batch.md",
-            "workflows/p2e-verify-story.md",
-            "workflows/p2e-cut-release.md",
+        for required_phrase in (
+            "name: p2e-mode",
+            "criteria op=propose",
+            "Coder→Verifier→Auditor→Human",
+            "Legacy `/p2e-*`",
         ):
             assert_true(
-                workflow_ref in router,
-                f"Router skill {router_path.relative_to(ROOT)} missing {workflow_ref}",
+                required_phrase in content,
+                f"{rel_path} missing required phrase: {required_phrase}",
             )
 
 
-def validate_add_story_contract():
-    add_story_skill = read_text(ROOT / "skills" / "p2e-add-story" / "SKILL.md")
-    add_story_workflow = read_text(ROOT / "workflows" / "p2e-add-story.md")
+def validate_agents():
+    expected_agents = {
+        "p2e-architect.md",
+        "p2e-staff-engineer.md",
+        "p2e-story-lead.md",
+        "p2e-verifier.md",
+        "p2e-auditor.md",
+    }
+    actual_agents = {p.name for p in (ROOT / "agents").glob("*.md")}
+    assert_equal(actual_agents, expected_agents, "Unexpected agent set")
 
+    verifier = read_text(ROOT / "agents" / "p2e-verifier.md")
+    auditor = read_text(ROOT / "agents" / "p2e-auditor.md")
     for required_phrase in (
-        "ALWAYS show a preview",
-        "NEVER silently create",
-        "stop and report the concrete blocker briefly",
+        "criteria op=propose",
+        "role: VERIFIER",
+        "Do **not** Mark DONE",
     ):
         assert_true(
-            required_phrase in add_story_skill,
-            f"skills/p2e-add-story/SKILL.md missing add-story guardrail: {required_phrase}",
+            required_phrase in verifier,
+            f"agents/p2e-verifier.md missing: {required_phrase}",
         )
-
     for required_phrase in (
-        "Never write the story",
-        "## Required preview contents",
-        "## Required confirm step",
-        "accept and write",
-        "If the user does not accept, do not write.",
-        "GitHub issue will be created with the `ready` label",
+        "viewer_role: AUDITOR",
+        "criteria op=propose",
+        "verifier blind",
     ):
         assert_true(
-            required_phrase in add_story_workflow,
-            f"workflows/p2e-add-story.md missing add-story contract phrase: {required_phrase}",
+            required_phrase in auditor.lower() or required_phrase in auditor,
+            f"agents/p2e-auditor.md missing: {required_phrase}",
         )
 
 
-def validate_update_story_contract():
-    update_story_skill = read_text(ROOT / "skills" / "p2e-update-story" / "SKILL.md")
-    update_story_workflow = read_text(ROOT / "workflows" / "p2e-update-story.md")
-    add_story_command = read_text(ROOT / "commands" / "p2e-add-story.md")
-    add_story_workflow = read_text(ROOT / "workflows" / "p2e-add-story.md")
-
+def validate_policy_rule():
+    policy = read_text(ROOT / ".cursor" / "rules" / "p2e-policy.mdc")
     for required_phrase in (
-        "ALWAYS show an annotated preview",
-        "NEVER silently mutate",
-        "stop and report the concrete blocker briefly",
+        "p2e-mode",
+        "MCP is authoritative",
+        ".p2e/project.json",
     ):
         assert_true(
-            required_phrase in update_story_skill,
-            f"skills/p2e-update-story/SKILL.md missing update-story guardrail: {required_phrase}",
+            required_phrase in policy,
+            f".cursor/rules/p2e-policy.mdc missing: {required_phrase}",
         )
-
-    for required_phrase in (
-        "## Required preview contents",
-        "## Required confirm step",
-        "## Thicken rules",
-        "## Steer rules",
-        "## Thick-gate on DRAFT → OPEN",
-        "## GitHub issue reconciliation",
-        "Accept and write",
-        "If the user does not accept, do not write.",
-        "failingClauses",
-    ):
-        assert_true(
-            required_phrase in update_story_workflow,
-            f"workflows/p2e-update-story.md missing update-story contract phrase: {required_phrase}",
-        )
-
-    for surface, content in (
-        ("commands/p2e-add-story.md", add_story_command),
-        ("workflows/p2e-add-story.md", add_story_workflow),
-    ):
-        assert_true(
-            "/p2e-update-story" in content,
-            f"{surface} must document the --fill deprecation shim pointing at /p2e-update-story",
-        )
-
-
-def validate_sizing_contract():
-    rubric = read_text(ROOT / "workflows" / "p2e-sizing-rubric.md")
-    add_story_workflow = read_text(ROOT / "workflows" / "p2e-add-story.md")
-    update_story_workflow = read_text(ROOT / "workflows" / "p2e-update-story.md")
-    add_story_command = read_text(ROOT / "commands" / "p2e-add-story.md")
-    update_story_command = read_text(ROOT / "commands" / "p2e-update-story.md")
-    add_story_skill = read_text(ROOT / "skills" / "p2e-add-story" / "SKILL.md")
-    update_story_skill = read_text(ROOT / "skills" / "p2e-update-story" / "SKILL.md")
-
-    for tier in ("### XS", "### S", "### M", "### L", "### XL", "### XXL"):
-        assert_true(
-            tier in rubric,
-            f"workflows/p2e-sizing-rubric.md missing tier heading: {tier}",
-        )
-
-    for required_phrase in (
-        "Weighting rules",
-        "isBreaking",
-        "files_hint",
-        "Acceptance criteria count",
-        "Inference inputs",
-        "User override",
-    ):
-        assert_true(
-            required_phrase in rubric,
-            f"workflows/p2e-sizing-rubric.md missing sizing rubric phrase: {required_phrase}",
-        )
-
-    for surface, content in (
-        ("workflows/p2e-add-story.md", add_story_workflow),
-        ("workflows/p2e-update-story.md", update_story_workflow),
-        ("commands/p2e-add-story.md", add_story_command),
-        ("commands/p2e-update-story.md", update_story_command),
-        ("skills/p2e-add-story/SKILL.md", add_story_skill),
-        ("skills/p2e-update-story/SKILL.md", update_story_skill),
-    ):
-        assert_true(
-            "workflows/p2e-sizing-rubric.md" in content,
-            f"{surface} must reference workflows/p2e-sizing-rubric.md",
-        )
-
-    for required_phrase in (
-        "sizing",
-        "defaulted",
-        "Sizing rules",
-    ):
-        assert_true(
-            required_phrase in add_story_workflow,
-            f"workflows/p2e-add-story.md missing sizing contract phrase: {required_phrase}",
-        )
-
-    for required_phrase in (
-        "Sizing inference",
-        "Adjust sizing",
-        "derived-from-source",
-        "steered-by-user",
-    ):
-        assert_true(
-            required_phrase in update_story_workflow,
-            f"workflows/p2e-update-story.md missing sizing contract phrase: {required_phrase}",
-        )
-
-
-def validate_thick_mode_contract():
-    add_story_workflow = read_text(ROOT / "workflows" / "p2e-add-story.md")
-    add_story_command = read_text(ROOT / "commands" / "p2e-add-story.md")
-    add_story_skill = read_text(ROOT / "skills" / "p2e-add-story" / "SKILL.md")
-    update_story_workflow = read_text(ROOT / "workflows" / "p2e-update-story.md")
-    update_story_command = read_text(ROOT / "commands" / "p2e-update-story.md")
-    update_story_skill = read_text(ROOT / "skills" / "p2e-update-story" / "SKILL.md")
-
-    for required_phrase in (
-        "--thick",
-        "thick mode",
-        "## Modes",
-        "## Brainstorming escalation",
-        "derived-from-brainstorming",
-    ):
-        assert_true(
-            required_phrase in add_story_workflow,
-            f"workflows/p2e-add-story.md missing thick-mode contract phrase: {required_phrase}",
-        )
-
-    for required_phrase in (
-        "--thick",
-        "Brainstorming escalation",
-    ):
-        assert_true(
-            required_phrase in add_story_command,
-            f"commands/p2e-add-story.md missing thick-mode contract phrase: {required_phrase}",
-        )
-
-    for required_phrase in (
-        "--thick",
-        "Brainstorming escalation",
-        "derived-from-brainstorming",
-    ):
-        assert_true(
-            required_phrase in add_story_skill,
-            f"skills/p2e-add-story/SKILL.md missing thick-mode contract phrase: {required_phrase}",
-        )
-
-    for required_phrase in (
-        "## Brainstorming escalation",
-        "derived-from-brainstorming",
-    ):
-        assert_true(
-            required_phrase in update_story_workflow,
-            f"workflows/p2e-update-story.md missing brainstorming contract phrase: {required_phrase}",
-        )
-
-    for required_phrase in (
-        "Brainstorming escalation",
-    ):
-        assert_true(
-            required_phrase in update_story_command,
-            f"commands/p2e-update-story.md missing brainstorming reference: {required_phrase}",
-        )
-
-    for required_phrase in (
-        "Brainstorming escalation",
-        "derived-from-brainstorming",
-    ):
-        assert_true(
-            required_phrase in update_story_skill,
-            f"skills/p2e-update-story/SKILL.md missing brainstorming reference: {required_phrase}",
-        )
-
-
-def validate_sync_contract():
-    """Assert /p2e-sync satisfies the B-05-L4 acceptance criteria contract."""
-    sync_workflow = read_text(ROOT / "workflows" / "p2e-sync.md")
-    sync_command = read_text(ROOT / "commands" / "p2e-sync.md")
-    sync_skill = read_text(ROOT / "skills" / "p2e-sync" / "SKILL.md")
-
-    # Workflow must document all four reconciliation directions
-    for required_phrase in (
-        "Update GH from story",
-        "Update story from GH",
-        "Cherry-pick per-field",
-        "Abort",
-    ):
-        assert_true(
-            required_phrase in sync_workflow,
-            f"workflows/p2e-sync.md missing reconciliation direction: {required_phrase}",
-        )
-
-    # Workflow must describe the gh issue edit write path
     assert_true(
-        "gh issue edit" in sync_workflow,
-        "workflows/p2e-sync.md must reference 'gh issue edit' for story→GH direction",
-    )
-
-    # Workflow must reference AuditLog
-    assert_true(
-        "AuditLog" in sync_workflow,
-        "workflows/p2e-sync.md must reference AuditLog",
-    )
-
-    # Workflow must be explicit about user-invoked (not automatic)
-    assert_true(
-        "user-invoked" in sync_workflow,
-        "workflows/p2e-sync.md must state it is user-invoked (no polling/webhook/git-hook)",
-    )
-
-    # Workflow must describe template-mismatch abort with a diagnostic
-    assert_true(
-        "p2e-sync:start" in sync_workflow,
-        "workflows/p2e-sync.md must reference the p2e-sync fence for template-mismatch abort",
-    )
-
-    # Command must reference AskUserQuestion (Claude host confirm)
-    assert_true(
-        "AskUserQuestion" in sync_command,
-        "commands/p2e-sync.md must reference AskUserQuestion for the direction confirm step",
-    )
-
-    # Skill must note Codex lacks cherry-pick mode
-    assert_true(
-        "Cherry-pick" in sync_skill or "cherry-pick" in sync_skill,
-        "skills/p2e-sync/SKILL.md must note the cherry-pick mode limitation in Codex host",
-    )
-    assert_true(
-        "Codex" in sync_skill,
-        "skills/p2e-sync/SKILL.md must note Codex host limitations",
+        "workflows/" not in policy or "deprecated" in policy.lower(),
+        "p2e-policy.mdc should not require workflows/ as active surface",
     )
 
 
 def main():
     validate_json_files()
     validate_expected_files()
-    validate_wrapper_references()
-    validate_add_story_contract()
-    validate_update_story_contract()
-    validate_sizing_contract()
-    validate_thick_mode_contract()
-    validate_sync_contract()
+    validate_p2e_mode_skill()
+    validate_agents()
+    validate_policy_rule()
     print("plugin validation passed")
 
 

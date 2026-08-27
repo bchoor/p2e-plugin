@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.12.0 — 2026-08-27
+
+**Breaking:** Consolidates all P2E guidance into a single **`p2e-mode`** skill. Legacy `/p2e-*` slash commands, granular workflow skills, and the entire `workflows/` tree are removed.
+
+### Added
+- **`skills/p2e-mode/SKILL.md`** and **`.cursor/skills/p2e-mode/SKILL.md`** — sole entry point: entity model, MCP surface, story lifecycle, Coder→Verifier→Auditor→Human review pipeline.
+- **`agents/p2e-verifier.md`** — verifier subagent: tests, evidence, `criteria op=propose role=VERIFIER`.
+- **`agents/p2e-auditor.md`** — auditor subagent: blind review, `criteria op=propose role=AUDITOR`.
+
+### Removed
+- All **`commands/p2e-*.md`** slash commands.
+- All granular **`skills/p2e-*`**, **`skills/p2e/`**, and **`skills/writing-rich-docs/`**.
+- Entire **`workflows/`** directory (policy, add-story, work-on-next, verify-story, etc.).
+
+### Changed
+- **`scripts/validate-plugin.py`** — validates p2e-mode-only layout; no wrapper/workflow contract checks.
+- **`scripts/install-p2e-cursor-skills.sh`** — links `p2e-mode` + policy rule only; no `workflows/` symlink.
+- **`.cursor/rules/p2e-policy.mdc`** — references p2e-mode as entry point; deprecates `/p2e-*` menu.
+- Plugin manifests bumped to **0.12.0**.
+
+Product repos should use in-repo **`p2e-mode`** (via `.cursor/sync-external-plugins.sh` or vendored copy) and read product docs (`docs/P2E-lifecycle.md`, `docs/P2E-handover.md`, `docs/feat-review-view/design.md`).
+
 ## v0.11.3 — 2026-08-27
 
 Adds the **ac-evidence-proof/v1** contract — a generalizable, MCP-validated format for per-AC verification evidence (test runs, HTTP proofs, line references). Agents generate proof markdown via `mcp__p2e__evidence`, validate before upload, and attach via `story_assets`. Consumed by the P2E evidence digest viewer.

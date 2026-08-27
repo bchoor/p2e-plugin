@@ -4,59 +4,36 @@ Project-specific instructions for Claude Code (and any AI agent reading this fil
 
 ## What this repo is
 
-A multi-platform plugin that surfaces P2E story-map workflows on Claude Code, Codex, and Cursor — all backed by the shared P2E MCP server.
+A multi-platform plugin that surfaces P2E story-map guidance on Claude Code, Codex, and Cursor — all backed by the shared P2E MCP server.
 
-## The cross-platform compliance rule (mandatory)
+**v0.12+:** Single **`p2e-mode`** skill. Legacy `/p2e-*` commands, granular workflow skills, and `workflows/` are removed. See CHANGELOG v0.12.0.
 
-Every workflow this plugin ships must be invocable from Claude Code, Codex, AND Cursor with no behavior drift. The pattern is **shared-workflow + thin-wrapper**.
+## The p2e-mode contract (mandatory)
 
-### The four files every workflow must have
+Read **`skills/p2e-mode/SKILL.md`** (Codex) or **`.cursor/skills/p2e-mode/SKILL.md`** (Cursor) at session start. Product repos may extend with their own docs under `docs/`.
 
-When adding a workflow named `<name>`, you MUST create ALL four files. Missing any one is non-compliant — the plugin is broken on at least one platform.
+When changing P2E operating rules, update **p2e-mode** in both `skills/` and `.cursor/skills/`, plus `CHANGELOG.md` and plugin manifests.
 
-| File | Platform | Purpose |
-|---|---|---|
-| `workflows/<name>.md` | shared | Single source of truth for behavior |
-| `commands/<name>.md` | Claude Code | Slash command wrapper (frontmatter: `name`, `description`, `argument-hint`) |
-| `skills/<name>/SKILL.md` | Codex | Skill wrapper (frontmatter: `name`, `description`) |
-| `.cursor/skills/<name>/SKILL.md` | Cursor | Skill wrapper (frontmatter: `name`, `description`, optional `paths`) |
+### Where to find reference material
 
-Plus update:
-
-- `skills/p2e/SKILL.md` — add a routing line so the Codex top-level router can dispatch plain-language requests
-- `README.md` — add a row to the commands-and-skills table
-- `CHANGELOG.md` — note the new surface
-
-If the workflow needs a default-prompt suggestion in Codex's install UI, add an entry to `defaultPrompt` in `.codex-plugin/plugin.json`.
-
-### The wrapper rule
-
-Wrappers are thin. ~10 lines: frontmatter + a sentence that says "read `workflows/<name>.md` and execute it exactly." Domain logic does NOT live in wrappers. If you find yourself adding `if (platform === 'codex')` branches in a workflow, that is a smell — push the branch into the wrapper or document the asymmetry in the workflow body.
-
-### Where to find the canonical pattern
-
-- `reference/cross-platform-pattern.md` — the pattern + checklist + wrapper templates
+- `reference/cross-platform-pattern.md` — historical pattern (pre-v0.12); kept for schema reference
 - `reference/claude-code-plugins.md` — Claude Code plugin schema (distilled)
 - `reference/codex-plugins.md` — Codex plugin schema (distilled)
 - `reference/cursor-skills-rules.md` — Cursor skills/rules schema (distilled)
 
-Refresh the reference docs when an upstream platform releases a breaking schema change. Capture the source URL and date in the file header.
-
 ## Source-of-truth layout
 
 ```
-workflows/                  ← canonical behavior (shared across platforms)
-commands/                   ← Claude Code slash commands (thin wrappers)
-skills/                     ← Codex skills (thin wrappers + p2e router)
-.cursor/skills/             ← Cursor skills (thin wrappers)
+skills/p2e-mode/            ← sole Codex skill (entry point)
+.cursor/skills/p2e-mode/    ← Cursor mirror
 .cursor/rules/              ← Cursor always-apply rules
-agents/                     ← Claude Code subagents (architect, staff-engineer)
+agents/                     ← subagents (story-lead, verifier, auditor, architect, staff-engineer)
 hooks/                      ← Claude Code hooks (project-slug validator, session start)
 .mcp.json                   ← shared MCP server config
 .claude-plugin/plugin.json  ← Claude Code manifest
 .codex-plugin/plugin.json   ← Codex manifest
-AGENTS.md                   ← always-on orientation file (Cursor + AGENTS.md-aware tools)
-reference/                  ← platform schema reference + cross-platform pattern
+AGENTS.md                   ← always-on orientation file
+reference/                  ← platform schema reference
 ```
 
 ## Hard rules

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install (or refresh) P2E Cursor skills into the current workspace so Cloud Agents
-# can invoke /p2e-* without vendoring this plugin into the product git tree.
+# can use p2e-mode without vendoring this plugin into the product git tree.
 #
 # Designed to run from a product repo's `.cursor/environment.json`:
 #
@@ -28,9 +28,9 @@ PLUGIN_REF="${P2E_PLUGIN_REF:-main}"
 PLUGIN_HOME="${P2E_PLUGIN_HOME:-$HOME/p2e-plugin}"
 
 is_plugin_repo() {
-  # Product-repo installs symlink workflows/ and .cursor/skills/ into the
-  # workspace; only the real plugin checkout has the Claude/Codex manifests.
-  [[ -f "$1/.claude-plugin/plugin.json" && -f "$1/workflows/p2e-policy.md" && -f "$1/.cursor/skills/p2e/SKILL.md" ]]
+  # Product-repo installs symlink .cursor/skills/p2e-mode; only the real plugin
+  # checkout has the Claude/Codex manifests and the p2e-mode skill.
+  [[ -f "$1/.claude-plugin/plugin.json" && -f "$1/.cursor/skills/p2e-mode/SKILL.md" ]]
 }
 
 # Already inside p2e-plugin itself — skills are already at the workspace root.
@@ -103,34 +103,23 @@ link_into() {
   git_exclude "$exclude_pattern"
 }
 
-# Stable workspace-relative pointer so agents can Read workflows without $HOME paths.
+# Stable workspace-relative pointer for agents that need plugin metadata.
 link_into "$PLUGIN_ROOT" "$WORKSPACE/.cursor/p2e-plugin" ".cursor/p2e-plugin"
 
-for skill_dir in "$PLUGIN_ROOT/.cursor/skills"/*/; do
-  [[ -d "$skill_dir" ]] || continue
-  name="$(basename "$skill_dir")"
-  link_into "${skill_dir%/}" "$WORKSPACE/.cursor/skills/$name" ".cursor/skills/$name"
-done
+# Link p2e-mode only — product repos may own their own copy; skip if present.
+if [[ ! -e "$WORKSPACE/.cursor/skills/p2e-mode" ]]; then
+  link_into \
+    "$PLUGIN_ROOT/.cursor/skills/p2e-mode" \
+    "$WORKSPACE/.cursor/skills/p2e-mode" \
+    ".cursor/skills/p2e-mode"
+else
+  echo "p2e-cursor-skills: skip .cursor/skills/p2e-mode (repo-owned copy exists)"
+fi
 
 link_into \
   "$PLUGIN_ROOT/.cursor/rules/p2e-policy.mdc" \
   "$WORKSPACE/.cursor/rules/p2e-policy.mdc" \
   ".cursor/rules/p2e-policy.mdc"
-
-# Wrappers say `Read: workflows/<name>.md`. Symlink that tree when the product
-# repo does not already have a top-level workflows/ directory.
-if [[ ! -e "$WORKSPACE/workflows" ]]; then
-  link_into "$PLUGIN_ROOT/workflows" "$WORKSPACE/workflows" "workflows"
-fi
-
-# writing-rich-docs Cursor wrapper points at skills/writing-rich-docs/.
-if [[ ! -e "$WORKSPACE/skills/writing-rich-docs" ]]; then
-  mkdir -p "$WORKSPACE/skills"
-  link_into \
-    "$PLUGIN_ROOT/skills/writing-rich-docs" \
-    "$WORKSPACE/skills/writing-rich-docs" \
-    "skills/writing-rich-docs"
-fi
 
 # Merge the P2E MCP server into .cursor/mcp.json when missing. Does not overwrite
 # an existing `p2e` entry (the product repo's URL/auth wins).
@@ -162,4 +151,4 @@ else:
 PY
 
 echo "p2e-cursor-skills: installed from $PLUGIN_ROOT into $WORKSPACE"
-echo "p2e-cursor-skills: invoke /p2e, /p2e-work-on-next, /p2e-bind, … in Agent chat"
+echo "p2e-cursor-skills: read the p2e-mode skill at session start"

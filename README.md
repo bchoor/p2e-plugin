@@ -1,19 +1,22 @@
 # p2e-plugin — Claude Code, Codex, and Cursor plugin for P2E
 
-This plugin routes [P2E](https://github.com/bchoor/p2e) story-map work through the P2E MCP server on Claude Code, Codex, and Cursor. Behavior lives once in `workflows/<name>.md`; each platform gets a thin wrapper (`commands/` for Claude, `skills/` for Codex, `.cursor/skills/` for Cursor) — see [`CLAUDE.md`](./CLAUDE.md) and [`reference/cross-platform-pattern.md`](./reference/cross-platform-pattern.md).
+This plugin connects [P2E](https://github.com/bchoor/p2e) story-map work to the P2E MCP server on Claude Code, Codex, and Cursor.
 
-It tracks the P2E **Patton v3 Flow/Foundation model**: every project is now a *Product* with two seeded Flows — a persona Flow (the user-journey lane) and an immutable Foundation Flow (8 platform/infra slots: Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting). Stories carry a `priority` (`P0`…`P3`) that orders the `/p2e-work-on-next` queue. See [Flow / Foundation model](#flow--foundation-model) below.
+**v0.12+ ships a single skill: `p2e-mode`.** Read it at session start for entity model, MCP tools, story lifecycle, and the Coder→Verifier→Auditor→Human review pipeline. Legacy `/p2e-*` slash commands and granular workflow skills are removed.
 
-Primary workflows:
+It tracks the P2E **Patton v3 Flow/Foundation model**: every project is a *Product* with two seeded Flows — a persona Flow (the user-journey lane) and an immutable Foundation Flow (8 platform/infra slots). Stories carry a `priority` (`P0`…`P3`) that orders open work. See [Flow / Foundation model](#flow--foundation-model) below.
 
-- `p2e` — Codex / Cursor plain-language router
-- `/p2e-bootstrap` and `p2e-bootstrap` — supports `--mode={new,onboarding}`, `--backfill-built`, and `--all`
-- `/p2e-add-story` and `p2e-add-story`
-- `/p2e-update-story` and `p2e-update-story` — thicken or steer any existing story (replaces `/p2e-add-story --fill`)
-- `/p2e-work-on-next` and `p2e-work-on-next` — v2 supervisor: selects the next story/stories by priority, dispatches parallel story-lead subagent waves, stories end at `IN_REVIEW` (no release)
-- `/p2e-sync-labels`, `/p2e-sync`, `/p2e-manage-uxo`, `/p2e-archaeology` — label/drift reconciliation, UXO authoring, autonomous repo onboarding
-- `/p2e-fix` and `p2e-fix` — fix one or more bugs by uprooting and re-implementing, not by layering patches (per-bug fix-shape gate)
-- `/p2e-bind` and `p2e-bind` — bind this repo checkout to a P2E project for automatic slug calibration
+## p2e-mode (entry point)
+
+| Surface | Path |
+|---|---|
+| Codex | `skills/p2e-mode/SKILL.md` |
+| Cursor | `.cursor/skills/p2e-mode/SKILL.md` |
+| Claude Code | read the same skill content via plugin install |
+
+Subagents (optional): `p2e-story-lead`, `p2e-verifier`, `p2e-auditor`, `p2e-architect`, `p2e-staff-engineer`.
+
+Product repos may own their own copy of `p2e-mode` under `.cursor/skills/` — the plugin sync skips linking when a repo-owned copy exists.
 
 ## Auto-calibration via `.p2e/project.json`
 
@@ -57,20 +60,15 @@ The marketplace is named `p2e-plugins`; the plugin itself is named `p2e`.
 
 This repository includes a native Codex plugin manifest at [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json) plus the shared MCP config at [`.mcp.json`](./.mcp.json).
 
-Codex uses:
-
-- the top-level `p2e` skill for plain-language routing
-- direct alias skills for `p2e-bootstrap`, `p2e-add-story`, `p2e-update-story`, `p2e-work-on-next`, `p2e-sync-labels`, `p2e-sync`, `p2e-bind`, `p2e-manage-uxo`, `p2e-archaeology`, and `p2e-fix`
-- the `writing-rich-docs` skill (auto-discovered under `skills/`)
-- the same shared `workflows/` definitions used by the Claude wrappers
+Codex uses the **`p2e-mode`** skill as the sole entry point. Read it at session start before any P2E MCP operations.
 
 ## Install in Cursor
 
-Cursor reads the `.cursor/` directory directly — it does not load `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json`. Clone or vendor this repo (or add it as a submodule) so that `.cursor/skills/` and `.cursor/rules/` are visible from your project root, then:
+Cursor reads the `.cursor/` directory directly. Clone or sync this repo so `.cursor/skills/p2e-mode/` and `.cursor/rules/p2e-policy.mdc` are visible from your project root.
 
-- invoke any workflow with `/p2e-<name>` in agent chat — `/p2e-work-on-next`, `/p2e-bootstrap`, `/p2e-add-story`, `/p2e-update-story`, `/p2e-fix`, `/p2e-verify-story`, `/p2e-bind`, `/p2e-sync`, `/p2e-sync-labels`, `/p2e-manage-uxo`, `/p2e-archaeology`, or the plain-language `/p2e` router
-- the always-applied rule `.cursor/rules/p2e-policy.mdc` keeps Cursor aligned with the same `workflows/p2e-policy.md` contract Claude and Codex follow
-- point Cursor at the P2E MCP server via `.cursor/mcp.json` (or your global Cursor MCP config) using the same URL as [`.mcp.json`](./.mcp.json) — `https://p2e-mocha.vercel.app/api/mcp` by default, override with your own instance
+- Read **`p2e-mode`** at session start — it replaces the legacy `/p2e-*` command menu
+- The always-applied rule `.cursor/rules/p2e-policy.mdc` keeps Cursor aligned with Claude and Codex
+- Point Cursor at the P2E MCP server via `.cursor/mcp.json` (or your global Cursor MCP config) using the same URL as [`.mcp.json`](./.mcp.json) — `https://p2e-mocha.vercel.app/api/mcp` by default
 
 ### Cloud Agents (product repos)
 
@@ -84,11 +82,11 @@ Do **not** put a skill path in `.env`. Hook the same `.cursor/environment.json` 
 }
 ```
 
-Append those commands to your existing `install` / `start` (keep your `.env` and dependency steps). `install` snapshots the clone into the Build; `start --update` pulls `main` at the beginning of each session so new Cloud Agents pick up plugin changes without a rebuild. The script symlinks `/p2e-*` skills, the always-apply rule, and `workflows/` into the product workspace and ignores those links in `.git/info/exclude` so they are not committed.
+Append those commands to your existing `install` / `start` (keep your `.env` and dependency steps). `install` snapshots the clone into the Build; `start --update` pulls `main` at the beginning of each session so new Cloud Agents pick up plugin changes without a rebuild. The script symlinks **`p2e-mode`**, the always-apply rule, and merges MCP config into the product workspace. Symlinks are listed in `.git/info/exclude` so they are not committed.
 
 Commit a `p2e` entry in the product repo's `.cursor/mcp.json` (same URL as [`.mcp.json`](./.mcp.json)) so MCP is present even before the script merges it.
 
-The `/p2e-html`, `/p2e-md`, and `/p2e-md-to-html` doc-output override commands are Claude-Code-specific (they override the default rich-Markdown output set in `~/.claude/CLAUDE.md`) and have no Codex or Cursor equivalent — the `writing-rich-docs` skill is the cross-platform doc-rendering surface (default output: Markdown with embedded HTML blocks). See [`reference/cross-platform-pattern.md`](./reference/cross-platform-pattern.md) for the full asymmetry table.
+> **v0.12 note:** Legacy `/p2e-*` commands, `writing-rich-docs`, and the commands table below are removed. Use **`p2e-mode`** and product-repo docs (`docs/P2E-lifecycle.md`, `docs/P2E-handover.md`).
 
 ## Configure
 

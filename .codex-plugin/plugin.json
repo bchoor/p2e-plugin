@@ -1,7 +1,7 @@
 {
   "name": "p2e",
-  "version": "0.11.3",
-  "description": "P2E authoring and execution workflows for Codex, backed by the P2E MCP. Includes bootstrap (new + onboarding modes), add-story, update-story, work-on-next, ship-batch (heavyweight release-batch with 360° verify + per-story PR + review + roll-up), cut-release (PR-gated release flow with authoritative version detection + optional story closeout), sync-labels, sync, bind, manage-uxo, archaeology, fix, and verify-story. Aligned with the P2E Patton v3 Flow/Foundation model.",
+  "version": "0.12.0",
+  "description": "P2E operating mode for Codex — single p2e-mode skill covering entity model, MCP surface, story lifecycle, and Coder→Verifier→Auditor→Human review pipeline. Legacy granular workflow skills removed in v0.12. Backed by the P2E MCP.",
   "author": {
     "name": "bchoor",
     "email": "noreply@users.noreply.github.com",
@@ -21,8 +21,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "P2E",
-    "shortDescription": "Route P2E story-map work from Codex",
-    "longDescription": "Use P2E in Codex through a plain-language router and explicit workflow aliases for bootstrap (new + onboarding modes), add-story, update-story, work-on-next, ship-batch (heavyweight release-batch orchestrator), label reconciliation, drift sync, repo binding, UXO management, repo archaeology, uproot-and-replace bug fixing, and end-to-end story verification with a rich-HTML UAT report.",
+    "shortDescription": "P2E operating mode — read p2e-mode at session start",
+    "longDescription": "Use P2E in Codex through the p2e-mode skill: entity model, MCP tools, story lifecycle, and the three-agent review pipeline (Coder → Verifier → Auditor → Human). Subagents available for split work.",
     "developerName": "bchoor",
     "category": "Coding",
     "capabilities": [
@@ -34,16 +34,11 @@
     "privacyPolicyURL": "https://github.com/bchoor/p2e-plugin",
     "termsOfServiceURL": "https://github.com/bchoor/p2e-plugin",
     "defaultPrompt": [
-      "Work on the next planned P2E story",
-      "Ship the v0.X release batch end-to-end with full verify + review gates",
-      "Bootstrap a P2E project from this PRD",
-      "Onboard this existing repo into P2E",
-      "Create a new P2E story from this feature idea",
-      "Draft a thick P2E story from this feature idea",
-      "Thicken this draft story",
-      "Fix these bugs the right way (uproot and re-implement)",
-      "Verify this story end-to-end and produce a UAT report",
-      "Cut a release for this branch and close out the linked P2E story"
+      "Read p2e-mode and work on the next P2E story",
+      "Implement this P2E layer and move it to IN_REVIEW",
+      "Verify this story and propose verifier assessments per AC",
+      "Audit this story blind and propose auditor assessments",
+      "Bootstrap a P2E product from this PRD"
     ],
     "brandColor": "#0f766e",
     "composerIcon": "./assets/p2e-icon.svg",
