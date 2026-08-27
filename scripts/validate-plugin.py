@@ -153,8 +153,9 @@ def validate_p2e_mode_skill():
             "product intelligence",
             "references/p2e-model.md",
             "criteria op=propose",
-            "Coder→Verifier→Auditor→Human",
-            "Legacy `/p2e-*`",
+            "IN_PROGRESS",
+            "NOT_TESTED",
+            "Mark DONE",
         ):
             assert_true(
                 required_phrase in content,

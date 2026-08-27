@@ -10,7 +10,7 @@ A multi-platform plugin that surfaces P2E story-map guidance on Claude Code, Cod
 
 ## How to work in this repo
 
-1. **Read `p2e-mode` at session start.** Entity model, MCP surface, story lifecycle, and the Coder→Verifier→Auditor→Human review pipeline live in `skills/p2e-mode/SKILL.md` (Codex) and `.cursor/skills/p2e-mode/SKILL.md` (Cursor).
+1. **Read `p2e-mode` at session start.** Lifecycle contract and assessment gates live in `skills/p2e-mode/SKILL.md` (Codex) and `.cursor/skills/p2e-mode/SKILL.md` (Cursor).
 2. **MCP is authoritative.** Domain reads/writes go through `mcp__p2e__*` tools.
 3. **Bind first.** If `.p2e/project.json` is missing in a target repo, create a binding before any project-scoped MCP operation.
 

@@ -4,7 +4,7 @@ This plugin connects [P2E](https://github.com/bchoor/p2e) story-map work to the 
 
 P2E is **product intelligence** — a living map of your product that grows iteratively as you capture UXOs, draft layers, implement, and land work. It is not a one-shot spec tool.
 
-**v0.12+ ships a single skill: `p2e-mode`.** Read it at session start for bind, lifecycle, MCP tools, and the Coder→Verifier→Auditor→Human review pipeline. Entity definitions and create/update/UXO recipes live in [`references/p2e-model.md`](skills/p2e-mode/references/p2e-model.md) — read before drafting work. Legacy `/p2e-*` slash commands are removed.
+**v0.12+ ships a single skill: `p2e-mode`.** Read it at session start for bind, lifecycle, MCP tools, and the lifecycle contract and assessment gates. Entity/assessment facts live in [`references/p2e-model.md`](skills/p2e-mode/references/p2e-model.md). Legacy `/p2e-*` slash commands are removed.
 
 It tracks the P2E **Patton v3 Flow/Foundation model**: every project is a *Product* with two seeded Flows — a persona Flow (the user-journey lane) and an immutable Foundation Flow (8 platform/infra slots). Stories carry a `priority` (`P0`…`P3`) that orders open work. See [Flow / Foundation model](#flow--foundation-model) below.
 
@@ -16,7 +16,7 @@ It tracks the P2E **Patton v3 Flow/Foundation model**: every project is a *Produ
 | Cursor | `.cursor/skills/p2e-mode/SKILL.md` |
 | Claude Code | read the same skill content via plugin install |
 
-**Story lifecycle:** `DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE` (+ `BLOCKED`). The coder implements and ends at **IN_REVIEW**; verifier and auditor propose per-AC assessments; the human **Mark DONE** is the sole acceptance gate. Details in [`p2e-mode`](skills/p2e-mode/SKILL.md).
+**Story lifecycle:** `DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE` (+ `BLOCKED`). `IN_PROGRESS` = code + verify (evidence + VERIFIER); `IN_REVIEW` = blind second opinion and/or human **Mark DONE**. Details in [`p2e-mode`](skills/p2e-mode/SKILL.md).
 
 Product repos may own their own copy of `p2e-mode` under `.cursor/skills/` — the plugin sync skips linking when a repo-owned copy exists.
 
@@ -32,7 +32,7 @@ From inside a Claude Code session:
 Pin the marketplace to a tag for stability:
 
 ```text
-/plugin marketplace add bchoor/p2e-plugin@v0.12.3
+/plugin marketplace add bchoor/p2e-plugin@v0.12.4
 /plugin install p2e@p2e-plugins
 ```
 

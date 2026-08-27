@@ -1,7 +1,7 @@
 {
   "name": "p2e",
-  "version": "0.12.3",
-  "description": "P2E operating mode for Codex — single p2e-mode skill covering entity model, MCP surface, story lifecycle, and Coder→Verifier→Auditor→Human review pipeline. Legacy granular workflow skills removed in v0.12. Backed by the P2E MCP.",
+  "version": "0.12.4",
+  "description": "P2E operating mode for Codex \u2014 single p2e-mode skill: bind, MCP surface, lifecycle contract, and assessment gates. Legacy granular workflow skills removed in v0.12. Backed by the P2E MCP.",
   "author": {
     "name": "bchoor",
     "email": "noreply@users.noreply.github.com",
@@ -21,8 +21,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "P2E",
-    "shortDescription": "P2E operating mode — read p2e-mode at session start",
-    "longDescription": "Use P2E in Codex through the p2e-mode skill: entity model, MCP tools, story lifecycle, and the Coder→Verifier→Auditor→Human review pipeline.",
+    "shortDescription": "P2E operating mode \u2014 read p2e-mode at session start",
+    "longDescription": "Use P2E in Codex through the p2e-mode skill: entity model, MCP tools, story lifecycle, and the Coder\u2192Verifier\u2192Auditor\u2192Human review pipeline.",
     "developerName": "bchoor",
     "category": "Coding",
     "capabilities": [
@@ -44,5 +44,6 @@
     "composerIcon": "./assets/p2e-icon.svg",
     "logo": "./assets/p2e-icon.svg",
     "screenshots": []
-  }
+  },
+  "longDescription": "Use P2E in Codex through the p2e-mode skill: bind, MCP tools, lifecycle contract (verify in IN_PROGRESS; review in IN_REVIEW), and assessment gates."
 }

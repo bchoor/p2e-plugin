@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.4 — 2026-08-27
+
+Straw-man lifecycle contract: verify and evidence live in **IN_PROGRESS**; **IN_REVIEW** is blind second opinion and/or human Mark DONE. Hard gate — no IN_REVIEW while any AC lacks a VERIFIER assessment or is NOT_TESTED. Skill compressed to a contract framework (≤60 lines); reference stays lean facts.
+
+### Changed
+- **`skills/p2e-mode/SKILL.md`** (+ Cursor mirror) — lifecycle meanings + gates/roles; removed review-pipeline/evidence-tooling procedure prose.
+- **`references/p2e-model.md`** (+ Cursor mirror) — entity/assessment facts, BLOCKED disambiguation, one-line tag shapes; removed operating recipe runbooks.
+- **README / policy / manifests** — pipeline wording aligned to the contract; version **0.12.4**.
+
 ## v0.12.3 — 2026-08-27
 
 Adds a bundled **P2E model reference** with canonical entity definitions and operating recipes. Keeps **`p2e-mode`** lean as session entry; agents read the reference before create/update/UXO work.
