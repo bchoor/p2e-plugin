@@ -107,7 +107,6 @@ These differences are real and intentional. Don't try to paper over them:
 |---|---|---|---|
 | Slash commands | yes (`commands/`) | no — use skills | yes (skills are `/`-invokable) |
 | Skills | yes (`skills/`) | yes (`skills/`) | yes (`.cursor/skills/`) |
-| Subagents | yes (`agents/`) | invoke via skill content | invoke via skill content |
 | `PreToolUse` hooks | yes | no | no |
 | `SessionStart` hooks | yes | partial | no |
 | MCP servers | yes (`.mcp.json`) | yes (`.mcp.json`) | yes (`.cursor/mcp.json` or shared) |

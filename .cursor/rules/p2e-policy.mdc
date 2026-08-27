@@ -13,17 +13,6 @@ This repo ships P2E guidance to Claude Code, Codex, and Cursor through a **singl
 - **MCP is authoritative.** P2E reads and writes go through `mcp__p2e__*` tools. Do not invent a parallel REST or local-file path.
 - **Bind once via `.p2e/project.json`.** If the file is present, honor the bound `product_slug` (legacy `project_slug` still accepted) for every MCP call. If absent, ask the user to create a binding before project-scoped operations.
 
-## Subagents
-
-Optional split for review pipeline work:
-
-- `p2e-story-lead` — implementation (coder)
-- `p2e-verifier` — tests, evidence, `criteria op=propose role=VERIFIER`
-- `p2e-auditor` — blind review, `criteria op=propose role=AUDITOR`
-- `p2e-architect` / `p2e-staff-engineer` — approach review and wave planning
-
-Supervisor owns all story status flips. Coder ends at `IN_REVIEW`; human Mark DONE is the sole acceptance gate.
-
 ## P2E Flow/Foundation model (Patton v3)
 
 A project is a **Product** (`mcp__p2e__products`, `product_slug`). Every Product has two seeded **Flows** — a **persona Flow** (user-journey lane) and an immutable **Foundation Flow** (8 fixed slots). Story → UXO → Phase → Flow → Product. `Story.priority` (`P0`…`P3`/`null`) orders open work.

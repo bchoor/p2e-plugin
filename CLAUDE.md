@@ -6,7 +6,7 @@ Project-specific instructions for Claude Code (and any AI agent reading this fil
 
 A multi-platform plugin that surfaces P2E story-map guidance on Claude Code, Codex, and Cursor — all backed by the shared P2E MCP server.
 
-**v0.12+:** Single **`p2e-mode`** skill. Legacy `/p2e-*` commands, granular workflow skills, and `workflows/` are removed. See CHANGELOG v0.12.0.
+**v0.12+:** Single **`p2e-mode`** skill. Legacy `/p2e-*` commands, granular workflow skills, bundled subagents, and `workflows/` are removed. See CHANGELOG v0.12.0.
 
 ## The p2e-mode contract (mandatory)
 
@@ -27,31 +27,27 @@ When changing P2E operating rules, update **p2e-mode** in both `skills/` and `.c
 skills/p2e-mode/            ← sole Codex skill (entry point)
 .cursor/skills/p2e-mode/    ← Cursor mirror
 .cursor/rules/              ← Cursor always-apply rules
-agents/                     ← subagents + CONTRACTS.md (reference-only orchestration contracts)
 hooks/                      ← Claude Code hooks (project-slug validator, session start)
 .mcp.json                   ← shared MCP server config
 .claude-plugin/plugin.json  ← Claude Code manifest
 .codex-plugin/plugin.json   ← Codex manifest
 AGENTS.md                   ← always-on orientation file
 reference/                  ← platform schema reference
-docs/archive/               ← pre-v0.12 historical feature docs
+docs/archive/               ← pre-v0.12 historical docs
 ```
 
 ## Hard rules
 
-- **Behavior lives in `p2e-mode`.** Domain posture and invariants go in the skill; agent-executable contracts go in `agents/CONTRACTS.md`.
+- **Behavior lives in `p2e-mode`.** All domain posture and invariants go in the skill.
 - **MCP is authoritative.** P2E reads/writes go through `mcp__p2e__*`. No parallel REST or local-file paths.
 - **Bind first.** If `.p2e/project.json` is missing in a target repo, create a binding before any project-scoped MCP operation.
-- **No platform forks of behavior.** Document asymmetries (hooks not on Codex/Cursor; agents invoked differently) in the skill or agent files, not as silent fallbacks.
+- **No platform forks of behavior.** Document asymmetries (hooks not on Codex/Cursor) in the skill, not as silent fallbacks.
 
 ## Known platform asymmetries
-
-These differences are real and documented — don't try to paper over them:
 
 | Capability | Claude Code | Codex | Cursor |
 |---|---|---|---|
 | Skills | yes (`skills/`) | yes (`skills/`) | yes (`.cursor/skills/`) |
-| Subagents | yes (`agents/`) | invoke via skill content | invoke via skill content |
 | `PreToolUse` hooks | yes | no | no |
 | `SessionStart` hooks | yes | partial | no |
 | MCP servers | yes (`.mcp.json`) | yes (`.mcp.json`) | yes (`.cursor/mcp.json` or shared) |
@@ -73,10 +69,9 @@ This plugin tracks the P2E backend's Patton v3 ontology — keep skill prose con
 | Change | Files to touch |
 |---|---|
 | p2e-mode behavior | Both `skills/p2e-mode/` mirrors + CHANGELOG + manifests |
-| Agent contract | `agents/CONTRACTS.md` + affected `agents/*.md` |
 | Cursor policy | `.cursor/rules/p2e-policy.mdc` |
 | Platform schema change (upstream) | Matching `reference/<platform>.md` (refresh date + source URL in the header) |
-| New hook (Claude only) | `hooks/hooks.json` + document the asymmetry in affected agent/skill files |
+| New hook (Claude only) | `hooks/hooks.json` + document the asymmetry in the skill |
 
 ## Commit and PR conventions
 
@@ -89,7 +84,5 @@ This plugin tracks the P2E backend's Patton v3 ontology — keep skill prose con
 
 - README: install + MCP tool surface
 - `skills/p2e-mode/SKILL.md`: operating mode (entry point)
-- `agents/CONTRACTS.md`: orchestration contracts for subagents
 - `reference/`: platform schemas + historical cross-platform pattern
-- `agents/`: subagent definitions
 - `hooks/`: project-slug validator + session start (Claude Code only)

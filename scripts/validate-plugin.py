@@ -73,6 +73,10 @@ def validate_expected_files():
         not (ROOT / "workflows").exists(),
         "workflows/ must be removed — guidance lives in p2e-mode skill",
     )
+    assert_true(
+        not (ROOT / "agents").exists(),
+        "agents/ must be removed — p2e-mode is the sole entry point",
+    )
 
     expected_codex_skill_paths = {
         ROOT / "skills" / "p2e-mode" / "SKILL.md",
@@ -147,54 +151,6 @@ def validate_p2e_mode_skill():
             )
 
 
-def validate_agents():
-    expected_agents = {
-        "p2e-architect.md",
-        "p2e-staff-engineer.md",
-        "p2e-story-lead.md",
-        "p2e-verifier.md",
-        "p2e-auditor.md",
-    }
-    actual_agents = {p.name for p in (ROOT / "agents").glob("p2e-*.md")}
-    assert_equal(actual_agents, expected_agents, "Unexpected agent set")
-
-    contracts = ROOT / "agents" / "CONTRACTS.md"
-    assert_true(contracts.exists(), "Missing agents/CONTRACTS.md")
-    contracts_text = read_text(contracts)
-    assert_true(
-        "Not a workflow" in contracts_text,
-        "agents/CONTRACTS.md missing reference-only header",
-    )
-
-    for agent_name in expected_agents:
-        content = read_text(ROOT / "agents" / agent_name)
-        assert_true(
-            "workflows/" not in content,
-            f"agents/{agent_name} still references workflows/",
-        )
-
-    verifier = read_text(ROOT / "agents" / "p2e-verifier.md")
-    auditor = read_text(ROOT / "agents" / "p2e-auditor.md")
-    for required_phrase in (
-        "criteria op=propose",
-        "role: VERIFIER",
-        "Do **not** Mark DONE",
-    ):
-        assert_true(
-            required_phrase in verifier,
-            f"agents/p2e-verifier.md missing: {required_phrase}",
-        )
-    for required_phrase in (
-        "viewer_role: AUDITOR",
-        "criteria op=propose",
-        "verifier blind",
-    ):
-        assert_true(
-            required_phrase in auditor.lower() or required_phrase in auditor,
-            f"agents/p2e-auditor.md missing: {required_phrase}",
-        )
-
-
 def validate_policy_rule():
     policy = read_text(ROOT / ".cursor" / "rules" / "p2e-policy.mdc")
     for required_phrase in (
@@ -228,7 +184,6 @@ def validate_stale_references():
         ROOT / "README.md",
         ROOT / "AGENTS.md",
         ROOT / "CLAUDE.md",
-        ROOT / "agents",
         ROOT / "hooks",
         ROOT / "reference",
         ROOT / "skills",
@@ -282,7 +237,6 @@ def main():
     validate_json_files()
     validate_expected_files()
     validate_p2e_mode_skill()
-    validate_agents()
     validate_policy_rule()
     validate_stale_references()
     print("plugin validation passed")
