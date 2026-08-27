@@ -28,11 +28,13 @@ Product
 | **Product** | The whole product map, bound via `.p2e/project.json` → `product_slug`. | A repo — the repo is where the binding lives. |
 | **Flow** | A lane of phases: **persona** (user journey) or **Foundation** (platform/infra; system-immutable). | A field on a layer — derive via UXO → Phase → Flow. |
 | **Phase** | One journey step (persona) or one of 8 fixed Foundation slots (Surfaces, Security, Data, Compute, Build-Deploy, Distribution, Observability, Cross-cutting). | Creatable on Foundation — the 8 slots are seeded and immutable. |
-| **UXO** | A **grouping bucket** of product machinery: `objectives[]` (3–6 MECE noun phrases) + one-sentence `description` synthesized from them. | A user narrative — RRR prose lives on layers. |
+| **UXO** | **User Experience Objective** — a **grouping bucket** for one coherent slice of product machinery under a phase. Holds `objectives[]` (3–6 MECE noun phrases) + one-sentence `description` synthesized from them. | A user narrative — RRR prose lives on layers. |
 | **Layer** (Story) | One landable slice of work under a UXO: RRR + thick-spec + status + priority; advances one UXO objective. | The whole feature — a UXO holds many layers over time. |
 | **Capability** | Concrete change on a layer: `INTRODUCES` / `MODIFIES` / `DEPRECATES` / `REMOVES` (+ `isBreaking`). | A UXO objective — objectives name scope; capabilities name change. |
 | **Criterion** (AC) | One testable acceptance condition; verifier and auditor assess separately in review. | A capability; not bulk-approvable. |
 | **Relation** | Typed edge between layers (`DEPENDS_ON`, `BUILDS_ON`, `FIXES`, `SUPERSEDES`). | Containment — that's UXO → layer. |
+
+**What is a UXO?** Despite the name, a User Experience Objective is **not** a user story or UX write-up. It is the map's **grouping construct** — the bucket that answers "what machinery does this part of the product own?" Think machine part (session lifecycle, membership roster, deploy pipeline), not user journey prose. `objectives[]` name the concerns the bucket owns (MECE within the UXO); **layers** under it carry RRR, capabilities, and ACs that land on those objectives. One UXO typically holds many layers over time.
 
 **Foundation vs persona:** Journey work → persona Flow. Platform/infra → Foundation slots. ADRs (`docs/adrs/`) link from Foundation UXOs via `spec_file`; description references the decision, does not restate it.
 
