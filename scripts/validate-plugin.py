@@ -117,6 +117,15 @@ def validate_expected_files():
     assert_true((ROOT / "AGENTS.md").exists(), "Missing AGENTS.md")
     assert_true((ROOT / "assets" / "p2e-icon.svg").exists(), "Missing p2e icon asset")
 
+    for rel_path in (
+        "skills/p2e-mode/references/p2e-model.md",
+        ".cursor/skills/p2e-mode/references/p2e-model.md",
+    ):
+        assert_true(
+            (ROOT / rel_path).exists(),
+            f"Missing bundled P2E model reference: {rel_path}",
+        )
+
     install_script = ROOT / "scripts" / "install-p2e-cursor-skills.sh"
     assert_true(install_script.exists(), "Missing scripts/install-p2e-cursor-skills.sh")
     script_text = read_text(install_script)
@@ -141,6 +150,8 @@ def validate_p2e_mode_skill():
         content = read_text(ROOT / rel_path)
         for required_phrase in (
             "name: p2e-mode",
+            "product intelligence",
+            "references/p2e-model.md",
             "criteria op=propose",
             "Coder→Verifier→Auditor→Human",
             "Legacy `/p2e-*`",

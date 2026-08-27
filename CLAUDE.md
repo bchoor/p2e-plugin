@@ -68,7 +68,8 @@ This plugin tracks the P2E backend's Patton v3 ontology — keep skill prose con
 
 | Change | Files to touch |
 |---|---|
-| p2e-mode behavior | Both `skills/p2e-mode/` mirrors + CHANGELOG + manifests |
+| p2e-mode session entry | Both `skills/p2e-mode/SKILL.md` mirrors + CHANGELOG + manifests |
+| P2E entity definitions / recipes | Both `skills/p2e-mode/references/p2e-model.md` mirrors + CHANGELOG |
 | Cursor policy | `.cursor/rules/p2e-policy.mdc` |
 | Platform schema change (upstream) | Matching `reference/<platform>.md` (refresh date + source URL in the header) |
 | New hook (Claude only) | `hooks/hooks.json` + document the asymmetry in the skill |
@@ -84,5 +85,6 @@ This plugin tracks the P2E backend's Patton v3 ontology — keep skill prose con
 
 - README: install + MCP tool surface
 - `skills/p2e-mode/SKILL.md`: operating mode (entry point)
+- `skills/p2e-mode/references/p2e-model.md`: entity definitions and operating recipes
 - `reference/`: platform schemas + historical cross-platform pattern
 - `hooks/`: project-slug validator + session start (Claude Code only)

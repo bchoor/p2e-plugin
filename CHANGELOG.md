@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.3 — 2026-08-27
+
+Adds a bundled **P2E model reference** with canonical entity definitions and operating recipes. Keeps **`p2e-mode`** lean as session entry; agents read the reference before create/update/UXO work.
+
+### Added
+- **`skills/p2e-mode/references/p2e-model.md`** (+ Cursor mirror) — graph, entity definitions table, layer anatomy, UXO recipe, create/update/thicken/manage/pick-next recipes, invariants. Distilled from pre-v0.12 workflows (`p2e-uxo-recipe`, `p2e-add-story`, `p2e-update-story`, `p2e-thicken`, `p2e-sizing-rubric`).
+
+### Changed
+- **`skills/p2e-mode/SKILL.md`** (+ Cursor mirror) — slimmed to bind, lifecycle, MCP table, review pipeline, evidence, invariants; points at `references/p2e-model.md`.
+- **`README.md`** — product intelligence intro; documentation map links the bundled reference.
+- **`scripts/validate-plugin.py`** — requires `references/p2e-model.md` in both skill paths.
+- **`CLAUDE.md`**, **`.cursor/rules/p2e-policy.mdc`** — reference doc in contributor/policy pointers.
+
 ## v0.12.2 — 2026-08-27
 
 Removes bundled subagents from the plugin install surface. The Coder→Verifier→Auditor→Human review pipeline remains documented in `p2e-mode` as roles — hosts execute them inline, not via shipped agent definition files.
