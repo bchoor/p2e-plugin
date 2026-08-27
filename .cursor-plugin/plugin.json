@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "P2E operating mode for Cursor — single p2e-mode skill for entity model, MCP surface, story lifecycle, and Coder→Verifier→Auditor→Human review pipeline. Also ships Codex skills and `.cursor/rules/`. Legacy /p2e-* slash commands and bundled subagents removed in v0.12. Backed by the p2e MCP. Bind once via .p2e/project.json for automatic slug calibration.",
   "author": {
     "name": "bchoor",

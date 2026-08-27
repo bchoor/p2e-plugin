@@ -9,7 +9,7 @@ This repo ships P2E guidance to Claude Code, Codex, and Cursor through a **singl
 
 ## Hard rules
 
-- **Read `p2e-mode` at session start.** Entity model, MCP surface, story lifecycle, and the Coder→Verifier→Auditor→Human review pipeline live in `skills/p2e-mode/SKILL.md` (Codex) and `.cursor/skills/p2e-mode/SKILL.md` (Cursor).
+- **Read `p2e-mode` at session start.** MCP surface, story lifecycle, and the Coder→Verifier→Auditor→Human review pipeline live in `skills/p2e-mode/SKILL.md` (Codex) and `.cursor/skills/p2e-mode/SKILL.md` (Cursor). Entity definitions and create/update/UXO recipes live in `references/p2e-model.md` under the same skill — read before drafting work.
 - **MCP is authoritative.** P2E reads and writes go through `mcp__p2e__*` tools. Do not invent a parallel REST or local-file path.
 - **Bind once via `.p2e/project.json`.** If the file is present, honor the bound `product_slug` (legacy `project_slug` still accepted) for every MCP call. If absent, ask the user to create a binding before project-scoped operations.
 
@@ -20,5 +20,6 @@ A project is a **Product** (`mcp__p2e__products`, `product_slug`). Every Product
 ## Where to read
 
 - `skills/p2e-mode/SKILL.md` — operating mode (entry point)
+- `skills/p2e-mode/references/p2e-model.md` — entity definitions and operating recipes
 - `README.md` — installation and MCP configuration
 - Product repo docs: `docs/P2E-lifecycle.md`, `docs/P2E-handover.md`

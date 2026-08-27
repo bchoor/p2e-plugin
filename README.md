@@ -2,7 +2,9 @@
 
 This plugin connects [P2E](https://github.com/bchoor/p2e) story-map work to the P2E MCP server on Claude Code, Codex, and Cursor.
 
-**v0.12+ ships a single skill: `p2e-mode`.** Read it at session start for entity model, MCP tools, story lifecycle, and the Coder→Verifier→Auditor→Human review pipeline. Legacy `/p2e-*` slash commands and granular workflow skills are removed.
+P2E is **product intelligence** — a living map of your product that grows iteratively as you capture UXOs, draft layers, implement, and land work. It is not a one-shot spec tool.
+
+**v0.12+ ships a single skill: `p2e-mode`.** Read it at session start for bind, lifecycle, MCP tools, and the Coder→Verifier→Auditor→Human review pipeline. Entity definitions and create/update/UXO recipes live in [`references/p2e-model.md`](skills/p2e-mode/references/p2e-model.md) — read before drafting work. Legacy `/p2e-*` slash commands are removed.
 
 It tracks the P2E **Patton v3 Flow/Foundation model**: every project is a *Product* with two seeded Flows — a persona Flow (the user-journey lane) and an immutable Foundation Flow (8 platform/infra slots). Stories carry a `priority` (`P0`…`P3`) that orders open work. See [Flow / Foundation model](#flow--foundation-model) below.
 
@@ -30,7 +32,7 @@ From inside a Claude Code session:
 Pin the marketplace to a tag for stability:
 
 ```text
-/plugin marketplace add bchoor/p2e-plugin@v0.12.2
+/plugin marketplace add bchoor/p2e-plugin@v0.12.3
 /plugin install p2e@p2e-plugins
 ```
 
@@ -168,7 +170,7 @@ P2E's Patton v3 ontology, which this plugin tracks:
 
 | Location | What it covers |
 |---|---|
-| **This repo** (`p2e-plugin`) | Install, MCP config, `p2e-mode` skill, platform schema reference |
+| **This repo** (`p2e-plugin`) | Install, MCP config, `p2e-mode` skill, [`references/p2e-model.md`](skills/p2e-mode/references/p2e-model.md), platform schema reference |
 | **Product repos** | Domain depth: `docs/P2E-lifecycle.md`, `docs/P2E-handover.md`, review-view design |
 | **`docs/archive/`** | Pre-v0.12 historical feature docs (work-on-next v2, rich-html-docs, etc.) |
 

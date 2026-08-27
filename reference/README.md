@@ -10,6 +10,8 @@ owner: bchoor
 
 Distilled platform requirements that the p2e-plugin must stay compliant with. Since v0.12, the plugin ships a single **`p2e-mode`** skill — the historical 4-file workflow pattern in `cross-platform-pattern.md` is kept for schema reference only.
 
+P2E **domain** definitions (Product, Flow, UXO, layer anatomy, operating recipes) live in the bundled skill reference [`skills/p2e-mode/references/p2e-model.md`](../skills/p2e-mode/references/p2e-model.md), not in this directory.
+
 ## Files
 
 - [`claude-code-plugins.md`](./claude-code-plugins.md) — Claude Code plugin reference (commands, skills, agents, hooks, plugin.json schema). Source: <https://code.claude.com/docs/en/plugins-reference>.
