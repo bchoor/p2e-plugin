@@ -35,7 +35,7 @@ GITHUB_REPO="$(jq -r '.github_repo // empty' "$BINDING_FILE" 2>/dev/null || true
 
 if [ -z "${SLUG:-}" ] || [ -z "${GITHUB_REPO:-}" ]; then
   # Malformed file — warn but do not block.
-  echo "WARNING [session-start-bound-project]: .p2e/project.json is present but missing 'slug' or 'github_repo' fields. Run /p2e-bind to regenerate." >&2
+  echo "WARNING [session-start-bound-project]: .p2e/project.json is present but missing 'slug' or 'github_repo' fields. Repair the file at the repo root with both fields set (derive slug from your P2E product and github_repo from git remote origin)." >&2
   exit 0
 fi
 

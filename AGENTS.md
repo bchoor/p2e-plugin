@@ -1,26 +1,24 @@
 # AGENTS.md — p2e-plugin
 
-This file is the orientation any AI agent (Codex CLI, Cursor agent, generic AGENTS.md-aware tool) reads on first contact with the repo. Authoritative project conventions live in `CLAUDE.md` (project-level) and the per-platform reference in `reference/`. This file is the short version.
+This file is the orientation any AI agent (Codex CLI, Cursor agent, generic AGENTS.md-aware tool) reads on first contact with the repo.
 
 ## What this repo is
 
-A multi-platform plugin that adds P2E story-map workflows to Claude Code, Codex, and Cursor — all backed by the shared P2E MCP server.
+A multi-platform plugin that surfaces P2E story-map guidance on Claude Code, Codex, and Cursor — all backed by the shared P2E MCP server.
+
+**v0.12+ ships a single skill: `p2e-mode`.** Legacy `/p2e-*` slash commands and granular workflow skills are removed.
 
 ## How to work in this repo
 
-1. **Behavior lives in `workflows/`.** Per-platform wrappers in `commands/`, `skills/`, and `.cursor/skills/` are thin and point at the workflow.
+1. **Read `p2e-mode` at session start.** Entity model, MCP surface, story lifecycle, and the Coder→Verifier→Auditor→Human review pipeline live in `skills/p2e-mode/SKILL.md` (Codex) and `.cursor/skills/p2e-mode/SKILL.md` (Cursor).
 2. **MCP is authoritative.** Domain reads/writes go through `mcp__p2e__*` tools.
-3. **Cross-platform compliance is mandatory.** Every workflow ships as four files (one shared workflow + one wrapper per platform). See `reference/cross-platform-pattern.md`.
-4. **Bind first.** If `.p2e/project.json` is missing, run `/p2e-bind` before any project-scoped MCP operation.
+3. **Bind first.** If `.p2e/project.json` is missing in a target repo, create a binding before any project-scoped MCP operation.
+4. **Subagents are optional.** Orchestration agents (`p2e-story-lead`, `p2e-architect`, `p2e-staff-engineer`) and review agents (`p2e-verifier`, `p2e-auditor`) share contracts in `agents/CONTRACTS.md`.
 
 ## Where to look
 
-- `README.md` — install + command table
-- `CLAUDE.md` — full project conventions (read this if you'll be writing code)
-- `reference/` — distilled platform requirements (Claude / Codex / Cursor) + the cross-platform pattern
-- `workflows/` — the canonical behavior for every command/skill
-- `commands/` (Claude), `skills/` (Codex), `.cursor/skills/` (Cursor) — thin wrappers
-
-## Available workflows
-
-`p2e-bootstrap`, `p2e-add-story`, `p2e-update-story`, `p2e-work-on-next`, `p2e-sync-labels`, `p2e-sync`, `p2e-bind`, `p2e-manage-uxo`, `p2e-archaeology`, `p2e-fix`. Each is invocable as `/<name>` on Claude and Cursor and as `<name>` (or via the `p2e` router skill) on Codex.
+- `README.md` — install + MCP configuration
+- `CLAUDE.md` — contributor conventions for this repo
+- `skills/p2e-mode/SKILL.md` — operating mode (entry point)
+- `agents/` — subagent definitions + `CONTRACTS.md`
+- `reference/` — platform schema summaries

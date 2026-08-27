@@ -155,8 +155,23 @@ def validate_agents():
         "p2e-verifier.md",
         "p2e-auditor.md",
     }
-    actual_agents = {p.name for p in (ROOT / "agents").glob("*.md")}
+    actual_agents = {p.name for p in (ROOT / "agents").glob("p2e-*.md")}
     assert_equal(actual_agents, expected_agents, "Unexpected agent set")
+
+    contracts = ROOT / "agents" / "CONTRACTS.md"
+    assert_true(contracts.exists(), "Missing agents/CONTRACTS.md")
+    contracts_text = read_text(contracts)
+    assert_true(
+        "Not a workflow" in contracts_text,
+        "agents/CONTRACTS.md missing reference-only header",
+    )
+
+    for agent_name in expected_agents:
+        content = read_text(ROOT / "agents" / agent_name)
+        assert_true(
+            "workflows/" not in content,
+            f"agents/{agent_name} still references workflows/",
+        )
 
     verifier = read_text(ROOT / "agents" / "p2e-verifier.md")
     auditor = read_text(ROOT / "agents" / "p2e-auditor.md")
@@ -197,12 +212,79 @@ def validate_policy_rule():
     )
 
 
+def validate_stale_references():
+    stale_patterns = (
+        "workflows/",
+        "commands/p2e-",
+        "/p2e-bind",
+    )
+    allowlist_prefixes = (
+        ROOT / "CHANGELOG.md",
+        ROOT / "docs" / "archive",
+        ROOT / "reference" / "cross-platform-pattern.md",
+    )
+
+    scan_roots = [
+        ROOT / "README.md",
+        ROOT / "AGENTS.md",
+        ROOT / "CLAUDE.md",
+        ROOT / "agents",
+        ROOT / "hooks",
+        ROOT / "reference",
+        ROOT / "skills",
+        ROOT / ".cursor",
+        ROOT / "scripts",
+    ]
+
+    def is_allowlisted(path: pathlib.Path) -> bool:
+        for prefix in allowlist_prefixes:
+            if path == prefix:
+                return True
+            try:
+                path.relative_to(prefix)
+                return True
+            except ValueError:
+                continue
+        return False
+
+    violations = []
+    for scan_root in scan_roots:
+        if scan_root.is_file():
+            paths = [scan_root]
+        else:
+            paths = scan_root.rglob("*")
+        for path in paths:
+            if not path.is_file():
+                continue
+            if path.suffix not in {".md", ".mdc", ".sh", ".py", ".json"}:
+                continue
+            if is_allowlisted(path):
+                continue
+            if path.name == "validate-plugin.py":
+                continue
+            content = read_text(path)
+            for pattern in stale_patterns:
+                if pattern in content:
+                    # p2e-mode deprecation footnote is allowed
+                    if pattern == "/p2e-bind":
+                        continue
+                    if pattern == "workflows/" and "Legacy `/p2e-*`" in content:
+                        continue
+                    violations.append(f"{path.relative_to(ROOT)}: contains {pattern!r}")
+
+    assert_true(
+        not violations,
+        "Stale pre-v0.12 references found:\n  " + "\n  ".join(violations),
+    )
+
+
 def main():
     validate_json_files()
     validate_expected_files()
     validate_p2e_mode_skill()
     validate_agents()
     validate_policy_rule()
+    validate_stale_references()
     print("plugin validation passed")
 
 

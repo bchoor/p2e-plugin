@@ -1,14 +1,16 @@
 ---
 title: Cross-platform compliance pattern
 hash: ref-xplat-pattern
-status: living
+status: historical
 date: 2026-05-10
 owner: bchoor
 ---
 
 # Cross-platform compliance pattern
 
-**The rule:** every workflow this plugin ships must be invocable from Claude Code, Codex, AND Cursor — without behavior drift. The way we achieve that is the **shared-workflow + thin-wrapper** pattern.
+> **Historical (pre-v0.12):** Superseded by the single **`p2e-mode`** skill in v0.12.0. Kept for schema reference only — do not add new workflows using this pattern.
+
+**The rule (v0.11 and earlier):** every workflow this plugin shipped had to be invocable from Claude Code, Codex, AND Cursor — without behavior drift. The way we achieved that was the **shared-workflow + thin-wrapper** pattern.
 
 ## The shape
 

@@ -69,7 +69,7 @@ description: When and what this skill does.
 ---
 ```
 
-Body is the prompt Codex executes. The standard pattern in this repo: each skill is a thin wrapper that reads one or more files in `workflows/` and follows that workflow exactly.
+Body is the prompt Codex executes. Since v0.12, this repo ships a single **`p2e-mode`** skill as the entry point.
 
 ## MCP servers
 
@@ -77,13 +77,12 @@ Same `.mcp.json` schema as Claude Code. The plugin in this repo shares `.mcp.jso
 
 ## Discovery and invocation
 
-- Plain-language: a top-level router skill (e.g. `p2e`) catches free-form requests and selects the right workflow.
-- Direct alias: per-workflow skills (e.g. `p2e-work-on-next`) act as named entrypoints.
+- Read **`p2e-mode`** at session start for entity model, MCP surface, story lifecycle, and review pipeline.
+- Optional subagents in `agents/` for split work (story-lead, verifier, auditor, architect, staff-engineer).
 
-## What this repo uses
+## What this repo uses (v0.12+)
 
 - `.codex-plugin/plugin.json` with `skills`, `mcpServers`, `interface`
-- `skills/p2e/SKILL.md` (top-level router)
-- `skills/p2e-<workflow>/SKILL.md` (one alias skill per workflow)
+- `skills/p2e-mode/SKILL.md` (sole entry point)
 - shared `.mcp.json`
-- shared `workflows/` (single source of truth for behavior)
+- `agents/CONTRACTS.md` (reference-only orchestration contracts for subagents)

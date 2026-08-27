@@ -53,7 +53,7 @@ BOUND_SLUG="$(jq -r '.slug // empty' "$BINDING_FILE" 2>/dev/null || true)"
 
 if [ -z "${BOUND_SLUG:-}" ]; then
   # Malformed binding — warn but allow (do not block on corrupted anchor).
-  echo "WARNING [pretooluse-project-slug-validator]: .p2e/project.json exists but 'slug' field is missing or empty — skipping slug validation. Run /p2e-bind to regenerate." >&2
+  echo "WARNING [pretooluse-project-slug-validator]: .p2e/project.json exists but 'slug' field is missing or empty — skipping slug validation. Repair the file at the repo root with slug and github_repo set." >&2
   exit 0
 fi
 
@@ -79,6 +79,6 @@ fi
 GITHUB_REPO="$(jq -r '.github_repo // "unknown"' "$BINDING_FILE" 2>/dev/null || echo "unknown")"
 
 echo "BLOCKED [pretooluse-project-slug-validator]: tool '${TOOL_NAME}' was called with project_slug='${CALL_SLUG}' but this repo is bound to '${BOUND_SLUG}' (GitHub: ${GITHUB_REPO})." >&2
-echo "  Fix: pass project_slug=\"${BOUND_SLUG}\" in the tool call, or update the binding by running /p2e-bind." >&2
+echo "  Fix: pass project_slug=\"${BOUND_SLUG}\" in the tool call, or update .p2e/project.json at the repo root." >&2
 echo "  Binding source: ${BINDING_FILE}" >&2
 exit 1
