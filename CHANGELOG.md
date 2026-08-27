@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.12.2 — 2026-08-27
+
+Removes bundled subagents from the plugin install surface. The Coder→Verifier→Auditor→Human review pipeline remains documented in `p2e-mode` as roles — hosts execute them inline, not via shipped agent definition files.
+
+### Removed
+- **`agents/`** — `p2e-story-lead`, `p2e-verifier`, `p2e-auditor`, `p2e-architect`, `p2e-staff-engineer`, and `CONTRACTS.md` moved to `docs/archive/agents/`.
+- Subagent sections from README, `p2e-mode`, `p2e-policy.mdc`, AGENTS.md, and CLAUDE.md.
+
+### Changed
+- **`scripts/validate-plugin.py`** — asserts `agents/` is absent at repo root.
+- Manifests bumped to **0.12.2**; `.cursor-plugin` drops `agents` key.
+
 ## v0.12.1 — 2026-08-27
 
 Documentation reconciliation for the v0.12 p2e-mode-only architecture. No behavior changes to the skill or MCP surface.

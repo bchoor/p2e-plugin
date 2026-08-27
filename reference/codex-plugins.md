@@ -78,11 +78,9 @@ Same `.mcp.json` schema as Claude Code. The plugin in this repo shares `.mcp.jso
 ## Discovery and invocation
 
 - Read **`p2e-mode`** at session start for entity model, MCP surface, story lifecycle, and review pipeline.
-- Optional subagents in `agents/` for split work (story-lead, verifier, auditor, architect, staff-engineer).
 
 ## What this repo uses (v0.12+)
 
 - `.codex-plugin/plugin.json` with `skills`, `mcpServers`, `interface`
 - `skills/p2e-mode/SKILL.md` (sole entry point)
 - shared `.mcp.json`
-- `agents/CONTRACTS.md` (reference-only orchestration contracts for subagents)

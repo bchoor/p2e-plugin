@@ -10,8 +10,8 @@
     {
       "name": "p2e",
       "source": "./",
-      "description": "Single p2e-mode skill: entity model, MCP surface, story lifecycle, and Coder→Verifier→Auditor→Human review pipeline. Subagents: p2e-story-lead, p2e-verifier, p2e-auditor, p2e-architect, p2e-staff-engineer. Legacy /p2e-* commands and granular workflow skills removed in v0.12. Ships Codex skills and a Cursor `.cursor/` surface. Backed by the P2E MCP server (configurable via P2E_MCP_URL).",
-      "version": "0.12.1",
+      "description": "Single p2e-mode skill: entity model, MCP surface, story lifecycle, and Coder→Verifier→Auditor→Human review pipeline. Legacy /p2e-* commands, granular workflow skills, and bundled subagents removed in v0.12. Ships Codex skills and a Cursor `.cursor/` surface. Backed by the P2E MCP server (configurable via P2E_MCP_URL).",
+      "version": "0.12.2",
       "author": {
         "name": "bchoor"
       },

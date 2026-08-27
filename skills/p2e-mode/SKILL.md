@@ -74,10 +74,6 @@ Upload via `story_assets`; assessments via `op=propose` with one-line `summary` 
 - Coder does not write assessments; human does not per-AC approve.
 - Never create Foundation phases via MCP — the 8 Foundation slots are seeded and immutable.
 
-## Subagents (optional)
-
-When splitting work: `p2e-story-lead` (code), `p2e-verifier`, `p2e-auditor`. Supervisor owns status flips.
-
 ---
 
 *Legacy `/p2e-*` slash commands and granular workflow skills are deprecated in this repo — this file is the entry point.*

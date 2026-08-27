@@ -10,7 +10,6 @@ These documents describe architecture and features from before v0.12, when the p
 | [`feat-rich-html-docs/`](feat-rich-html-docs/) | Rich HTML doc rendering (`writing-rich-docs`, `/p2e-html`) |
 | [`feat-task-ladder/`](feat-task-ladder/) | TaskCreate progress ladder for multi-story runs |
 | [`superpowers/`](superpowers/) | Codex compatibility design notes |
+| [`agents/`](agents/) | Pre-v0.12.2 bundled subagent definitions and orchestration contracts |
 
 Current entry point: [`skills/p2e-mode/SKILL.md`](../skills/p2e-mode/SKILL.md).
-
-Orchestration contracts salvaged for subagents: [`agents/CONTRACTS.md`](../agents/CONTRACTS.md).

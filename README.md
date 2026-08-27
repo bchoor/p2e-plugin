@@ -16,18 +16,6 @@ It tracks the P2E **Patton v3 Flow/Foundation model**: every project is a *Produ
 
 **Story lifecycle:** `DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE` (+ `BLOCKED`). The coder implements and ends at **IN_REVIEW**; verifier and auditor propose per-AC assessments; the human **Mark DONE** is the sole acceptance gate. Details in [`p2e-mode`](skills/p2e-mode/SKILL.md).
 
-**Subagents (optional):**
-
-| Agent | Role |
-|---|---|
-| `p2e-story-lead` | Per-story implementation lifecycle (plan → implement → verify → PR) |
-| `p2e-verifier` | Tests, evidence, `criteria op=propose role=VERIFIER` |
-| `p2e-auditor` | Blind review, `criteria op=propose role=AUDITOR` |
-| `p2e-architect` | Approach design for Standard/Architectural stories |
-| `p2e-staff-engineer` | Wave dependency graph for batch runs |
-
-Shared orchestration contracts: [`agents/CONTRACTS.md`](agents/CONTRACTS.md).
-
 Product repos may own their own copy of `p2e-mode` under `.cursor/skills/` — the plugin sync skips linking when a repo-owned copy exists.
 
 ## Install in Claude Code
@@ -42,7 +30,7 @@ From inside a Claude Code session:
 Pin the marketplace to a tag for stability:
 
 ```text
-/plugin marketplace add bchoor/p2e-plugin@v0.12.1
+/plugin marketplace add bchoor/p2e-plugin@v0.12.2
 /plugin install p2e@p2e-plugins
 ```
 
@@ -180,7 +168,7 @@ P2E's Patton v3 ontology, which this plugin tracks:
 
 | Location | What it covers |
 |---|---|
-| **This repo** (`p2e-plugin`) | Install, MCP config, `p2e-mode` skill, subagents, platform schema reference |
+| **This repo** (`p2e-plugin`) | Install, MCP config, `p2e-mode` skill, platform schema reference |
 | **Product repos** | Domain depth: `docs/P2E-lifecycle.md`, `docs/P2E-handover.md`, review-view design |
 | **`docs/archive/`** | Pre-v0.12 historical feature docs (work-on-next v2, rich-html-docs, etc.) |
 
