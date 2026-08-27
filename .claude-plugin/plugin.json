@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.11.2",
+  "version": "0.11.3",
   "description": "P2E authoring + workflow commands for Claude Code (also ships Codex skills and a Cursor `.cursor/` surface — same shared workflows on all three). Adds /p2e-bootstrap, /p2e-add-story, /p2e-update-story, /p2e-work-on-next, /p2e-ship-batch (heavyweight release-batch with 360° verify + per-story PR + review + roll-up), /p2e-cut-release (PR-gated release flow with authoritative version detection + optional story closeout), /p2e-sync-labels, /p2e-sync, /p2e-bind, /p2e-manage-uxo, /p2e-archaeology, /p2e-fix, /p2e-verify-story, /p2e-html, /p2e-md, and /p2e-md-to-html, plus the writing-rich-docs skill for rich docs (Markdown with embedded HTML blocks). Aligned with the P2E Patton v3 Flow/Foundation model (flows + products MCP tools, Story.priority queue). Backed by the p2e MCP. Use /p2e-bind once per repo to anchor it to a P2E project for automatic slug calibration.",
   "author": {
     "name": "bchoor",

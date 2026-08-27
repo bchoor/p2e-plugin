@@ -76,6 +76,12 @@ For each acceptance criterion in `order`:
 4. **Probe state for completeness** — `evaluate_script` to read store / localStorage / network logs as *supporting* evidence (not the verdict).
 5. **Record verdict in the tracker** — call `mcp__p2e__criteria op=verdict` with `id=<ac-cuid>`, `verdict=PASS|FAIL|BLOCKED`, and `note=<screenshot path or curl output ref>`. In gate-engine mode this is mandatory per AC; in standalone mode it is performed unless `--no-tracker` is passed. `CAVEAT` is not a tracker verdict — map it to `PASS` with a note (caveat is informational, shipping acceptable) or `BLOCKED` (caveat gates shipping).
 
+6. **Upload structured proof markdown (backend / test ACs)** — for non-screenshot evidence (vitest, curl, API proofs), use the `ac-evidence-proof/v1` contract (`workflows/p2e-ac-evidence-proof.md`):
+   - `mcp__p2e__evidence op=template schema=ac-evidence-proof/v1 criterion_index=<N> story_id=<id>`
+   - Fill `## Result`, `## Tests`, `## HTTP proof`, and `<details><summary>Line references</summary>` bullets
+   - `mcp__p2e__evidence op=validate_proof content=<md> filename=acN-proof.md` — must return `valid: true` before upload
+   - `mcp__p2e__story_assets op=upload_url` with `criterion_id=<ac-cuid>`, filename `acN-proof.md` (TOKEN-CARRY PUT via `upload-asset.sh` when using signed URL)
+
 After recording the verdict, if a screenshot was saved: upload it using the TOKEN-CARRY pattern — see `## Screenshot evidence upload → TOKEN-CARRY DISCIPLINE` in `workflows/p2e-policy.md` for the canonical recipe. Short form: (1) call `story_assets op=upload_url` with `story_id`, `filename`, `content_type=image/png`, `caption`, and `criterion_id=<ac-cuid>`; (2) Write the full JSON response to `/tmp/upload-ticket.json`; (3) run `skills/p2e-verify-story/scripts/upload-asset.sh /tmp/upload-ticket.json <screenshot.png> image/png`. The helper reads the HMAC-signed `client_token` from the file — never inline it in a shell command. Do NOT use `op=upload data_base64` (being removed server-side, B-01-L15).
 
 Store screenshots at `<artifacts-dir>/<NN>-<ac-slug>.png`. The two-digit prefix preserves order; the slug helps a reviewer scan filenames.

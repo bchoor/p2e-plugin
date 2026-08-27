@@ -231,6 +231,8 @@ Each round logs the open-problem count so the trend is auditable. On BLOCKED, es
 
 The adaptive fix loop (step 3 iterates while problem count strictly shrinks), the 6-round cap, and the stall/oscillation → BLOCKED exit condition are defined in `### Adaptive fix loop (inside the gate)` and are NOT weakened by this ordering. Per-AC verdicts and the DEVIATIONS entry are written once by the supervisor, after the loop exits with pass and the report is received.
 
+For backend/test ACs, upload `ac{N}-proof.md` per `workflows/p2e-ac-evidence-proof.md` — validate with `mcp__p2e__evidence op=validate_proof` before `story_assets` upload. UI ACs continue to use screenshot assets via `story_assets op=upload`.
+
 ## Orchestrator DEVIATIONS checkpoint
 
 After the gate passes and before the `IN_REVIEW` flip, the orchestrator **must** write a `DEVIATIONS` story-log entry. This is not optional — it is a required gate step, not a convention.
