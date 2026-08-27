@@ -1,0 +1,58 @@
+schema: ac-evidence-proof/v1
+title: AC evidence proof markdown contract
+description: |
+  Canonical format for per-AC verification evidence uploaded via story_assets
+  and consumed by the P2E evidence digest viewer. Agents MUST validate with
+  `mcp__p2e__evidence op=validate_proof` before upload.
+
+required:
+  h1:
+    pattern: '^# AC{N} proof — {story-id}'
+    example: '# AC1 proof — P-07-L9'
+  result:
+    heading: '## Result'
+    verdict: '**PASS** | **FAIL** | **BLOCKED** (bold required)'
+    example: '**PASS** — 4/4 tests'
+  line_references:
+    format: |
+      <details>
+      <summary>Line references</summary>
+
+      - `repo-relative-path:line`
+
+      </details>
+    min_bullets: 1
+
+recommended:
+  scope:
+    heading: '## Scope'
+  tests:
+    heading: '## Tests'
+    format: markdown table with Location | Test | Result columns
+  http_proof:
+    heading: '## HTTP proof'
+    block_header: '### `path:line` — title'
+    asserted_bullets: '- `path:line` expect(...)'
+
+optional:
+  companion_json:
+    filename: 'ac{N}-proof.json'
+    fields:
+      - schema: ac-evidence-proof/v1
+      - storyId
+      - criterionIndex
+      - verdict: PASS | FAIL | BLOCKED
+      - focusLines: '[{ file, line }]'
+
+filename: 'ac{N}-proof.md'
+
+agent_flow:
+  - 'mcp__p2e__evidence op=template criterion_index=N story_id=<id>'
+  - fill sections from verification run
+  - 'mcp__p2e__evidence op=validate_proof content=<md> filename=acN-proof.md'
+  - 'mcp__p2e__story_assets op=upload_url criterion_id=<cuid> (acN-proof.md)'
+  - 'mcp__p2e__criteria op=verdict items=[{ id, verdict, note }]'
+
+deprecated:
+  - 'ac-evidence-digest with ## Verdict and focusLines JSON in <details>'
+  - '### Exchange N — `file:line` legacy exchange headers'

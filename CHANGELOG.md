@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.10.7 — 2026-08-27
+
+Adds the **ac-evidence-proof/v1** contract — a generalizable, MCP-validated format for per-AC verification evidence (test runs, HTTP proofs, line references). Agents generate proof markdown via `mcp__p2e__evidence`, validate before upload, and attach via `story_assets`. Consumed by the P2E evidence digest viewer.
+
+### Added
+- **`workflows/p2e-ac-evidence-proof.md`** — canonical contract doc: required sections, agent flow, offline validation.
+- **`specs/ac-evidence-proof.v1.yaml`** — machine-readable schema summary.
+- **`templates/ac-proof.v1.md`** — starter template for `ac{N}-proof.md`.
+- **`scripts/validate-ac-evidence-proof.ts`** — offline validator (`bun scripts/validate-ac-evidence-proof.ts ac1-proof.md`).
+
+### Changed
+- **`workflows/p2e-verify-story.md`** — Phase 3 step 6: upload structured proof markdown for backend/test ACs using the new contract.
+- **`workflows/p2e-policy.md`** — verify gate step 5 references `mcp__p2e__evidence op=validate_proof` before story_assets upload.
+
+Requires P2E MCP with the `evidence` tool (validate_proof + template ops).
+
 ## v0.10.6 — 2026-06-10
 
 Patch release packaging three changes that landed on `main` after `v0.10.5`: the converged verify gate, single-source recipe consolidation, and the `github_pr_url` doc note. No new workflow surface; refinements to existing verify/review behavior and docs.

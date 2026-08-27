@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "description": "P2E authoring and execution workflows for Codex, backed by the P2E MCP. Includes bootstrap (new + onboarding modes), add-story, update-story, work-on-next, ship-batch (heavyweight release-batch with 360° verify + per-story PR + review + roll-up), cut-release (PR-gated release flow with authoritative version detection + optional story closeout), sync-labels, sync, bind, manage-uxo, archaeology, fix, and verify-story. Aligned with the P2E Patton v3 Flow/Foundation model.",
   "author": {
     "name": "bchoor",

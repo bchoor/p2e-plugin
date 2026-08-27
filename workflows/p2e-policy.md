@@ -181,6 +181,8 @@ Each round logs the open-problem count so the trend is auditable. On BLOCKED, es
 4. If review finds problems: dispatch fix batch to the same implementer agent; re-run from step 1.
 5. If gate passes: record per-AC verdicts via `mcp__p2e__criteria op=verdict` (see `## Story log checkpoint policy` Checkpoint 1 in `workflows/p2e-work-on-next.md`) and write the DEVIATIONS story-log entry (see `## Orchestrator DEVIATIONS checkpoint`).
 
+For backend/test ACs, upload `ac{N}-proof.md` per `workflows/p2e-ac-evidence-proof.md` — validate with `mcp__p2e__evidence op=validate_proof` before `story_assets` upload. UI ACs continue to use screenshot assets via `story_assets op=upload`.
+
 ## Orchestrator DEVIATIONS checkpoint
 
 After the gate passes and before the `IN_REVIEW` flip, the orchestrator **must** write a `DEVIATIONS` story-log entry. This is not optional — it is a required gate step, not a convention.

@@ -76,6 +76,12 @@ For each acceptance criterion in `order`:
 4. **Probe state for completeness** — `evaluate_script` to read store / localStorage / network logs as *supporting* evidence (not the verdict).
 5. **Record verdict in the tracker** — call `mcp__p2e__criteria op=verdict` with `id=<ac-cuid>`, `verdict=PASS|FAIL|BLOCKED`, and `note=<screenshot path or curl output ref>`. In gate-engine mode this is mandatory per AC; in standalone mode it is performed unless `--no-tracker` is passed. `CAVEAT` is not a tracker verdict — map it to `PASS` with a note (caveat is informational, shipping acceptable) or `BLOCKED` (caveat gates shipping).
 
+6. **Upload structured proof markdown (backend / test ACs)** — for non-screenshot evidence (vitest, curl, API proofs), use the `ac-evidence-proof/v1` contract (`workflows/p2e-ac-evidence-proof.md`):
+   - `mcp__p2e__evidence op=template schema=ac-evidence-proof/v1 criterion_index=<N> story_id=<id>`
+   - Fill `## Result`, `## Tests`, `## HTTP proof`, and `<details><summary>Line references</summary>` bullets
+   - `mcp__p2e__evidence op=validate_proof content=<md> filename=acN-proof.md` — must return `valid: true` before upload
+   - `mcp__p2e__story_assets op=upload_url` (or `upload`) with `criterion_id=<ac-cuid>`, filename `acN-proof.md`
+
 After recording the verdict, if a screenshot was saved: call `mcp__p2e__story_assets op=upload` with `story_id=<story-id>`, `filename=<NN-ac-slug.png>`, `content_type=image/png`, `data_base64=<base64>`, `caption=<one-line description>`, and `criterion_id=<ac-cuid>` to scope the asset to the criterion. Use `items:[{...}]` form per policy.
 
 Store screenshots at `<artifacts-dir>/<NN>-<ac-slug>.png`. The two-digit prefix preserves order; the slug helps a reviewer scan filenames.
