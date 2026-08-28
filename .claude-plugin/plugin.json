@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.12.6",
+  "version": "0.12.7",
   "description": "P2E operating mode for Claude Code \u2014 single p2e-mode skill: bind, MCP surface, lifecycle contract (IN_PROGRESS=code+verify; IN_REVIEW=blind opinion/human), and assessment gates. Also ships Codex skills and a Cursor `.cursor/` surface. Legacy /p2e-* slash commands removed in v0.12. Backed by the p2e MCP. Bind once via .p2e/project.json.",
   "author": {
     "name": "bchoor",

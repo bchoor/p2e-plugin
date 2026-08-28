@@ -25,22 +25,36 @@ Before create/update/UXO work: [`references/p2e-model.md`](references/p2e-model.
 
 `DRAFT → OPEN → IN_PROGRESS → IN_REVIEW → DONE` (+ `BLOCKED`, `CANCELLED`)
 
-- **`IN_PROGRESS`** — code + verify loop; evidence and VERIFIER assessments live here.
+| Who | Typical action |
+|-----|----------------|
+| **coder** | Implement layer; ends at **IN_REVIEW** — never Mark DONE |
+| **verifier** | Tests + evidence + `criteria op=propose` (verifier role) |
+| **reviewer** | Blind review + `criteria op=propose` (reviewer role) |
+| **human** | Comments; **Mark layer DONE** (sole acceptance gate) |
+
+- **`IN_PROGRESS`** — code + verify loop; evidence and verifier assessments live here.
 - **`IN_REVIEW`** — blind second opinion and/or human review; only a human may **Mark DONE**.
 - Thick layers required for `OPEN → IN_PROGRESS`. No write without a confirmed preview.
 
 ## Gates & roles
 
-Roles: **coder** → **verifier** → **reviewer** → **human**.
+Roles: **coder** → **verifier** → **reviewer** → **human**. MCP role mapping: [`references/p2e-model.md`](references/p2e-model.md#assessments).
 
-- Every AC needs a VERIFIER assessment before `IN_REVIEW`; none may be `NOT_TESTED`.
-- Any VERIFIER `FAIL` → stay `IN_PROGRESS`.
+- Every AC needs a verifier assessment before `IN_REVIEW`; none may be `NOT_TESTED`.
+- Any verifier `FAIL` → stay `IN_PROGRESS`.
 - AC `BLOCKED` = coder/verifier cannot align → escalate to human (≠ `StoryStatus.BLOCKED`).
-- Reviewer is blind to verifier output (`criteria op=list` + `viewer_role=AUDITOR`; MCP wire name unchanged).
+- Reviewer is blind to verifier output — `criteria op=list` with reviewer viewer role only.
 - Coder never writes assessments; agents use `criteria op=propose`, never `op=verdict` / `op=toggle`.
 - Release audit is a batch over DONE sets — not a story status.
 - AuditLog on every mutation.
 - Never create Foundation phases via MCP.
+
+## Review pipeline (`IN_REVIEW`)
+
+1. **Verifier** — run `verificationCmd`, capture proof, upload assets, propose PASS/FAIL/BLOCKED per AC.
+2. **Reviewer** — read evidence + UXO/flow context only; propose PASS/FAIL per AC (never sees verifier verdict).
+3. **Mismatch** — verifier ≠ reviewer → human reads Review view / AC modal.
+4. **Human** — Mark DONE when satisfied.
 
 ## Tags
 
@@ -53,4 +67,5 @@ Tags (`backend` / `ui` / `external` / `docs` / `security`) select the verify/evi
 ## Pointers
 
 - Model + tags: `references/p2e-model.md`
+- Release reviewer subagent (Cursor): `.cursor/agents/p2e-reviewer.md`
 - Product repo (when present): `docs/P2E-lifecycle.md`, `docs/P2E-handover.md`

@@ -75,7 +75,7 @@ if ! is_plugin_repo "$PLUGIN_ROOT"; then
   exit 1
 fi
 
-mkdir -p "$WORKSPACE/.cursor/skills" "$WORKSPACE/.cursor/rules" "$WORKSPACE/.cursor"
+mkdir -p "$WORKSPACE/.cursor/skills" "$WORKSPACE/.cursor/rules" "$WORKSPACE/.cursor/agents" "$WORKSPACE/.cursor"
 
 git_exclude() {
   local pattern="$1"
@@ -120,6 +120,15 @@ link_into \
   "$PLUGIN_ROOT/.cursor/rules/p2e-policy.mdc" \
   "$WORKSPACE/.cursor/rules/p2e-policy.mdc" \
   ".cursor/rules/p2e-policy.mdc"
+
+if [[ ! -e "$WORKSPACE/.cursor/agents/p2e-reviewer.md" ]]; then
+  link_into \
+    "$PLUGIN_ROOT/.cursor/agents/p2e-reviewer.md" \
+    "$WORKSPACE/.cursor/agents/p2e-reviewer.md" \
+    ".cursor/agents/p2e-reviewer.md"
+else
+  echo "p2e-cursor-skills: skip .cursor/agents/p2e-reviewer.md (repo-owned copy exists)"
+fi
 
 # Merge the P2E MCP server into .cursor/mcp.json when missing. Does not overwrite
 # an existing `p2e` entry (the product repo's URL/auth wins).

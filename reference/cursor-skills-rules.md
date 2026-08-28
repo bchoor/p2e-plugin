@@ -87,6 +87,7 @@ Any skill with valid frontmatter can back a [Custom Mode](https://cursor.com/doc
 ## What this repo uses (v0.12+)
 
 - `.cursor/skills/p2e-mode/SKILL.md` — sole Cursor skill (entry point); Custom Mode–ready (`icon: book-open`, `color: cyan`, `disable-model-invocation: true`)
+- `.cursor/agents/p2e-reviewer.md` — release reviewer subagent (blind integration review; MCP role mapping in p2e-model)
 - `.cursor/rules/p2e-policy.mdc` — repo-wide policy rule (always-apply) summarizing scope and pointing at `p2e-mode`
 - `scripts/install-p2e-cursor-skills.sh` — product-repo Cloud Agent helper: clone this plugin and symlink `p2e-mode` + policy rule into the workspace from `.cursor/environment.json` `install` / `start --update`
 - `AGENTS.md` — minimal pointer file so non-Cursor IDEs that read `AGENTS.md` get the same orientation

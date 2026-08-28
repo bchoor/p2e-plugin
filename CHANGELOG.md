@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.12.7 — 2026-08-28
+
+Completes **reviewer** terminology in `p2e-mode`; adds Cursor **`p2e-reviewer`** subagent for adversarial release-batch review.
+
+### Added
+- **`.cursor/agents/p2e-reviewer.md`** — blind holistic integration reviewer (`claude-opus-5[effort=high]`); release batch over `IN_REVIEW` layers; skips stories with unverified ACs; proposes assessments via MCP reviewer role mapping.
+
+### Changed
+- **`skills/p2e-mode/SKILL.md`** (+ Cursor mirror) — lifecycle role table, review pipeline, zero **auditor** prose; points at reviewer subagent.
+- **`references/p2e-model.md`** (+ mirror) — MCP role mapping table (reviewer → `AUDITOR` enum); no **auditor** wording.
+- **`scripts/validate-plugin.py`** — fails on `auditor` in p2e-mode surfaces; requires p2e-reviewer agent.
+- **`scripts/install-p2e-cursor-skills.sh`** — symlinks `p2e-reviewer` agent.
+- **`.cursor-plugin/plugin.json`** — adds `agents` key.
+- Manifests bumped to **0.12.7**.
+
 ## v0.12.6 — 2026-08-28
 
 Renames the human-facing **auditor** role to **reviewer** across `p2e-mode` and reference docs. Role ladder is now **coder → verifier → reviewer → human**. MCP wire values remain `role=AUDITOR` / `viewer_role=AUDITOR` until the backend renames them.
