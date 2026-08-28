@@ -141,6 +141,35 @@ def validate_expected_files():
             f"scripts/install-p2e-cursor-skills.sh missing {required_phrase}",
         )
 
+    # Pre-v0.12 workflow helpers — must stay gone
+    for dead_script in (
+        "parse-gh-issue-body.sh",
+        "sync-github-label.sh",
+        "validate-ac-evidence-proof.ts",
+    ):
+        assert_true(
+            not (ROOT / "scripts" / dead_script).exists(),
+            f"scripts/{dead_script} must be removed — orphaned by p2e-mode consolidation",
+        )
+
+    # Claude Code binding hooks remain; the removed status-gate hook must not return
+    assert_true(
+        (ROOT / "hooks" / "hooks.json").exists(),
+        "Missing hooks/hooks.json",
+    )
+    assert_true(
+        (ROOT / "hooks" / "pretooluse-project-slug-validator.sh").exists(),
+        "Missing hooks/pretooluse-project-slug-validator.sh",
+    )
+    assert_true(
+        (ROOT / "hooks" / "session-start-bound-project.sh").exists(),
+        "Missing hooks/session-start-bound-project.sh",
+    )
+    assert_true(
+        not (ROOT / "hooks" / "pre-agent-spawn-story-status.sh").exists(),
+        "hooks/pre-agent-spawn-story-status.sh must stay removed",
+    )
+
 
 def validate_p2e_mode_skill():
     for rel_path in (

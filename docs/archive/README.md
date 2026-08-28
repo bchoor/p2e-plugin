@@ -4,12 +4,13 @@ These documents describe architecture and features from before v0.12, when the p
 
 **v0.12 consolidated all guidance into the single `p2e-mode` skill.** These files are kept for historical reference only — agents should not pattern-match against them as current operating instructions.
 
-| Directory | Topic |
+| Directory / file | Topic |
 |---|---|
 | [`feat-work-on-next-v2/`](feat-work-on-next-v2/) | v2 supervisor architecture (parallel story-lead waves) |
 | [`feat-rich-html-docs/`](feat-rich-html-docs/) | Rich HTML doc rendering (`writing-rich-docs`, `/p2e-html`) |
 | [`feat-task-ladder/`](feat-task-ladder/) | TaskCreate progress ladder for multi-story runs |
 | [`superpowers/`](superpowers/) | Codex compatibility design notes |
 | [`agents/`](agents/) | Pre-v0.12.2 bundled subagent definitions and orchestration contracts |
+| [`architecture-explorer.html`](architecture-explorer.html) | Pre-v0.12 interactive map of commands / workflows / hooks / scripts |
 
-Current entry point: [`skills/p2e-mode/SKILL.md`](../skills/p2e-mode/SKILL.md).
+Current entry point: [`skills/p2e-mode/SKILL.md`](../../skills/p2e-mode/SKILL.md).
