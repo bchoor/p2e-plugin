@@ -2,11 +2,12 @@
 title: Cursor skills and rules reference (distilled)
 hash: ref-cursor
 status: living
-date: 2026-05-10
+date: 2026-08-28
 owner: bchoor
 sources:
   - https://cursor.com/docs/context/rules
-  - https://cursor.com/docs/agent/chat/skills
+  - https://cursor.com/docs/skills
+  - https://cursor.com/docs/agent/prompting.md
 ---
 
 # Cursor skills and rules reference
