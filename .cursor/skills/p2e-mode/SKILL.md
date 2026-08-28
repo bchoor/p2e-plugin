@@ -52,7 +52,7 @@ Roles: **coder** → **verifier** → **reviewer** → **human**. MCP role mappi
 ## Review pipeline (`IN_REVIEW`)
 
 1. **Verifier** — run `verificationCmd`, capture proof, upload assets, propose PASS/FAIL/BLOCKED per AC.
-2. **Reviewer** — read evidence + UXO/flow context only; propose PASS/FAIL per AC (never sees verifier verdict).
+2. **Reviewer** — read evidence + UXO/flow context only; propose PASS/FAIL per AC (never sees verifier verdict). Do not read `story_log` or inline log entries from `stories op=get` — they leak verifier output.
 3. **Mismatch** — verifier ≠ reviewer → human reads Review view / AC modal.
 4. **Human** — Mark DONE when satisfied.
 

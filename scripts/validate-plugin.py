@@ -239,6 +239,10 @@ def validate_p2e_reviewer_agent():
         "name: p2e-reviewer",
         "reviewer",
         "verifier blind",
+        "Blindness in practice",
+        "nextCursor",
+        "criterion_id",
+        "seam_defects",
         "p2e-mode",
     ):
         assert_true(
