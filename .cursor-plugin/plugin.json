@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.12.8",
+  "version": "0.12.9",
   "description": "P2E operating mode for Cursor \u2014 single p2e-mode skill: bind, MCP surface, lifecycle contract, and assessment gates. Also ships Codex skills and `.cursor/rules/`. Legacy /p2e-* slash commands and bundled subagents removed in v0.12. Backed by the p2e MCP. Bind once via .p2e/project.json.",
   "author": {
     "name": "bchoor",

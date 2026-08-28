@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.12.9 — 2026-08-28
+
+**Hotfix:** removes the retired role name from all active plugin surfaces.
+
+### Fixed
+- **`references/p2e-model.md`** (+ mirror) — deleted reviewer → legacy wire enum mapping; reviewer-only language; wire values from live MCP `criteria` schema.
+- **`skills/p2e-mode/SKILL.md`** (+ mirror), **`.cursor/agents/p2e-reviewer.md`** — no legacy role name references.
+- **`scripts/validate-plugin.py`** — zero-tolerance ban on the substring `auditor` (any case) in p2e-mode surfaces; no exceptions.
+- Manifests bumped to **0.12.9**.
+
 ## v0.12.8 — 2026-08-28
 
 Hardens **`p2e-reviewer`** against blind-review contradictions found in adversarial review.

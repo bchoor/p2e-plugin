@@ -43,10 +43,12 @@ Statuses: `DRAFT | OPEN | BLOCKED | IN_PROGRESS | IN_REVIEW | DONE | CANCELLED`.
 
 Role ladder: **coder** → **verifier** → **reviewer** → **human**.
 
-| Human role | MCP `role` / `viewer_role` |
-|------------|----------------------------|
-| verifier | `VERIFIER` |
-| reviewer | `AUDITOR` |
+| Role | MCP usage |
+|------|-----------|
+| verifier | `criteria op=propose` with verifier role; `criteria op=list` includes verifier block |
+| reviewer | `criteria op=propose` with reviewer role; `criteria op=list` with reviewer viewer role (verifier block omitted — blind invariant) |
+
+Wire enum values for verifier and reviewer roles: read the live **`criteria`** tool schema at session start — MCP is authoritative. Plugin docs use **reviewer** only; never the retired role name.
 
 Verdicts: verifier `PASS | FAIL | BLOCKED`; reviewer `PASS | FAIL` only. Absence / `NOT_TESTED` = unassessed.
 - Agents write via `criteria op=propose`. `op=verdict` / `op=toggle` are not for agents.
