@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **`.cursor/agents/p2e-reviewer.md`** — pin `claude-opus[effort=high]` (Opus family, not a frozen `claude-opus-5` slug).
+
 ## v0.12.9 — 2026-08-28
 
 **Hotfix:** removes the retired role name from all active plugin surfaces.
