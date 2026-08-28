@@ -19,7 +19,7 @@ Product → Flow (persona | foundation) → Phase → UXO → Layer (Story)
 | **UXO** | Grouping bucket under a phase (`objectives[]` + `description`) | User-story prose (that is RRR on layers) |
 | **Layer** | Landable work under a UXO (RRR, thick-spec, status, priority) | The whole feature |
 | **Capability** | `INTRODUCES` / `MODIFIES` / `DEPRECATES` (+ `isBreaking`; `DEPRECATES` absorbs retired `REMOVES`) | A UXO objective |
-| **Criterion** | One testable AC; verifier and reviewer assess separately (MCP `AUDITOR`) | Bulk-approvable |
+| **Criterion** | One testable AC; verifier and reviewer assess separately | Bulk-approvable |
 | **Relation** | `DEPENDS_ON` / `BUILDS_ON` / `FIXES` / `SUPERSEDES` | Containment |
 
 Foundation slots are seeded and immutable. Journey → persona Flow; platform/infra → Foundation.
@@ -43,9 +43,14 @@ Statuses: `DRAFT | OPEN | BLOCKED | IN_PROGRESS | IN_REVIEW | DONE | CANCELLED`.
 
 Role ladder: **coder** → **verifier** → **reviewer** → **human**.
 
-MCP assessment roles: `VERIFIER` | `AUDITOR` (`AUDITOR` = reviewer; wire name unchanged). Verdicts: `PASS | FAIL | BLOCKED` (reviewer: PASS/FAIL only). Absence / `NOT_TESTED` = unassessed.
+| Human role | MCP `role` / `viewer_role` |
+|------------|----------------------------|
+| verifier | `VERIFIER` |
+| reviewer | `AUDITOR` |
+
+Verdicts: verifier `PASS | FAIL | BLOCKED`; reviewer `PASS | FAIL` only. Absence / `NOT_TESTED` = unassessed.
 - Agents write via `criteria op=propose`. `op=verdict` / `op=toggle` are not for agents.
-- Reviewer is blind to verifier output — list with `viewer_role=AUDITOR` (verifier block omitted).
+- Reviewer is blind to verifier output — `criteria op=list` with reviewer viewer role (table above; verifier block omitted).
 - Evidence attaches via `story_assets` (`criterion_id`); proof markdown via `evidence` tool where applicable.
 
 ## Tag shapes

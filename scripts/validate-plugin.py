@@ -2,6 +2,7 @@
 
 import json
 import pathlib
+import re
 import sys
 
 
@@ -27,11 +28,23 @@ def assert_equal(actual, expected, message: str):
         raise AssertionError(f"{message}: expected {expected!r}, got {actual!r}")
 
 
+def assert_no_auditor_prose(content: str, path: str):
+    """Ban human-facing 'auditor'; allow MCP wire enum AUDITOR."""
+    cleaned = content.replace("`AUDITOR`", "")
+    cleaned = re.sub(r"\bAUDITOR\b", "", cleaned)
+    assert_true(
+        "auditor" not in cleaned.lower(),
+        f"{path} must use reviewer language — found 'auditor'",
+    )
+
+
 def validate_json_files():
     codex_manifest = read_json(ROOT / ".codex-plugin" / "plugin.json")
     claude_plugin = read_json(ROOT / ".claude-plugin" / "plugin.json")
+    cursor_plugin = read_json(ROOT / ".cursor-plugin" / "plugin.json")
     marketplace = read_json(ROOT / ".claude-plugin" / "marketplace.json")
     mcp = read_json(ROOT / ".mcp.json")
+    canonical_version = codex_manifest["version"]
 
     assert_equal(codex_manifest["name"], "p2e", "Codex plugin name mismatch")
     assert_equal(codex_manifest["skills"], "./skills/", "Codex skills path mismatch")
@@ -53,8 +66,18 @@ def validate_json_files():
     assert_equal(plugin_entry["name"], "p2e", "Marketplace plugin name mismatch")
     assert_equal(
         plugin_entry["version"],
-        codex_manifest["version"],
+        canonical_version,
         "Marketplace and Codex versions must stay in sync",
+    )
+    assert_equal(
+        claude_plugin["version"],
+        canonical_version,
+        "Claude plugin and Codex versions must stay in sync",
+    )
+    assert_equal(
+        cursor_plugin["version"],
+        canonical_version,
+        "Cursor plugin and Codex versions must stay in sync",
     )
 
     assert_true(
@@ -172,6 +195,14 @@ def validate_expected_files():
 
 
 def validate_p2e_mode_skill():
+    p2e_paths = (
+        "skills/p2e-mode/SKILL.md",
+        ".cursor/skills/p2e-mode/SKILL.md",
+        "skills/p2e-mode/references/p2e-model.md",
+        ".cursor/skills/p2e-mode/references/p2e-model.md",
+    )
+    for rel_path in p2e_paths:
+        assert_no_auditor_prose(read_text(ROOT / rel_path), rel_path)
     for rel_path in (
         "skills/p2e-mode/SKILL.md",
         ".cursor/skills/p2e-mode/SKILL.md",
@@ -191,14 +222,28 @@ def validate_p2e_mode_skill():
             "Custom Mode",
             "reviewer",
             "coder",
+            "Review pipeline",
         ):
             assert_true(
                 required_phrase in content,
                 f"{rel_path} missing required phrase: {required_phrase}",
             )
+
+
+def validate_p2e_reviewer_agent():
+    agent_path = ROOT / ".cursor" / "agents" / "p2e-reviewer.md"
+    assert_true(agent_path.exists(), "Missing .cursor/agents/p2e-reviewer.md")
+    content = read_text(agent_path)
+    assert_no_auditor_prose(content, "p2e-reviewer agent")
+    for required_phrase in (
+        "name: p2e-reviewer",
+        "reviewer",
+        "verifier blind",
+        "p2e-mode",
+    ):
         assert_true(
-            "Auditor is blind" not in content,
-            f"{rel_path} should use reviewer language, not Auditor",
+            required_phrase.lower() in content.lower(),
+            f"p2e-reviewer agent missing: {required_phrase}",
         )
 
 
@@ -288,6 +333,7 @@ def main():
     validate_json_files()
     validate_expected_files()
     validate_p2e_mode_skill()
+    validate_p2e_reviewer_agent()
     validate_policy_rule()
     validate_stale_references()
     print("plugin validation passed")
