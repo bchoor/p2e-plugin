@@ -88,8 +88,8 @@ Standard MCP server config. Servers start automatically when the plugin is enabl
 ## What this repo uses
 
 - `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
-- `commands/` (one slash command per workflow)
-- `skills/` (codex-facing routing skills, also discoverable by Claude)
-- `agents/` (`p2e-architect`, `p2e-staff-engineer`)
-- `hooks/` (PreToolUse project-slug validator, SessionStart project briefing)
+- `skills/p2e-mode/` (sole entry point; also mirrored under `.cursor/skills/`)
+- `hooks/` (PreToolUse project-slug validator, SessionStart bound-project reminder)
 - `.mcp.json` (P2E MCP)
+
+Legacy slash-command wrappers, shared workflow markdown, and bundled agents were removed in v0.12+.

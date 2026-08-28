@@ -2,13 +2,25 @@
 
 ## v0.12.5 — 2026-08-28
 
-Makes **`/p2e-mode`** Custom Mode–compatible in Cursor: valid skill frontmatter styles the mode badge and keeps the operating contract in context for the whole session (Option+Enter / Alt+Enter or **Use as Mode**).
+Makes **`/p2e-mode`** Custom Mode–compatible in Cursor and removes orphaned pre-v0.12 workflow helpers. Claude Code binding hooks and the Cloud Agent / CI scripts stay.
+
+### Removed
+- **`scripts/parse-gh-issue-body.sh`** — only used by the deleted `/p2e-sync` workflow.
+- **`scripts/sync-github-label.sh`** — only used by deleted `/p2e-update-story` / `/p2e-sync-labels` flows.
+- **`scripts/validate-ac-evidence-proof.ts`** — offline companion to the deleted verify-story workflow; MCP `evidence op=validate_proof` remains the live path (`specs/` + `templates/` kept).
 
 ### Changed
 - **`skills/p2e-mode/SKILL.md`** (+ Cursor mirror) — third-person WHAT/WHEN description; `disable-model-invocation: true`; Custom Mode badge `icon: book-open`, `color: cyan`.
-- **README / `.cursor/rules/p2e-policy.mdc` / `reference/cursor-skills-rules.md`** — document `/p2e-mode` one-shot vs Custom Mode session pinning.
-- **`scripts/validate-plugin.py`** — requires Custom Mode frontmatter fields on both skill mirrors.
+- **README / `.cursor/rules/p2e-policy.mdc` / `reference/cursor-skills-rules.md`** — document `/p2e-mode` one-shot vs Custom Mode session pinning (Option+Enter / Alt+Enter or **Use as Mode**).
+- **`docs/architecture-explorer.html`** → **`docs/archive/`** — pre-v0.12 command/workflow map; no longer a live surface.
+- **`scripts/validate-plugin.py`** — requires Custom Mode frontmatter; asserts dead scripts and the status-gate hook stay absent; keeps binding hooks required.
+- **`reference/claude-code-plugins.md`**, **`docs/archive/README.md`** — aligned with p2e-mode-only layout.
 - Manifests bumped to **0.12.5**.
+
+### Kept (still in use)
+- **`hooks/`** — PreToolUse project-slug validator + SessionStart bound-project reminder (Claude Code).
+- **`scripts/install-p2e-cursor-skills.sh`** — Cloud Agent product-repo installer.
+- **`scripts/validate-plugin.py`** — CI plugin invariant check.
 
 ## v0.12.4 — 2026-08-27
 
