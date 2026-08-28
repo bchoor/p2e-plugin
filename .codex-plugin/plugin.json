@@ -1,6 +1,6 @@
 {
   "name": "p2e",
-  "version": "0.12.5",
+  "version": "0.12.6",
   "description": "P2E operating mode for Codex \u2014 single p2e-mode skill: bind, MCP surface, lifecycle contract, and assessment gates. Legacy granular workflow skills removed in v0.12. Backed by the P2E MCP.",
   "author": {
     "name": "bchoor",
@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "P2E",
     "shortDescription": "P2E operating mode \u2014 read p2e-mode at session start",
-    "longDescription": "Use P2E in Codex through the p2e-mode skill: entity model, MCP tools, story lifecycle, and the Coder\u2192Verifier\u2192Auditor\u2192Human review pipeline.",
+    "longDescription": "Use P2E in Codex through the p2e-mode skill: entity model, MCP tools, story lifecycle, and the Coder\u2192Verifier\u2192Reviewer\u2192Human review pipeline.",
     "developerName": "bchoor",
     "category": "Coding",
     "capabilities": [
@@ -37,7 +37,7 @@
       "Read p2e-mode and work on the next P2E story",
       "Implement this P2E layer and move it to IN_REVIEW",
       "Verify this story and propose verifier assessments per AC",
-      "Audit this story blind and propose auditor assessments",
+      "Review this story blind and propose reviewer assessments",
       "Read p2e-mode and work on the next open P2E layer"
     ],
     "brandColor": "#0f766e",

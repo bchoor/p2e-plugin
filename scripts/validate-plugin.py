@@ -189,11 +189,17 @@ def validate_p2e_mode_skill():
             "icon: book-open",
             "color: cyan",
             "Custom Mode",
+            "reviewer",
+            "coder",
         ):
             assert_true(
                 required_phrase in content,
                 f"{rel_path} missing required phrase: {required_phrase}",
             )
+        assert_true(
+            "Auditor is blind" not in content,
+            f"{rel_path} should use reviewer language, not Auditor",
+        )
 
 
 def validate_policy_rule():

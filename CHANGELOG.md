@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.12.6 — 2026-08-28
+
+Renames the human-facing **auditor** role to **reviewer** across `p2e-mode` and reference docs. Role ladder is now **coder → verifier → reviewer → human**. MCP wire values remain `role=AUDITOR` / `viewer_role=AUDITOR` until the backend renames them.
+
+### Changed
+- **`skills/p2e-mode/SKILL.md`** (+ Cursor mirror, `references/p2e-model.md`) — reviewer terminology; explicit role ladder.
+- **README**, **`.codex-plugin/plugin.json`** — verifier/reviewer assessments; Coder→Verifier→Reviewer→Human pipeline wording.
+- **`scripts/validate-plugin.py`** — requires reviewer language in skill mirrors.
+- Manifests bumped to **0.12.6**.
+
 ## v0.12.5 — 2026-08-28
 
 Makes **`/p2e-mode`** Custom Mode–compatible in Cursor and removes orphaned pre-v0.12 workflow helpers. Claude Code binding hooks and the Cloud Agent / CI scripts stay.
