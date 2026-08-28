@@ -1,8 +1,12 @@
 # Changelog
 
-## Unreleased
+## v0.12.10 — 2026-08-28
 
-- **`.cursor/agents/p2e-reviewer.md`** — pin `claude-opus[effort=high]` (Opus family, not a frozen `claude-opus-5` slug).
+Pins **`p2e-reviewer`** to the Opus family so it tracks newer Opus versions.
+
+### Changed
+- **`.cursor/agents/p2e-reviewer.md`** — `claude-opus[effort=high]` instead of frozen `claude-opus-5`.
+- Manifests bumped to **0.12.10**.
 
 ## v0.12.9 — 2026-08-28
 
