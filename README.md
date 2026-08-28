@@ -4,7 +4,7 @@ This plugin connects [P2E](https://github.com/bchoor/p2e) story-map work to the 
 
 P2E is **product intelligence** — a living map of your product that grows iteratively as you capture UXOs, draft layers, implement, and land work. It is not a one-shot spec tool.
 
-**v0.12+ ships a single skill: `p2e-mode`.** Read it at session start for bind, lifecycle, MCP tools, and the lifecycle contract and assessment gates. Entity/assessment facts live in [`references/p2e-model.md`](skills/p2e-mode/references/p2e-model.md). Legacy `/p2e-*` slash commands are removed.
+**v0.12+ ships a single skill: `p2e-mode`.** In Cursor, invoke `/p2e-mode` or run it as a Custom Mode for the session. Entity/assessment facts live in [`references/p2e-model.md`](skills/p2e-mode/references/p2e-model.md). Legacy `/p2e-*` slash commands are removed.
 
 It tracks the P2E **Patton v3 Flow/Foundation model**: every project is a *Product* with two seeded Flows — a persona Flow (the user-journey lane) and an immutable Foundation Flow (8 platform/infra slots). Stories carry a `priority` (`P0`…`P3`) that orders open work. See [Flow / Foundation model](#flow--foundation-model) below.
 
@@ -48,7 +48,7 @@ Codex uses the **`p2e-mode`** skill as the sole entry point. Read it at session 
 
 Cursor reads the `.cursor/` directory directly. Clone or sync this repo so `.cursor/skills/p2e-mode/` and `.cursor/rules/p2e-policy.mdc` are visible from your project root.
 
-- Read **`p2e-mode`** at session start — it replaces the legacy `/p2e-*` command menu
+- Type **`/p2e-mode`** in Agent chat — Enter attaches it to one message; **Option+Enter** (Mac) / **Alt+Enter** (Windows) or **Use as Mode** keeps it on for the whole session as a Custom Mode (cyan `book-open` badge)
 - The always-applied rule `.cursor/rules/p2e-policy.mdc` keeps Cursor aligned with Claude and Codex
 - Point Cursor at the P2E MCP server via `.cursor/mcp.json` (or your global Cursor MCP config) using the same URL as [`.mcp.json`](./.mcp.json) — `https://p2e-mocha.vercel.app/api/mcp` by default
 

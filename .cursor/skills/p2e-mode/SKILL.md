@@ -1,8 +1,13 @@
 ---
 name: p2e-mode
 description: >-
-  P2E operating mode — bind, MCP surface, lifecycle contract, and assessment
-  gates. Read at session start; read references/p2e-model.md before create/update/UXO work.
+  P2E operating mode for product intelligence — bind via .p2e/project.json,
+  MCP lifecycle contract (IN_PROGRESS=code+verify; IN_REVIEW=blind opinion/human),
+  and assessment gates. Use when working on P2E layers/stories, UXOs, verification,
+  evidence, or when the user invokes /p2e-mode or runs it as a Custom Mode.
+disable-model-invocation: true
+icon: book-open
+color: cyan
 ---
 
 # p2e-mode

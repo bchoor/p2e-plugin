@@ -1,8 +1,8 @@
 # Changelog
 
-## v0.12.5 — 2026-08-27
+## v0.12.5 — 2026-08-28
 
-Removes orphaned pre-v0.12 workflow helpers left behind after the p2e-mode consolidation. Claude Code binding hooks and the Cloud Agent / CI scripts stay.
+Makes **`/p2e-mode`** Custom Mode–compatible in Cursor and removes orphaned pre-v0.12 workflow helpers. Claude Code binding hooks and the Cloud Agent / CI scripts stay.
 
 ### Removed
 - **`scripts/parse-gh-issue-body.sh`** — only used by the deleted `/p2e-sync` workflow.
@@ -10,8 +10,10 @@ Removes orphaned pre-v0.12 workflow helpers left behind after the p2e-mode conso
 - **`scripts/validate-ac-evidence-proof.ts`** — offline companion to the deleted verify-story workflow; MCP `evidence op=validate_proof` remains the live path (`specs/` + `templates/` kept).
 
 ### Changed
+- **`skills/p2e-mode/SKILL.md`** (+ Cursor mirror) — third-person WHAT/WHEN description; `disable-model-invocation: true`; Custom Mode badge `icon: book-open`, `color: cyan`.
+- **README / `.cursor/rules/p2e-policy.mdc` / `reference/cursor-skills-rules.md`** — document `/p2e-mode` one-shot vs Custom Mode session pinning (Option+Enter / Alt+Enter or **Use as Mode**).
 - **`docs/architecture-explorer.html`** → **`docs/archive/`** — pre-v0.12 command/workflow map; no longer a live surface.
-- **`scripts/validate-plugin.py`** — asserts dead scripts and the status-gate hook stay absent; keeps binding hooks required.
+- **`scripts/validate-plugin.py`** — requires Custom Mode frontmatter; asserts dead scripts and the status-gate hook stay absent; keeps binding hooks required.
 - **`reference/claude-code-plugins.md`**, **`docs/archive/README.md`** — aligned with p2e-mode-only layout.
 - Manifests bumped to **0.12.5**.
 

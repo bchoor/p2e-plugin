@@ -185,6 +185,10 @@ def validate_p2e_mode_skill():
             "IN_PROGRESS",
             "NOT_TESTED",
             "Mark DONE",
+            "disable-model-invocation: true",
+            "icon: book-open",
+            "color: cyan",
+            "Custom Mode",
         ):
             assert_true(
                 required_phrase in content,
