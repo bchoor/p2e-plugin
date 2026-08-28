@@ -32,7 +32,7 @@ From inside a Claude Code session:
 Pin the marketplace to a tag for stability:
 
 ```text
-/plugin marketplace add bchoor/p2e-plugin@v0.12.4
+/plugin marketplace add bchoor/p2e-plugin@v0.12.5
 /plugin install p2e@p2e-plugins
 ```
 
@@ -48,7 +48,7 @@ Codex uses the **`p2e-mode`** skill as the sole entry point. Read it at session 
 
 Cursor reads the `.cursor/` directory directly. Clone or sync this repo so `.cursor/skills/p2e-mode/` and `.cursor/rules/p2e-policy.mdc` are visible from your project root.
 
-- Read **`p2e-mode`** at session start — it replaces the legacy `/p2e-*` command menu
+- Type **`/p2e-mode`** in Agent chat — Enter attaches it to one message; **Option+Enter** (Mac) / **Alt+Enter** (Windows) or **Use as Mode** keeps it on for the whole session as a Custom Mode (cyan `book-open` badge)
 - The always-applied rule `.cursor/rules/p2e-policy.mdc` keeps Cursor aligned with Claude and Codex
 - Point Cursor at the P2E MCP server via `.cursor/mcp.json` (or your global Cursor MCP config) using the same URL as [`.mcp.json`](./.mcp.json) — `https://p2e-mocha.vercel.app/api/mcp` by default
 

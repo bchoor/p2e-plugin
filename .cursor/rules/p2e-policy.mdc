@@ -9,7 +9,7 @@ This repo ships P2E guidance to Claude Code, Codex, and Cursor through a **singl
 
 ## Hard rules
 
-- **Read `p2e-mode` at session start.** MCP surface, lifecycle contract, and assessment gates live in `skills/p2e-mode/SKILL.md` (Codex) and `.cursor/skills/p2e-mode/SKILL.md` (Cursor). Entity/assessment facts live in `references/p2e-model.md` under the same skill.
+- **Read `p2e-mode` at session start** (or invoke `/p2e-mode` / run it as a Cursor Custom Mode). MCP surface, lifecycle contract, and assessment gates live in `skills/p2e-mode/SKILL.md` (Codex) and `.cursor/skills/p2e-mode/SKILL.md` (Cursor). Entity/assessment facts live in `references/p2e-model.md` under the same skill.
 - **MCP is authoritative.** P2E reads and writes go through `mcp__p2e__*` tools. Do not invent a parallel REST or local-file path.
 - **Bind once via `.p2e/project.json`.** If the file is present, honor the bound `product_slug` (legacy `project_slug` still accepted) for every MCP call. If absent, ask the user to create a binding before project-scoped operations.
 

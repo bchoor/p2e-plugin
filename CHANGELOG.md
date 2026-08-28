@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.12.5 — 2026-08-28
+
+Makes **`/p2e-mode`** Custom Mode–compatible in Cursor: valid skill frontmatter styles the mode badge and keeps the operating contract in context for the whole session (Option+Enter / Alt+Enter or **Use as Mode**).
+
+### Changed
+- **`skills/p2e-mode/SKILL.md`** (+ Cursor mirror) — third-person WHAT/WHEN description; `disable-model-invocation: true`; Custom Mode badge `icon: book-open`, `color: cyan`.
+- **README / `.cursor/rules/p2e-policy.mdc` / `reference/cursor-skills-rules.md`** — document `/p2e-mode` one-shot vs Custom Mode session pinning.
+- **`scripts/validate-plugin.py`** — requires Custom Mode frontmatter fields on both skill mirrors.
+- Manifests bumped to **0.12.5**.
+
 ## v0.12.4 — 2026-08-27
 
 Straw-man lifecycle contract: verify and evidence live in **IN_PROGRESS**; **IN_REVIEW** is blind second opinion and/or human Mark DONE. Hard gate — no IN_REVIEW while any AC lacks a VERIFIER assessment or is NOT_TESTED. Skill compressed to a contract framework (≤60 lines); reference stays lean facts.

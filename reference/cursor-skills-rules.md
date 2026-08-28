@@ -79,9 +79,13 @@ Simplified always-on instructions in repo root or subdirectories. No frontmatter
 - Agent-requested rules: model selects based on `description`
 - Manual rules: `@<rule-name>`
 
+## Custom Modes (skill → session mode)
+
+Any skill with valid frontmatter can back a [Custom Mode](https://cursor.com/docs/agent/prompting.md#custom-modes): `/skill-name` + Enter attaches to one message; Option+Enter / Alt+Enter (or **Use as Mode**) keeps it in context for the whole session. Style the mode badge with optional `icon` and `color` frontmatter (`color`: `default` | `green` | `cyan` | `blue` | `purple` | `magenta` | `orange` | `yellow` | `red` | `brand`). Set `disable-model-invocation: true` so the skill only loads when explicitly invoked or used as a mode.
+
 ## What this repo uses (v0.12+)
 
-- `.cursor/skills/p2e-mode/SKILL.md` — sole Cursor skill (entry point)
+- `.cursor/skills/p2e-mode/SKILL.md` — sole Cursor skill (entry point); Custom Mode–ready (`icon: book-open`, `color: cyan`, `disable-model-invocation: true`)
 - `.cursor/rules/p2e-policy.mdc` — repo-wide policy rule (always-apply) summarizing scope and pointing at `p2e-mode`
 - `scripts/install-p2e-cursor-skills.sh` — product-repo Cloud Agent helper: clone this plugin and symlink `p2e-mode` + policy rule into the workspace from `.cursor/environment.json` `install` / `start --update`
 - `AGENTS.md` — minimal pointer file so non-Cursor IDEs that read `AGENTS.md` get the same orientation
