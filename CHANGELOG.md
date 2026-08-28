@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.12.8 — 2026-08-28
+
+Hardens **`p2e-reviewer`** against blind-review contradictions found in adversarial review.
+
+### Changed
+- **`.cursor/agents/p2e-reviewer.md`** — trust `IN_REVIEW` lifecycle gate (no blind verifier re-check); `story_log` / inline log blindness; MCP id/length limits; pagination; binding check; seam defects + per-story rollup in report; reviewer-env skip path.
+- **`skills/p2e-mode/SKILL.md`** (+ Cursor mirror) — review pipeline notes `story_log` blindness leak.
+- **`scripts/validate-plugin.py`** — requires new reviewer spec phrases.
+- Manifests bumped to **0.12.8**.
+
 ## v0.12.7 — 2026-08-28
 
 Completes **reviewer** terminology in `p2e-mode`; adds Cursor **`p2e-reviewer`** subagent for adversarial release-batch review.
