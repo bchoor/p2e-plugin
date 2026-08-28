@@ -38,7 +38,7 @@ Before create/update/UXO work: [`references/p2e-model.md`](references/p2e-model.
 
 ## Gates & roles
 
-Roles: **coder** → **verifier** → **reviewer** → **human**. MCP role mapping: [`references/p2e-model.md`](references/p2e-model.md#assessments).
+Roles: **coder** → **verifier** → **reviewer** → **human**. Assessment facts: [`references/p2e-model.md`](references/p2e-model.md#assessments).
 
 - Every AC needs a verifier assessment before `IN_REVIEW`; none may be `NOT_TESTED`.
 - Any verifier `FAIL` → stay `IN_PROGRESS`.
