@@ -32,7 +32,7 @@ From inside a Claude Code session:
 Pin the marketplace to a tag for stability:
 
 ```text
-/plugin marketplace add bchoor/p2e-plugin@v0.12.5
+/plugin marketplace add bchoor/p2e-plugin@v0.12.6
 /plugin install p2e@p2e-plugins
 ```
 
@@ -107,7 +107,7 @@ The plugin exposes the P2E MCP server tools via `mcp__plugin_p2e_p2e__*`. Each t
 | Tool | Ops | Summary |
 |------|-----|---------|
 | `stories` | `list`, `get`, `create`, `update`, `delete`, `move` | Core story CRUD. `create` / `update` use an `items:[{...}]` array payload and accept `priority` (`"P0"`…`"P3"` or `null` = unprioritized). `update` also accepts `github_pr_url` (string or `null`) to manually set or clear a story's PR link. `list` supports multi-value filters (see below). `get` returns full detail including audit log, capabilities, and acceptance criteria. `move` re-parents a story to another UXO. |
-| `criteria` | `list`, `get`, `create`, `update`, `delete`, `propose` | Acceptance criteria attached to a story. Agents use `op=propose` for verifier/auditor assessments. |
+| `criteria` | `list`, `get`, `create`, `update`, `delete`, `propose` | Acceptance criteria attached to a story. Agents use `op=propose` for verifier/reviewer assessments (`role=VERIFIER` or `role=AUDITOR`). |
 | `capabilities` | `list`, `get`, `create`, `update`, `delete` | Story capabilities (INTRODUCES / MODIFIES / DEPRECATES change entries). |
 | `relations` | `list`, `get`, `create`, `delete` | Inter-story relations (BUILDS_ON, DEPENDS_ON, SUPERSEDES, FIXES, etc.). |
 | `products` | `list`, `get`, `create`, `update` | Product management — UXO health summary, member roster, seeded Flows. **Canonical** as of Patton v3. |

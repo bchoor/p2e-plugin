@@ -31,10 +31,12 @@ Before create/update/UXO work: [`references/p2e-model.md`](references/p2e-model.
 
 ## Gates & roles
 
+Roles: **coder** → **verifier** → **reviewer** → **human**.
+
 - Every AC needs a VERIFIER assessment before `IN_REVIEW`; none may be `NOT_TESTED`.
 - Any VERIFIER `FAIL` → stay `IN_PROGRESS`.
 - AC `BLOCKED` = coder/verifier cannot align → escalate to human (≠ `StoryStatus.BLOCKED`).
-- Auditor is blind to verifier output (`criteria op=list` + `viewer_role=AUDITOR`).
+- Reviewer is blind to verifier output (`criteria op=list` + `viewer_role=AUDITOR`; MCP wire name unchanged).
 - Coder never writes assessments; agents use `criteria op=propose`, never `op=verdict` / `op=toggle`.
 - Release audit is a batch over DONE sets — not a story status.
 - AuditLog on every mutation.
