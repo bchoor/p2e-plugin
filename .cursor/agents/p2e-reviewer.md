@@ -4,7 +4,7 @@ description: >-
   P2E release reviewer — adversarial blind integration review of IN_REVIEW layers
   for a release batch. Use after verifier completes. Never reads verifier assessments;
   runs the app, re-tests evidence, proposes reviewer assessments via MCP.
-model: claude-opus-5[effort=high]
+model: claude-opus[effort=high]
 ---
 
 # p2e-reviewer
