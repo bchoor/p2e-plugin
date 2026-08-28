@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.12.5 — 2026-08-27
+
+Removes orphaned pre-v0.12 workflow helpers left behind after the p2e-mode consolidation. Claude Code binding hooks and the Cloud Agent / CI scripts stay.
+
+### Removed
+- **`scripts/parse-gh-issue-body.sh`** — only used by the deleted `/p2e-sync` workflow.
+- **`scripts/sync-github-label.sh`** — only used by deleted `/p2e-update-story` / `/p2e-sync-labels` flows.
+- **`scripts/validate-ac-evidence-proof.ts`** — offline companion to the deleted verify-story workflow; MCP `evidence op=validate_proof` remains the live path (`specs/` + `templates/` kept).
+
+### Changed
+- **`docs/architecture-explorer.html`** → **`docs/archive/`** — pre-v0.12 command/workflow map; no longer a live surface.
+- **`scripts/validate-plugin.py`** — asserts dead scripts and the status-gate hook stay absent; keeps binding hooks required.
+- **`reference/claude-code-plugins.md`**, **`docs/archive/README.md`** — aligned with p2e-mode-only layout.
+- Manifests bumped to **0.12.5**.
+
+### Kept (still in use)
+- **`hooks/`** — PreToolUse project-slug validator + SessionStart bound-project reminder (Claude Code).
+- **`scripts/install-p2e-cursor-skills.sh`** — Cloud Agent product-repo installer.
+- **`scripts/validate-plugin.py`** — CI plugin invariant check.
+
 ## v0.12.4 — 2026-08-27
 
 Straw-man lifecycle contract: verify and evidence live in **IN_PROGRESS**; **IN_REVIEW** is blind second opinion and/or human Mark DONE. Hard gate — no IN_REVIEW while any AC lacks a VERIFIER assessment or is NOT_TESTED. Skill compressed to a contract framework (≤60 lines); reference stays lean facts.
