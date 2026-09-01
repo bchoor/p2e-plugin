@@ -2,10 +2,10 @@
 
 ## v0.12.11 — 2026-09-01
 
-Removes the **`P2E_MCP_URL`** override from the docs — the env var was never read, and `.mcp.json` has held a concrete URL since v0.4.2.
+Corrects the **`P2E_MCP_URL`** documentation — the shipped `.mcp.json` has held a concrete URL since v0.4.2, so the advertised `export` did nothing.
 
 ### Fixed
-- **`README.md`** — `## Configure` now shows the real override path (edit the literal URL in `.mcp.json`, plugin-level or project-scoped) instead of an `export P2E_MCP_URL=...` block that does nothing; folds the Codex-specific `${VAR:-fallback}` caveat into the general rule.
+- **`README.md`** — `## Configure` now shows the real override path (edit the URL in `.mcp.json`, plugin-level or project-scoped) instead of an `export P2E_MCP_URL=...` block that does nothing against the shipped literal. Documents the host split measured on Claude Code 2.1.252: Claude Code expands `${VAR:-default}` in `.mcp.json` at connect time, Codex does not — so the shipped file stays literal, while Claude-Code-only users may use the interpolated form in their own project-scoped `.mcp.json`.
 - **`.claude-plugin/marketplace.json`** — plugin description no longer advertises the removed env override.
 - Manifests bumped to **0.12.11**.
 

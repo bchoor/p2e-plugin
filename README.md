@@ -105,7 +105,15 @@ To point it at your own instance, edit that URL directly — either in the plugi
 }
 ```
 
-The URL must be a literal. Shell-style `${VAR:-fallback}` syntax is not expanded in the MCP auth flow and breaks Codex login discovery, so there is no environment-variable override. Cursor takes the same URL in `.cursor/mcp.json`, and Codex users editing an already-installed MCP entry should likewise set a concrete URL.
+The shipped `.mcp.json` holds a **literal** URL on purpose: Codex does not expand shell-style `${VAR:-fallback}` syntax in its MCP auth flow, and an unexpanded `${...}` string breaks Codex login discovery. Keep the plugin's own `.mcp.json` literal so it stays Codex-safe.
+
+Claude Code *does* expand that syntax at connect time. If Claude Code is your only host, you can drive the endpoint from the environment in **your own** project-scoped `.mcp.json`:
+
+```json
+{ "mcpServers": { "p2e": { "type": "http", "url": "${P2E_MCP_URL:-https://p2e-mocha.vercel.app/api/mcp}" } } }
+```
+
+Cursor takes the same URL in `.cursor/mcp.json`, and Codex users editing an already-installed MCP entry should set a concrete URL.
 
 Auth is handled by the host application's MCP flow on first use.
 
