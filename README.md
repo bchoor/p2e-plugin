@@ -90,15 +90,24 @@ Neither hook does anything in repos that lack `.p2e/project.json` — non-P2E re
 
 ## Configure
 
-The plugin talks to a running P2E instance. It defaults to the hosted production endpoint at `https://p2e-mocha.vercel.app/api/mcp`. Point it at your own instance with `P2E_MCP_URL`:
+The plugin talks to a running P2E instance. It ships with the hosted production endpoint at `https://p2e-mocha.vercel.app/api/mcp` written as a concrete URL in [`.mcp.json`](./.mcp.json).
 
-```bash
-export P2E_MCP_URL="https://<your-p2e-instance>/api/mcp"
+To point it at your own instance, edit that URL directly — either in the plugin's `.mcp.json`, or in your own product repo's project-scoped `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "p2e": {
+      "type": "http",
+      "url": "https://<your-p2e-instance>/api/mcp"
+    }
+  }
+}
 ```
 
-Auth is handled by the host application's MCP flow on first use.
+The URL must be a literal. Shell-style `${VAR:-fallback}` syntax is not expanded in the MCP auth flow and breaks Codex login discovery, so there is no environment-variable override. Cursor takes the same URL in `.cursor/mcp.json`, and Codex users editing an already-installed MCP entry should likewise set a concrete URL.
 
-For Codex specifically, the plugin ships with the hosted production URL as its default MCP endpoint. If you want to point Codex at a different P2E instance, update the installed MCP entry or re-add it with a concrete URL rather than relying on shell-style `${VAR:-fallback}` expansion.
+Auth is handled by the host application's MCP flow on first use.
 
 ## MCP tool surface
 

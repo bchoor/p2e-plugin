@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.11 — 2026-09-01
+
+Removes the **`P2E_MCP_URL`** override from the docs — the env var was never read, and `.mcp.json` has held a concrete URL since v0.4.2.
+
+### Fixed
+- **`README.md`** — `## Configure` now shows the real override path (edit the literal URL in `.mcp.json`, plugin-level or project-scoped) instead of an `export P2E_MCP_URL=...` block that does nothing; folds the Codex-specific `${VAR:-fallback}` caveat into the general rule.
+- **`.claude-plugin/marketplace.json`** — plugin description no longer advertises the removed env override.
+- Manifests bumped to **0.12.11**.
+
 ## v0.12.10 — 2026-08-28
 
 Pins **`p2e-reviewer`** to the Opus family so it tracks newer Opus versions.
