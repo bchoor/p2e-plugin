@@ -15,7 +15,7 @@ This repo ships P2E guidance to Claude Code, Codex, and Cursor through a **singl
 
 ## P2E Flow/Foundation model (Patton v3)
 
-A project is a **Product** (`mcp__p2e__products`, `product_slug`). Every Product has two seeded **Flows** — a **persona Flow** (user-journey lane) and an immutable **Foundation Flow** (8 fixed slots). Story → UXO → Phase → Flow → Product. `Story.priority` (`P0`…`P3`/`null`) orders open work.
+A project is a **Product** (`mcp__p2e__products`, `product_slug`). Every Product has two seeded **Flows** — a **persona Flow** (user-journey lane) and an immutable **Foundation Flow** (8 fixed slots). Story → UXO → Phase → Flow → Product. **Wave** is a first-class unbounded package per Product+Release (`W{n}`, no W25 ceiling); call `waves.get` before BUILD membership lists.
 
 ## Where to read
 

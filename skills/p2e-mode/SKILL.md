@@ -3,8 +3,8 @@ name: p2e-mode
 description: >-
   P2E operating mode for product intelligence — bind via .p2e/project.json,
   MCP lifecycle contract (IN_PROGRESS=code+verify; IN_REVIEW=blind opinion/human),
-  and assessment gates. Use when working on P2E layers/stories, UXOs, verification,
-  evidence, or when the user invokes /p2e-mode or runs it as a Custom Mode.
+  and assessment gates. Use when working on P2E layers/stories, Waves, UXOs,
+  verification, evidence, or when the user invokes /p2e-mode or runs it as a Custom Mode.
 disable-model-invocation: true
 icon: book-open
 color: cyan
@@ -12,9 +12,9 @@ color: cyan
 
 # p2e-mode
 
-P2E is **product intelligence**: **Product → Flow → Phase → UXO → Layer** (`Story`). MCP is the write interface; UI and agents share the same actions. Domain state lives in MCP — never parallel story files.
+P2E is **product intelligence**: **Product → Flow → Phase → UXO → Layer** (`Story`), plus **Release → Wave** packages. MCP is the write interface; UI and agents share the same actions. Domain state lives in MCP — never parallel story files.
 
-Before create/update/UXO work: [`references/p2e-model.md`](references/p2e-model.md).
+Before create/update/UXO/Wave work: [`references/p2e-model.md`](references/p2e-model.md).
 
 ## Bind & scope
 
@@ -49,6 +49,18 @@ Roles: **coder** → **verifier** → **reviewer** → **human**. Assessment fac
 - AuditLog on every mutation.
 - Never create Foundation phases via MCP.
 
+## Wave packages (BUILD)
+
+**Wave** is a first-class unbounded package (`W{n}`, `n ≥ 1` — **no W25 ceiling**). Facts: [`references/p2e-model.md`](references/p2e-model.md#wave-package).
+
+Before listing or executing BUILD work for a package:
+
+1. `waves.get` (by `id` or `release` + `n`) — freeze: members, gate, branch, status, shipChecks, PR.
+2. Prefer the returned **ordered members** as the BUILD set.
+3. Do not treat `stories.list` wave filters as a substitute for package membership.
+
+Create/update packages via `waves` (`n=auto` or explicit); membership rewrite stamps `Story.wave`.
+
 ## Review pipeline (`IN_REVIEW`)
 
 1. **Verifier** — run `verificationCmd`, capture proof, upload assets, propose PASS/FAIL/BLOCKED per AC.
@@ -62,10 +74,10 @@ Tags (`backend` / `ui` / `external` / `docs` / `security`) select the verify/evi
 
 ## MCP
 
-`products`/`flows`/`phases`/`uxos` · `stories` · `criteria` (`op=propose`) · `capabilities` · `relations` · `coverage` · `story_assets` · `story_log` · `validate` · `evidence`
+`products`/`flows`/`phases`/`uxos` · **`waves`** (`list`/`get`/`create`/`update`) · `stories` · `criteria` (`op=propose`) · `capabilities` · `relations` · `coverage` · `story_assets` · `story_log` · `validate` · `evidence`
 
 ## Pointers
 
-- Model + tags: `references/p2e-model.md`
+- Model + Wave + tags: `references/p2e-model.md`
 - Release reviewer subagent (Cursor): `.cursor/agents/p2e-reviewer.md`
 - Product repo (when present): `docs/P2E-lifecycle.md`, `docs/P2E-handover.md`

@@ -7,6 +7,7 @@ Canonical entity and assessment facts. **`p2e-mode` points here** before draftin
 ```
 Product → Flow (persona | foundation) → Phase → UXO → Layer (Story)
   Layer holds: acceptance criteria, capabilities, relations → other layers
+Product → Release → Wave (W{n}, unbounded) → ordered member Layers
 ```
 
 ## Entities
@@ -17,12 +18,23 @@ Product → Flow (persona | foundation) → Phase → UXO → Layer (Story)
 | **Flow** | Persona (journey) or Foundation (8 immutable platform slots) | A field on a layer |
 | **Phase** | Journey step or one Foundation slot | Creatable on Foundation |
 | **UXO** | Grouping bucket under a phase (`objectives[]` + `description`) | User-story prose (that is RRR on layers) |
-| **Layer** | Landable work under a UXO (RRR, thick-spec, status, priority) | The whole feature |
+| **Layer** | Landable work under a UXO (RRR, thick-spec, status, wave stamp) | The whole feature |
+| **Wave** | First-class package for a Product+Release with unbounded `n` (`W{n}`); gate/branch/status/membership/shipChecks/PR | A fixed W1–W25 enum or a priority rank |
 | **Capability** | `INTRODUCES` / `MODIFIES` / `DEPRECATES` (+ `isBreaking`; `DEPRECATES` absorbs retired `REMOVES`) | A UXO objective |
 | **Criterion** | One testable AC; verifier and reviewer assess separately | Bulk-approvable |
 | **Relation** | `DEPENDS_ON` / `BUILDS_ON` / `FIXES` / `SUPERSEDES` | Containment |
 
 Foundation slots are seeded and immutable. Journey → persona Flow; platform/infra → Foundation.
+
+## Wave (package)
+
+- Unique on `(productId, release, n)` with `n ≥ 1` — **no W25 ceiling**. `W26+` is valid.
+- Labels are canonical `W{n}` (legacy `P0`–`P24` aliases may appear on write; storage is `Wn`).
+- **Membership** is ordered on the Wave; rewriting members also stamps `Story.wave` / `priority` to `W{n}`.
+- A story must not sit in two **OPEN** waves (`DualOpenWave`).
+- Freeze fields from `waves.get`: `n`, `gate`, `branch`, `status`, `shipChecks`, `githubPrUrl`, ordered `members`.
+
+**Before BUILD / execute work for a package:** call `waves.get` (by `id` or `release`+`n`) and use its member list — do not invent membership from `stories.list` wave filters alone.
 
 ## Layer fields
 
@@ -30,7 +42,7 @@ Foundation slots are seeded and immutable. Journey → persona Flow; platform/in
 
 **Thick-spec:** `filesHint`, `constraints`, `nonGoals`, `contextDocs`, `effortHint`, `verificationCmd`. Thick = all six set. Thick gate (`validate op=run`) before `OPEN → IN_PROGRESS`.
 
-**Sizing** (`XS`–`XXL`) and **priority** (`P0`–`P3` / `null`) are independent.
+**Sizing** (`XS`–`XXL`) and **wave** (`W{n}` / `null`) are independent. Wave is the package stamp; open-work ordering within a release follows Wave `n` ascending, then oldest-first.
 
 ## Status vs AC blocked
 
@@ -75,3 +87,4 @@ Multi-tag layers take the union of shapes.
 - Preview before writes on layers/UXOs/criteria/capabilities.
 - Never create Foundation phases via MCP.
 - Human Mark DONE is the sole acceptance gate for a layer.
+- Wave `n` is unbounded — never reject or clamp at W25.
