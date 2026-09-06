@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — v0.14-w23 (Wave noun)
+
+### Changed
+- **`p2e-mode` / `p2e-model`** — Wave is a first-class unbounded package (`W{n}`, no W25 ceiling). BUILD flows call `waves.get` for membership freeze before story lists.
+- **MCP docs** — `waves` tool listed in skill MCP section and README tool table.
+- **`.cursor/rules/p2e-policy.mdc`**, **CLAUDE.md**, **README** — Wave noun replaces fixed W1–W25 / P0–P3 ordering language for packaging.
+
 ## v0.12.11 — 2026-09-01
 
 Corrects the **`P2E_MCP_URL`** documentation — the shipped `.mcp.json` has held a concrete URL since v0.4.2, so the advertised `export` did nothing.

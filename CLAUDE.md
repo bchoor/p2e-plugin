@@ -61,7 +61,7 @@ This plugin tracks the P2E backend's Patton v3 ontology — keep skill prose con
 
 - A project is a **Product**: `mcp__p2e__products` / `product_slug` is canonical; `mcp__p2e__projects` / `project_slug` is a deprecated alias kept for one release. **Every other MCP tool still takes `project_slug`** — do not rename it. The `.p2e/project.json` binding anchors that one slug value.
 - Every Product is seeded with two **Flows**: a **persona Flow** (`type=persona`, user-journey lane) and an immutable **Foundation Flow** (`type=foundation`, 8 fixed phase slots). Never create Foundation phases via MCP.
-- Story graph: **Story → UXO → Phase → Flow → Product**. `Story.priority` (`P0`…`P3` / `null`) orders open work and is distinct from `sizing`.
+- Story graph: **Story → UXO → Phase → Flow → Product**. **Wave** packages ship work per Product+Release (`W{n}`, unbounded — no W25 ceiling). Call `waves.get` before BUILD member lists. `wave` is separate from `sizing`.
 - Tech-stack decisions live as ADRs linked from Foundation UXOs via `spec_file`.
 
 ## When you change something

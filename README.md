@@ -6,7 +6,7 @@ P2E is **product intelligence** — a living map of your product that grows iter
 
 **v0.12+ ships a single skill: `p2e-mode`.** In Cursor, invoke `/p2e-mode` or run it as a Custom Mode for the session. Entity/assessment facts live in [`references/p2e-model.md`](skills/p2e-mode/references/p2e-model.md). Legacy `/p2e-*` slash commands are removed.
 
-It tracks the P2E **Patton v3 Flow/Foundation model**: every project is a *Product* with two seeded Flows — a persona Flow (the user-journey lane) and an immutable Foundation Flow (8 platform/infra slots). Stories carry a `priority` (`P0`…`P3`) that orders open work. See [Flow / Foundation model](#flow--foundation-model) below.
+It tracks the P2E **Patton v3 Flow/Foundation model**: every project is a *Product* with two seeded Flows — a persona Flow (the user-journey lane) and an immutable Foundation Flow (8 platform/infra slots). Shipping work is packaged as unbounded **Waves** (`W{n}`, no W25 ceiling) owned by Product+Release; layers carry a denormalized wave stamp. See [Flow / Foundation model](#flow--foundation-model) below.
 
 ## How it works
 
@@ -123,7 +123,8 @@ The plugin exposes the P2E MCP server tools via `mcp__plugin_p2e_p2e__*`. Each t
 
 | Tool | Ops | Summary |
 |------|-----|---------|
-| `stories` | `list`, `get`, `create`, `update`, `delete`, `move` | Core story CRUD. `create` / `update` use an `items:[{...}]` array payload and accept `priority` (`"P0"`…`"P3"` or `null` = unprioritized). `update` also accepts `github_pr_url` (string or `null`) to manually set or clear a story's PR link. `list` supports multi-value filters (see below). `get` returns full detail including audit log, capabilities, and acceptance criteria. `move` re-parents a story to another UXO. |
+| `waves` | `list`, `get`, `create`, `update` | First-class Wave packages (`W{n}`, unbounded). `get` returns freeze (members, gate, branch, status, shipChecks, PR). Prefer `waves.get` before BUILD story lists. Membership rewrite stamps `Story.wave`. |
+| `stories` | `list`, `get`, `create`, `update`, `delete`, `move` | Core story CRUD. `create` / `update` accept `wave` (`W{n}` unbounded, or `null`). Legacy `priority` aliases still accepted. `update` also accepts `github_pr_url`. `list` supports multi-value filters (see below). `get` returns full detail including audit log, capabilities, and acceptance criteria. `move` re-parents a story to another UXO. |
 | `criteria` | `list`, `get`, `create`, `update`, `delete`, `propose` | Acceptance criteria attached to a story. Agents use `op=propose` for verifier/reviewer assessments (see p2e-model MCP role mapping). |
 | `capabilities` | `list`, `get`, `create`, `update`, `delete` | Story capabilities (INTRODUCES / MODIFIES / DEPRECATES change entries). |
 | `relations` | `list`, `get`, `create`, `delete` | Inter-story relations (BUILDS_ON, DEPENDS_ON, SUPERSEDES, FIXES, etc.). |
@@ -181,7 +182,7 @@ P2E's Patton v3 ontology, which this plugin tracks:
 - The Foundation Flow owns **8 fixed phase slots**: `Surfaces`, `Security`, `Data`, `Compute`, `Build-Deploy`, `Distribution`, `Observability`, `Cross-cutting`. Never create Foundation phases via MCP.
 - The story graph is **Story → UXO → Phase → Flow → Product**. A story's Flow membership is derived by following `story.uxo.phase.flow`.
 - The **tier** axis is deprecated. Flow membership (persona vs Foundation) is the meaningful structural axis.
-- **`Story.priority`** (`P0` urgent → `P3` lowest, or `null` = unprioritized) orders open work across all Flows, sorted `P0 → P1 → P2 → P3 → null`, then oldest-first. `priority` is separate from `sizing`.
+- **Wave** is a first-class package owned by Product+Release with unbounded `n` (`W{n}` — no W25 ceiling). Call `waves.get` before BUILD membership lists. Layer `wave` stamps are denormalized; ordered membership lives on the Wave.
 
 ## Documentation map
 
